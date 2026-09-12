@@ -135,7 +135,7 @@ class UserController extends Controller {
                         }catch (\Exception $ex){
                             //Log::error($ex);
                         }
-                        $url = Request::session()->pull('url.intended', '/');
+                        $url = Request::session()->pull('url.intended', url('/'));
                         //$failed = FailedLogin::whereRaw('ip_address = INET_ATON(\''.$ip_address.'\') and username="'. $username. '"');
                         //$failed->delete();
                         return ['url'=>$url,'msg'=>'Logging in. Please wait...','status'=>true,'hit'=>$hit, 'is_active'=>null];
