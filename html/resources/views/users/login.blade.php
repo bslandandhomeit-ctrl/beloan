@@ -174,4 +174,5 @@ $(document).ready(function(){
     new Login();
 });
 </script>
+@include('layouts.livereload')
 </html>

@@ -1,0 +1,9 @@
+{
+  "name": "landhome-livereload",
+  "private": true,
+  "description": "Watches html/app, html/resources, html/public and pushes a reload to any connected browser tab. Dev-only, unrelated to the Laravel app's own package.json.",
+  "dependencies": {
+    "chokidar": "^3.6.0",
+    "ws": "^8.18.0"
+  }
+}

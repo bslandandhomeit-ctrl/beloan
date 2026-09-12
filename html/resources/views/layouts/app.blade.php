@@ -222,5 +222,6 @@ function change_collapse(){
 <!--script for this page-->
 @yield('js')
 
+@include('layouts.livereload')
 </body>
 </html>

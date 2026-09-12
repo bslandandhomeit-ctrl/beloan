@@ -18,3 +18,6 @@
 .DS_Store
 Thumbs.db
 *.swp
+
+# Live-reload dev tool
+/dev-tools/livereload/node_modules/
