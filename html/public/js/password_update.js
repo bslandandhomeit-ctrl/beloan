@@ -22,9 +22,9 @@ $(document).ready(function(){
 
            $.ajax({
                url: '/user/change',
-               type: 'GET',
+               type: 'POST',
                dataType: "json",
-               data: { password : $('#password').val(),u_id: $('#u_id').val() },
+               data: { password : $('#password').val(), u_id: $('#u_id').val(), _token: $('#PasswordUpdate input[name="_token"]').val() },
                success: function(data)
                {
                    if(data.status == true){

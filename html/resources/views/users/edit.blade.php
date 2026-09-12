@@ -174,7 +174,8 @@
                              <h4 class="modal-title"> {{ trans('user.u_user_new_pass') }}</h4>
                          </div>
                          <div class="modal-body">
-                             <form role="form" method="get" class="cmxform" id="PasswordUpdate">
+                             <form role="form" method="post" class="cmxform" id="PasswordUpdate">
+                                 <input type="hidden" name="_token" value="{{ csrf_token() }}">
                                  <input type="hidden" name="u_id" id="u_id" value="{{ $user->id }}">
                                  <div class="form-group">
                                      <label class="control-label">{{ trans('user.u_user_new_pass') }} <span class="red-color">*</span></label>

@@ -970,6 +970,25 @@ class UserController extends Controller {
 //        return $this->view('users.notify',['last_login'=>$last_login])->render();
 //    }
 
+    public function postChangePwd(){
+        if(Request::ajax() && Auth::check()){
+            $u_id = Request::input('u_id');
+            $password = Request::input('password');
+            $is_self = ((int)$u_id === (int)Auth::user()->id);
+            $is_admin = in_array(Auth::user()->role_id, [1, 2]);
+            if($u_id > 0 && !empty($password) && ($is_self || $is_admin)){
+                $user = User::where('id', $u_id)->first();
+                if(!empty($user)){
+                    $user->password = Hash::make($password);
+                    if($user->save()){
+                        return ['status' => true];
+                    }
+                }
+            }
+        }
+        return ['status' => false];
+    }
+
     function reset_session(){
     	Session::flush();
     	return 1;
