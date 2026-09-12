@@ -24,7 +24,7 @@ if errorlevel 1 (
 )
 
 if not exist "node_modules" (
-    echo Installing dependencies (one-time)...
+    echo Installing dependencies, one-time...
     npm install
 )
 
