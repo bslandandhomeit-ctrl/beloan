@@ -1,0 +1,2 @@
+id,client_id,account_no,account_name,created_on,activated_on,currency,branch,balance,parent_id,coa_id,air_id,int_inc_id,sus_id,ap_id,acc_key,prefix,loan_ref,status,created_by,created_at,updated_at
+12,278,1002-1311-11017-000278,"Customer Test",2016-04-06,2016-04-06,2,100,26665.55,127,2273,2274,2275,0,2276,"Loan Long Term Machinery Loans for Agriculture-PS-",Std-,R160001,2,"Uy Dina","2016-04-06 16:18:46","2016-04-08 16:50:36"

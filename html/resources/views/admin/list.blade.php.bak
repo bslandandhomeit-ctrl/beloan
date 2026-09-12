@@ -1,0 +1,55 @@
+@extends('layouts.app')
+
+@section('content')
+    <div class="row">
+        <div class="col-lg-12">
+            <section class="panel">
+                <header class="panel-heading">
+                    <span>{{ trans('sidebar.sb_list_currencies') }}</span>
+                    <span style="float: right"><a href="{{route ('add_currencie') }}" class="btn btn-success"><i class="fa fa-plus"></i> {{ trans('sidebar.sb_add_currency') }}</a></span>
+                </header>
+                <div class="panel-body">
+                    <section id="unseen" class="ox-scroll">
+                        <table class="table table-bordered table-striped table-condensed">
+                            <thead class="cf">
+                                <tr>
+                                    <th>{{ trans('multiple.m_no') }}</th>
+                                    <th>{{ trans('currency.c_set_currency_name') }}</th>
+                                    <th>{{ trans('user.u_user_code') }}</th>
+                                    <th>{{ trans('currency.c_symbol') }}</th>
+                                    <th>{{ trans('currency.c_type') }}</th>
+                                    <th>{{ trans('multiple.m_status') }}</th>
+                                    <th style="text-align: center">{{ trans('multiple.m_action') }}</th>
+                                </tr>
+                            </thead>
+                            <?php $n = 1;?>
+                            <tbody>
+                                 @forelse($cur as $c)
+                                    <tr>
+                                         <td>{{ $c->id }}</td>
+                                         <td>{{ $c->name }}</td>
+                                         <td>{{ $c->code }}</td>
+                                         <td>{{ $c->symbol }}</td>
+                                         <td>{{ $c->type }}</td>
+                                         <td>{{ $c->status? "Active":"Inactive" }}</td>
+                                         <td align="center">
+                                             <a href="{{ route('edit_currencie',[$c->id]) }}" class="btn btn-default btn-xs" title="Edit"><i class="fa fa-pencil"></i></a>
+                                             @if($c->status == 0)
+                                                 <a href="{{route('enable_currency',[$c->id])}}" class="btn btn-default btn-xs" title="Activate"><i class="fa fa-check-circle"></i></a>
+                                             @else
+                                                 <a href="{{route('disable_currency',[$c->id])}}" class="btn btn-default btn-xs" title="Inactivate"><i class="fa fa-times-circle"></i></a>
+                                             @endif
+                                         </td>
+                                     </tr>
+                               <?php $n++; ?>
+                               @empty
+                               	<tr><td colspan=12>{{ trans('multiple.m_no_result')}}</td></tr>
+                               @endforelse
+                            </tbody>
+                        </table>
+                    </section>
+                </div>
+            </section>
+        </div>
+ 	</div>
+@endsection

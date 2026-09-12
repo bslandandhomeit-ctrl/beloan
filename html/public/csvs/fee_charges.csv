@@ -1,0 +1,2 @@
+id,loan_id,charge_type,charge_amount,charge_date,waived_amount,receipt,note,user_id,created_at,updated_at
+52,0,4,300.00,2016-04-06,0.00,,"Upfront charge for R160001",0,"2016-04-06 15:35:17","2016-04-06 15:35:17"

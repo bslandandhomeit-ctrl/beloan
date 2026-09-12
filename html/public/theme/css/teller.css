@@ -1,0 +1,7 @@
+form#tills label.error{
+    color:rgba(255, 0, 0, 0.7);
+    float: right;
+    margin-top: -5.6%;
+    margin-right: 3%;
+
+}

@@ -1,0 +1,100 @@
+<h4 class="sch_title">{{ trans('loan.l_transaction') }}</h4>
+    <table class="table table-bordered transaction">
+        <thead>
+            <tr>
+                <th rowspan="2" style="text-align:center; vertical-align: middle;">{{ trans('loan.l_id') }}</th>
+                <th rowspan="2" style="text-align:center; vertical-align: middle;">{{ trans('report.rpt_office') }}</th>
+                <th rowspan="2" style="text-align:center; vertical-align: middle;">{{ trans('report.rpt_transaction_date') }}</th>
+                <th rowspan="2" style="text-align:center; vertical-align: middle;">{{ trans('report.rpt_transaction_type') }}</th>
+                <th rowspan="2" style="text-align:center; vertical-align: middle;">{{ trans('report.rpt_amount') }}</th>
+                <th colspan="3" style="text-align:center; vertical-align: middle;">{{ trans('loan.l_break_down') }}</th>
+                <th rowspan="2" style="text-align:center; vertical-align: middle;">{{ trans('loan.l_fee') }}</th>
+                <th rowspan="2" style="text-align:center; vertical-align: middle;">{{ trans('report.rpt_principal_balance') }}</th>
+                <th rowspan="2" style="text-align:center; vertical-align: middle;">{{ trans('report.dr') }}</th>
+                <th rowspan="2" style="text-align:center; vertical-align: middle;">{{ trans('multiple.m_action') }}</th>
+            </tr>
+            <tr>
+                <th style="text-align:center;">{{ trans('report.rpt_principal') }}</th>
+                <th style="text-align:center;">{{ trans('report.rpt_interest') }}</th>
+                <th style="text-align:center;">{{ trans('report.rpt_penalty') }}</th>
+            </tr>
+        </thead>
+        <?php
+            $prin_total = 0.0;
+            $int_total = 0.0;
+            $penal_total = 0.0;
+            $fee_total = 0.0;
+        ?>
+        <tbody>
+            @if(!empty($loan))
+                @if(!empty($loan->transaction) && count($loan->transaction) > 0)
+                    @foreach($loan->transaction as $tran)
+                        <?php
+                            $prin_total += $tran->principal;
+                            $int_total += $tran->interest;
+                            $penal_total += $tran->penalty;
+                            $fee_total += $tran->fee;
+                        ?>
+                        <tr>
+                            <td align="center">{{ str_pad($tran->id,8,'0',STR_PAD_LEFT) }}</td>
+                            <td align="center">{{ $loan->branch_name }}</td>
+                            <td align="center">{{ date('Y-M-d',strtotime($tran->trans_date))}}</td>
+                            <td align="center">{{ $tran->trans_type }}</td>
+                            <td align="right">{{ number_format($tran->amount, 2, '.', ',') }}</td>
+                            <td align="right">{{ ($tran->principal > 0) ? number_format($tran->principal, 2, '.', ',') : '-' }}</td>
+                            <td align="right">{{ ($tran->interest > 0) ? number_format($tran->interest, 2, '.', ',') : '-' }}</td>
+                            <td align="right">{{ ($tran->penalty > 0) ? number_format($tran->penalty, 2, '.', ',') : '-' }}</td>
+                            <td align="right">{{ ($tran->fee > 0) ? number_format($tran->fee, 2, '.', ',') : '-' }}</td>
+                            <td align="right">{{ ($tran->balance > 0) ? number_format($tran->balance, 2, '.', ',') : '-' }}</td>
+                            <td align="right">
+                                @if($tran->repayment_receipt)
+                                <a href="{{ asset('data/loans/receipts/'.$tran->repayment_receipt,true)}}" title="{{ trans('multiple.document') }}" target="_blank">
+                                    <i class="glyphicon glyphicon-file"></i>
+                                </a>
+                                @endif
+
+                                @if($tran->waive_panalty_receipt)
+                                <a href="{{ asset('data/loans/documents/'.$tran->waive_panalty_receipt,true)}}" title="{{ trans('multiple.receipt') }}" target="_blank">
+                                    <i class="glyphicon glyphicon-file"></i>
+                                </a>
+                                @endif
+                            </td>
+                            <td align="center">
+                            @if($tran->description!="")
+                                <a href="#m{{$tran->id}}" data-toggle="modal" class="btn btn-xs btn-default" title="Description"><i class="fa fa-search-minus"></i></a>
+                                &nbsp;&nbsp;
+                            @endif
+                            <a href="{{ route('journal_entry',[$tran->id]) }}" class="btn btn-xs btn-primary" title="View Journal Entry"><i class="fa  fa-arrow-circle-right"></i></a></td>
+                            @if($tran->description!="")
+                                <div aria-hidden="true" aria-labelledby="myModalLabel" role="dialog" tabindex="-1" id="m{{$tran->id}}" class="modal fade">
+                                    <div class="modal-dialog">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <button aria-hidden="true" data-dismiss="modal" class="close" type="button">×</button>
+                                                <h4 class="modal-title">Description for transaction #{{$tran->id}}</h4>
+                                            </div>
+                                            <div class="modal-body">
+                                                {{ $tran->description }}
+                                            </div>
+                                            <div class="modal-footer">
+                                                <button data-dismiss="modal" class="btn btn-default" type="button">Close</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            @endif
+                        </tr>
+                    @endforeach
+                    <tr style="font-weight: bold">
+                        <td align="center" colspan="5">Total</td>
+                        <td align="right">{{number_format($prin_total,2,'.',',')}}</td>
+                        <td align="right">{{number_format($int_total,2,'.',',')}}</td>
+                        <td align="right">{{number_format($penal_total,2,'.',',')}}</td>
+                        <td align="right">{{number_format($fee_total,2,'.',',')}}</td>
+                        <td align="right" colspan="2"></td>
+                    </tr>
+                @endif
+            @endif
+        </tbody>
+    </table>
+

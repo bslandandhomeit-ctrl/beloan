@@ -1,0 +1,139 @@
+@extends('layouts.app')
+
+@section('css')
+    <link rel="stylesheet" type="text/css"
+          href="{{ asset('theme/js/bootstrap-fileupload/bootstrap-fileupload.css',isset($secure)?false:false)}}"
+          xmlns="http://www.w3.org/1999/html" xmlns="http://www.w3.org/1999/html"/>
+    <link rel="stylesheet" type="text/css"
+          href="{{ asset('theme/js/bootstrap-datepicker/css/datepicker.css',isset($secure)?false:false)}}"/>
+    <link rel="stylesheet" type="text/css"
+          href="{{ asset('theme/js/select2/select2.css',isset($secure)?false:false) }}"/>
+    <link href="{{ asset('css/client.css',isset($secure)?false:false) }}" rel="stylesheet">
+
+    <style>
+        #add {
+            z-index: 30000;;
+        }
+
+        textarea {
+            height: 30px !important;
+        }
+
+        .btn-group-xs > .btn, .btn-xs {
+            padding: 3px 10px !important;
+            font-size: 12px !important;;
+            line-height: 1.5 !important;;
+            border-radius: 3px !important;;
+            margin-left: -5px !important;;
+        }
+
+        .error {
+            color: red;
+            font-size: 85%;;
+        }
+
+        .dropdown-menu {
+            min-width: 260px !important;
+        }
+
+        .panel-heading {
+            text-transform: capitalize !important;
+        }
+    </style>
+
+@endsection
+
+@section('content')
+    <!--if client draft existing we required user to edit it-->
+    <?PHP
+    $urlId = Request::segment(3);
+    $path = 'clients.Add.formEditAndAdd';
+    ?>
+    @if(!empty($urlId)) <!--if 6-->
+    <!-- Include Add form ( edit task )-->
+    @include($path)
+    @else
+        <!--if No Client ID and $clientDraft existing in DB -->
+        @if(!empty($clientDraft) && count($clientDraft)>0)
+            <!-- Include Draft -->
+            @include('clients.draft.draft')
+        @else
+            <!-- Include for Add -->
+            @include($path)
+        @endif
+    @endif
+@endsection
+@section('js')
+    <script type="text/javascript"
+            src="{{ asset('theme/js/bootstrap-fileupload/bootstrap-fileupload.js',isset($secure)?false:false)}}"></script>
+    <script type="text/javascript"
+            src="{{ asset('theme/js/bootstrap-datepicker/js/bootstrap-datepicker.js',isset($secure)?false:false)}}"></script>
+    <script type="text/javascript"
+            src="{{ asset('theme/js/bootstrap-inputmask/bootstrap-inputmask.js',isset($secure)?false:false) }}"></script>
+    <script type="text/javascript"
+            src="{{ asset('theme/js/jquery.validate.min.js',isset($secure)?false:false) }}"></script>
+    <script src="{{ asset('theme/js/select2/select2.js',isset($secure)?false:false) }}"></script>
+    <script type="text/javascript" src="{{ asset('js/form.v.js',isset($secure)?false:false) }}"></script>
+    <script>
+        var countries = {};
+        $(document).ready(function () {
+            var opt = '<option value="">-</option>';
+            $.ajax({
+                url: '{{ url('/get_country') }}',
+                method: 'Get',
+                dataType: 'Json',
+                timeout: 10000,
+                cache: true,
+                headers: {
+                    'X-CSRF-Token': $('meta[name="_token"]').attr('content')
+                },
+                contentType: false,
+                processData: false,
+                success: function (data, status) {
+                    if (status == 'success') {
+                        var options = '', national = '';
+                        $.each(data.countries, function (inx, vals) {
+
+                            //if(!$.isEmptyObject(vals.description) && vals.iso_code_3 =='KHM') {
+                            options += '<option value="' + vals.id + '" data-code="' + vals.iso_code_3 + '">' + vals.description[0].name + '</option>';
+                            national += '<option value="' + vals.iso_code_3 + '" >' + vals.description[0].name + '</option>';
+                            //}
+                        });
+                        var db = $('#country_of_birth');
+                        var dbSelectedVal = (db.attr('option', 'selected').val()) ? db.attr('option', 'selected').val() : "";
+                        var em_countr = $('#em_country'), em_countID = em_countr.val();
+                        db.children().remove();
+                        db.append(options);
+                        if(!dbSelectedVal){
+                            db.select2('val', 36);
+                        }else{
+                            db.select2('val', dbSelectedVal);
+                        }
+                        $('.country').append(options).children('option').css({'display': 'none'});
+
+                        em_countr.children().remove();
+                        em_countr.append(options);
+                        em_countr.select2('val', em_countID);
+
+                        $('#national_code').append(national).select2('val', 'KHM');
+                        // $('#country_of_birth').append(national).select2('val', 'KHM');
+                        $('#sp_nationality').append(national).select2('val', 'KHM');
+                        countries = data;
+
+                        $.each(countries.province, function (inx, vals) {
+                            opt += '<option value="'+vals.prov_gis+'">'+' '+vals.prov_gis+' _ ' +vals.eng_name + '</option>';
+                        });
+                        $('#province_of_birth').append(opt);
+                    }
+                }
+            });
+        });
+    </script>
+    <script src="{{ asset('js/addClient/currentAdr.js', isset($secure)?false:false) }}"></script>
+    <script src="{{ asset('js/addClient/contact.js', isset($secure)?false:false) }}"></script>
+    <script src="{{ asset('js/addClient/employers.js', isset($secure)?false:false) }}"></script>
+    <script src="{{ asset('js/addClient/identification.js', isset($secure)?false:false) }}"></script>
+    <script src="{{ asset('js/addClient/addClient.js', isset($secure)?false:false) }}"></script>
+    <script src="{{ asset('js/addClient/countryofbirth.js', isset($secure)?false:false) }}"></script>
+
+@endsection

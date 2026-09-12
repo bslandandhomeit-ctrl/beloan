@@ -1,0 +1,111 @@
+@extends('layouts.app')
+
+@section('css')
+<link href="{{ asset('css/client.css',isset($secure) ? false : false) }}" rel="stylesheet">
+<link href="{{ asset('theme/css/table-responsive.css',isset($secure) ? false : false) }}" rel="stylesheet" />
+<link href="{{ asset('css/loan-style.css',isset($secure) ? false : false) }}" rel="stylesheet" />
+@endsection
+    <?php
+        $branch = config('static_data.branch');
+        $currency = config('static_data.currency_symbol');
+        $status = config('static_data.client_loan_account_status');
+        $drawdown_status = config('static_data.drawdown_status');
+    ?>
+
+@section('content')
+<div class="row">
+    <div class="col-sm-12">
+        <section class="panel">
+            <header class="panel-heading">
+                <span>{{ trans('sidebar.sb_drawdown_account') }}</span>
+            </header>
+            <div class="panel-body">
+                <div class="position-center" style="width:90%;">
+                    @if($errors->addCate->has('ipCate'))
+                    <div class="alert alert-danger fade in">
+                        <button class="close close-sm" type="button" data-dismiss="alert">x</button>
+                        {{$errors->addCate->first('ipCate')}}
+                    </div>
+                    @endif
+
+                    <div class="page">
+                        <div class="custom-pagi">
+                            <span class="pagi_label">{{ trans('sidebar.sb_number_of_rows') }}</span>
+                            <input type="text" class="form-control" name="set_offset" value="<?php echo $offset ?>" />
+                            <a href="#" class="btn btn-danger">Go</a>
+                        </div>
+                    </div>
+                </div>
+
+                <br /><br />
+                <div id="tabs">
+                    <table class="table table-bordered table-striped table-condensed cf">
+                        <thead class="cf">
+                            <tr>
+                                <th style="text-align: center;">{{ trans('multiple.account_name') }}</th>
+                                <th style="text-align: center;">{{ trans('multiple.account_no') }}</th>
+                                <th style="text-align: center;">{{ trans('multiple.branch') }}</th>
+                                <th style="text-align: center;">{{ trans('multiple.last_update') }}</th>
+				<th style="text-align: center;">{{ trans('account.a_debit') }}</th>
+				<th style="text-align: center;">{{ trans('account.a_credit') }}</th>
+				<th style="text-align: center;">{{ trans('multiple.balance') }}</th>				
+				<th style="text-align: center;">{{ trans('multiple.m_description') }}</th>
+                                <th style="text-align: center;">{{ trans('multiple.status') }}</th>
+                            </tr>
+                        </thead>
+                        <?php $n = 1;?>
+                        <tbody>
+                            @forelse($drawdown_accounts as $das)
+                            <tr>
+                                <td><a href="{{ route('drawdown_account_detail', $das->id) }}">{{$das->account_name}}</a></td>
+                                <td>{{$das->account_no}}</td>
+                                <td>{{$das->company_branch->branch_name}}</td>
+                            <?php  
+				$old_entry_date = date("Y-m-d", strtotime($journals[$das->coa_id][0]->entry_date)); 
+				$ent_date = $entry_date = null; $debit = $credit = 0; $desc = "";
+                                if(count($journals[$das->coa_id])>0){
+                                foreach($journals[$das->coa_id] as $jd){
+                                  $entry_date = date("Y-m-d", strtotime($jd->entry_date));
+                                  if(date_dif($old_entry_date, $entry_date, 1, false) != 0) continue;
+                                  $ent_date = $entry_date;
+                                  $debit += $jd->debit;
+                                  $credit += $jd->credit;
+                                  $desc = ($jd->decription != "")?$jd->decription : $jd->j_desc;
+                                  $old_entry_date = $entry_date;
+                                }
+                                }
+                                ?>
+                                <td>{{$ent_date}}</td>
+                                <td>{{$debit}}</td>
+                                <td>{{$credit}}</td>
+				<td>{{$currency[$das->currency].number_format($das->balance, 2)}}</td>
+                                <td>{{$desc}}</td>
+		                <td>{{$drawdown_status[$das->status]}}</td>
+                            </tr>
+                            <?php $n++;?>
+                            @empty
+                            <tr><td colspan=12>{{ trans('multiple.m_no_result')}}</td></tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
+@endsection
+
+@section('js')
+<script type="text/javascript" src="{{ asset('theme/js/bootstrap-inputmask/bootstrap-inputmask.min.js',false) }}"></script>
+<script type="text/javascript">
+$(document).ready(function () {
+//pagination
+$('.custom-pagi a').on('click', function () {
+    val = $(this).parent().find('input[name="set_offset"]').val();
+    $('input[name="offset"]').val(val);
+    $('#search_frm').submit();
+    return false;
+});
+
+});
+@endsection

@@ -1,0 +1,40 @@
+services:
+  landhome-uat-mysql:
+    image: mysql:5.7
+    container_name: landhome-uat-mysql
+    restart: unless-stopped
+    tty: true
+    ports:
+      - "3331:3306"
+    volumes:
+      - ./mysql:/var/lib/mysql:delegated
+    environment:
+      MYSQL_DATABASE: land_home
+      MYSQL_USER: land_home
+      MYSQL_PASSWORD: land_home
+      MYSQL_ROOT_PASSWORD: BSLH@2020
+      SERVICE_TAGS: dev
+      SERVICE_NAME: mysql
+    command: ['mysqld','--sql_mode=', '--character-set-server=utf8mb4', '--collation-server=utf8mb4_general_ci']
+
+  landhome-uat-apache:
+    container_name: landhome-uat-apache
+    restart: unless-stopped
+    volumes:
+      - "./html:/var/www/html:delegated"
+    image: 'landhome-uat-docker-app'
+    ports:
+      - "8081:80"
+
+  landhome-uat-pma:
+    links:
+      - landhome-uat-mysql
+    container_name: landhome-uat-pma
+    image: phpmyadmin/phpmyadmin
+    restart: unless-stopped
+    ports:
+      - "7771:80"
+    environment:
+      - PMA_HOST=landhome-uat-mysql
+      - PMA_PORT=3306
+      - UPLOAD_LIMIT=1G

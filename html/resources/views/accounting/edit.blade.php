@@ -1,0 +1,66 @@
+@extends('layouts.app')
+@section('css')
+    <link rel="stylesheet" type="text/css" href="{{ asset('css/loan-style.css',false) }}"/>
+@endsection
+@section('content')
+<div class="row">
+    <div class="col-sm-12">
+        <section class="panel">
+             <header class="panel-heading">
+                {{ trans('account.a_edit_account') }}
+             </header>
+             <div class="panel-body">
+                @if(Session::has('error'))
+                    <div class="alert alert-danger fade in">
+                        <button class="close close-sm" data-dismiss="alert">x</button>
+                        {{ Session::get('error') }}
+                    </div>
+                @endif
+                @if(Session::has('msg'))
+                    <div class="alert alert-success fade in">
+                        <button class="close close-sm" data-dismiss="alert">x</button>
+                        {{ Session::get('msg') }}
+                    </div>
+                @endif
+
+                <form class="cmxform form-horizontal" method="post" action="{{route('acc_edit_account',[$account->account_code])}}" id="frmEditAccount">
+                    <input type="hidden" name="_token" value="{{ csrf_token() }}"/>
+                    <input type="hidden" id="code" value="{{ $account->account_code }}">
+                    <div id="initRow" class="row initRow form-group">
+                        <div class="col-sm-offset-1 col-sm-2">
+                            <input type="text" class="form-control clsCode" name="account_code" id="1" placeholder="{{ trans('account.a_account_code') }}" value="{{ $account->account_code or ''  }}">
+                        </div>
+                        <div class="col-sm-2">
+                            <input type="text" class="form-control" name="category" id="category" placeholder="{{ trans('product.p_product_category') }}" value="{{ $account->category or '' }}">
+                        </div>
+                        <div class="col-sm-2">
+                            <input type="text" class="form-control" name="sub_category" id="sub_category" placeholder="{{ trans('account.a_sub_category') }}" value="{{ $account->sub_category or '' }}">
+                        </div>
+                        <div class="col-sm-2">
+                            <input type="text" class="form-control" name="type" id="type" placeholder="{{ trans('account.a_account_type') }}" value="{{ $account->type or '' }}">
+                        </div>
+                        <div class="col-sm-2">
+                            <input type="text" class="form-control" name="account_name" id="account_name" placeholder="{{ trans('dealer.dl_dealer_account_name') }}" value="{{ $account->account_name or '' }}">
+                        </div>
+                    </div>
+                    <br/><br/>
+                    <div class="row">
+                        <div class="col-sm-offset-1 col-sm-11">
+                            <button type="submit" id="button" class="btn btn-primary"><i class="fa fa-save"></i>&nbsp;&nbsp;{{ trans('multiple.m_save') }}</button>
+                            <button type="reset" class="btn btn-warning"><i class="fa fa-refresh"></i>&nbsp;&nbsp;{{ trans('multiple.m_reset') }}</button>
+                        </div>
+                        <br/><br/>
+                    </div>
+                </form>
+             </div>
+
+        </section>
+    </div>
+
+</div>
+@endsection
+
+@section('js')
+    <script type="text/javascript" src="{{ asset('theme/js/jquery.validate.min.js',false) }}"></script>
+    <script src="{{ asset('js/form-validate.js',false) }}"></script>
+@endsection

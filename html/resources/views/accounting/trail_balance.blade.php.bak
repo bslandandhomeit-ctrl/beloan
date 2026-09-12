@@ -1,0 +1,376 @@
+@extends('layouts.app')
+
+@section('css')
+<link href="{{ asset('css/client.css',isset($secure) ? false : false) }}" rel="stylesheet">
+<link rel="stylesheet" type="text/css" href="{{ asset('/css/loan-style.css',isset($secure) ? false : false) }}"/>
+<link rel="stylesheet" type="text/css" href="{{ asset('theme/js/bootstrap-datepicker/css/datepicker.css',isset($secure) ? false : false)}}" />
+
+<link rel="stylesheet" type="text/css" href="http://cdnjs.cloudflare.com/ajax/libs/TableExport/5.0.5/css/tableexport.css" />
+@endsection
+
+@section('content')
+<section class="panel">
+    <header class="panel-heading">
+        <span>{{ trans('sidebar.sb_trial_balance') }}</span>
+    </header>
+    <div class="panel-body">
+        <section id="unseen">
+            <form role="form" method="get" action="{{ route('trail_balance') }}">
+                <table class="tb-search-box">
+                    <tr>
+                        @if(count($branch) > 0)
+                        <td>
+                            {{ trans('report.rpt_branch_name') }}<br/>
+                            <select class="form-control" id="br" name="br">
+                                <option value="">-</option>
+                                @foreach($branch as $b)
+                                <option value="{{ $b->branch_code }}"
+                                        @if(isset($branch_code))
+                                        @if($branch_code==$b->branch_code)
+                                        selected
+                                        @endif
+                                        @endif>{{ $b->branch_name}}</option>
+                                @endforeach
+                            </select>
+                        </td>
+                        @endif
+
+                        <td>
+                            {{ trans('report.rpt_from') }}<br/>
+                            <div data-date-viewmode="years" data-initialize="datepicker" data-date-format="yyyy/mm/dd" data-date="{{date('Y-m-d')}}" class="input-append date dpStart">
+                                <input type="text" name="dpStart" size="16" class="form-control" value="{{ isset($start)?$start:old('dpStart') }}">
+                                <span class="add-on birhtdateDatepicker ptl-3">
+                                    <button class="btn btn-primary" type="button"><i class="fa fa-calendar"></i></button>
+                                </span>
+                            </div>
+                        </td>
+
+                        <td>
+                            {{ trans('report.rpt_to') }}<br/>
+                            <div data-date-viewmode="years" data-initialize="datepicker" data-date-format="yyyy/mm/dd" data-date="{{date('Y-m-d')}}" class="input-append date dpEnd">
+                                <input type="text" name="dpEnd" size="16" class="form-control" value="{{ isset($end)?$end:old('dpEnd') }}">
+                                <span class="add-on birhtdateDatepicker ptl-3">
+                                    <button class="btn btn-primary" type="button"><i class="fa fa-calendar"></i></button>
+                                </span>
+                            </div>
+                        </td>
+                        <td>
+                            <?php $types = array(1,2,3,4,5,6,7);?>
+                            {{ trans('report.rpt_type') }}<br/>
+                            <select class="form-control" id="type" name="type">
+                                <option value="6">-</option>
+                                @foreach($types as $val)
+                                <option value="{{ $val }}"
+                                        @if(isset($type) && $type == $val)
+                                        selected
+                                        @endif>{{ $val }}</option>
+                                @endforeach
+                            </select>
+                        </td>
+
+                        <td>
+                            {{ trans('report.rpt_currency') }}<br/>
+                            <select class="form-control" id="cur" name="cur">
+                                <option value="100">-</option>
+                                @foreach($currency as $key => $value)
+                                <option value="{{ $key }}"
+                                        @if(isset($currency_id) && $currency_id == $key)
+                                        selected
+                                        @endif>{{ $value }}</option>
+                                @endforeach
+                            </select>
+                        </td>
+
+                        <td>
+                            <input type="checkbox" name="consolidate" value="1" {{ isset($consolidate)?$consolidate==1?'checked':'':'' }} />
+                                   {{ trans('report.con') }} {{$consolidate}}<br/>
+
+                            <input type="radio" name="exchange_rate" value="1" {{ isset($exchange_rate)?$exchange_rate==1?'checked':'':'checked' }} />
+                                   {{ trans('report.rpt_khmer_riel') }}
+                                   <input type="radio" name="exchange_rate" value="2" {{ isset($exchange_rate)?$exchange_rate==2?'checked':'':'checked' }} />
+                                   {{ trans('report.rpt_us_dollar') }}<br/>
+
+                            <input type="text" name="rate" size="16" class="form-control" value="{{ isset($rate)?$rate:old('rate') }}" placeholder="{{ trans('report.rpt_rate_usd_khr') }}" style="width:150px;" />
+
+                        </td>
+                    </tr>
+                </table>
+
+                <div class="row">
+                    <div class="col-lg-offset-1 col-lg-4">
+                        <button type="submit" class="btn btn-info"><i class="fa fa-search"></i> {{ trans('multiple.m_search') }}</button>
+                        <button class="btn btn-warning" id="printer"><i class="fa fa-print"></i> {{ trans('multiple.m_print') }}</button>
+                        <a href="{{ route('trail_balance') }}" class="btn btn-default">{{ trans('multiple.m_internal') }}</a>
+                        <a href="{{ route('trail_balance') }}?nbc=1" class="btn btn-default"> {{ trans('multiple.for_nbc') }}</a>
+                        <a id="export" class="btn btn-primary"><i class="fa  fa-sign-out"></i> {{ trans('report.rpt_export') }}</a>
+                    </div>
+                </div>
+                <?php if (isset($_GET['nbc'])) { ?><input type="hidden" name='nbc' value="1" /><?php } ?>
+            </form>
+            <br><br>
+            <div id="printArea">
+                @include('api.report_header_nbc')
+                <h4 class="sch_title" id="p-header"></h4>
+
+                <div id="divTab">
+                <table class="table table-bordered table-striped table-condensed table-smaller" id="trail_balance">
+                    <thead class="cf" style="background: #ffffff;">
+                        <tr>
+                            <th rowspan="2">{{ trans('account.a_nbc_code') }}</th>
+                            @if($nbc==0) <th rowspan="2">{{ trans('account.a_coa_code') }}</th> @endif
+                            <th rowspan="2">{{ trans('account.a_gl_name') }}</th>
+                            <th colspan="2" class="text-center">{{ trans('account.a_pre_bal') }}</th>
+                            <th colspan="2" class="text-center">{{ trans('account.a_tran') }}</th>
+                            <th colspan="2" class="text-center">{{ trans('account.a_balance') }}</th>
+                            <th rowspan="1" class="text-center">{{ trans('multiple.m_type') }}</th>
+                        </tr>
+                        <tr>
+                            <th class="text-center">Debit</th>
+                            <th class="text-center">Credit</th>
+                            <th class="text-center">Debit</th>
+                            <th class="text-center">Credit</th>
+                            <th class="text-center">Debit</th>
+                            <th class="text-center">Credit</th>
+                            <th></th>
+                        </tr>
+
+                    </thead>
+                    <?php
+                      $pre_debit = 0;
+                      $pre_credit = 0;
+                      $cur_debit = 0;
+                      $cur_credit = 0;
+                      $sum_debit = 0;
+                      $sum_credit = 0;
+                      $total_pre_debit = 0;
+                      $total_pre_credit = 0;
+                      $total_cur_debit = 0;
+                      $total_cur_credit = 0;
+                      $total_pre_bal = 0;
+                      $total_cur_bal = 0;
+                    ?>
+                    <tbody>
+                        @foreach($coa_all_nor as $coa)
+                          @if(array_key_exists($coa->id, $coa_details))
+                            @var $dt = $coa_details[$coa->id]
+                            <?php
+                              if($coa->type > $type ) continue;
+                              $color_str = "";
+                              switch($coa->type){
+                                case 1 : $color_str = "#FA8258"; break;
+                                case 2 : $color_str = "#F79F81"; break;
+                                case 3 : $color_str = "#F5D0A9"; break;
+                                case 4 : $color_str = "#F3E2A9"; break;
+                                case 5 : $color_str = "#F5ECCE"; break;
+                                case 6 : $color_str = "#F2F5A9"; break;
+                                case 7 : $color_str = "#FBFBEF"; break;
+                              }
+                            ?>
+                        <tr style=" background-color: {{ $color_str }}">
+                            <td>{{$dt['nbc_code']}}</td>
+                            @if($nbc==0) <td>{{$dt['code']}}</td> @endif
+                            <td>{{$coa->name}}</td>
+                            <?php
+                              switch ($dt['initial']) {
+                                case '1':
+                                case '2':
+                                case '6':
+                                    if($coa->type == 1) {
+                                      $pre_debit = $dt['pre_debit']-$dt['pre_credit'];
+                                      $cur_debit = $dt['cur_debit']-$dt['cur_credit'];
+                                      $cur_credit = 0;
+                                      $pre_credit = 0;
+                                    }
+                                    echo '<td class="text-right">';
+                                    echo number_format($dt['pre_debit']-$dt['pre_credit'], 2, '.', ',');
+                                    echo '</td>';
+                                    echo '<td class="text-right">';
+                                    echo '-';
+                                    echo '</td>';
+                                  break;
+                                case '3':
+                                case '4':
+                                case '5':
+                                    if($coa->type == 1){
+                                      $pre_debit = 0;
+                                      $cur_debit = 0;
+                                      $pre_credit = $dt['pre_credit']-$dt['pre_debit'];
+                                      $cur_credit = $dt['cur_credit']-$dt['cur_debit'];
+                                    }
+                                    echo '<td class="text-right">';
+                                    echo '-';
+                                    echo '</td>';
+                                    echo '<td class="text-right">';
+                                    echo number_format($dt['pre_credit']-$dt['pre_debit'], 2, '.', ',');
+                                    echo '</td>';
+                                  break;
+                                default:
+                                  break;
+                              }
+                            ?>
+
+                            <td class="text-right">{{ ($dt['cur_debit'])? number_format($dt['cur_debit'], 2, '.', ',') : '-'}}</td>
+                            <td class="text-right">{{ ($dt['cur_credit'])? number_format($dt['cur_credit'], 2, '.', ',') : '-' }}</td>
+                            <?php
+                              switch ($dt['initial']) {
+                                case '1':
+                                case '2':
+                                case '6':
+                                    echo '<td class="text-right">';
+                                    echo number_format(($dt['pre_debit']-$dt['pre_credit']) + ($dt['cur_debit']-$dt['cur_credit']), 2, '.', ',');
+                                    echo '</td>';
+                                    echo '<td class="text-right">';
+                                    echo '-';
+                                    echo '</td>';
+                                  break;
+                                case '3':
+                                case '4':
+                                case '5':
+                                    echo '<td class="text-right">';
+                                    echo '-';
+                                    echo '</td>';
+                                    echo '<td class="text-right">';
+                                    echo number_format(($dt['pre_credit']-$dt['pre_debit']) + ($dt['cur_credit']-$dt['cur_debit']), 2, '.', ',');
+                                    echo '</td>';
+                                  break;
+                                default:
+                                  break;
+                              }
+
+                            ?>
+                          <td class="text-center">{{ $coa->type }}</td>
+                          <?php
+                              if($coa->type == 1){
+                                $total_pre_debit += $pre_debit;
+                                $total_pre_credit += $pre_credit;
+                                $total_cur_debit += $cur_debit;
+                                $total_cur_credit += $cur_credit;
+                                $sum_debit += $dt['cur_debit'];
+                                $sum_credit += $dt['cur_credit'];
+                              }
+                          ?>
+                        </tr>
+                          @endif
+                        @endforeach
+                        <tr style=" background-color: #BCF5A9 ">
+                            <td colspan="@if($nbc==0) 3 @else 2 @endif">Total</td>
+                            <td class="text-right">{{ number_format($total_pre_debit, 2, '.', ',') }}</td>
+                            <td class="text-right">{{ number_format($total_pre_credit, 2, '.', ',') }}</td>
+                            <td class="text-right">{{ number_format($sum_debit, 2, '.', ',') }}</td>
+                            <td class="text-right">{{ number_format($sum_credit, 2, '.', ',') }}</td>
+                            <td class="text-right">{{ number_format($total_pre_debit + $total_cur_debit, 2, '.', ',') }}</td>
+                            <td class="text-right">{{ number_format($total_pre_credit + $total_cur_credit, 2, '.', ',') }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+                </div>
+                @include('api.report_footer_nbc')
+            </div>
+        </section>
+    </div>
+</section>
+@endsection
+@section('js')
+<script type="text/javascript" src="{{ asset('theme/js/bootstrap-datepicker/js/bootstrap-datepicker.js',isset($secure) ? false : false)}}"></script>
+<script type="text/javascript" src="{{ asset('js/print.js',isset($secure) ? false : false)}}"></script>
+<script type="text/javascript" src="{{ asset('js/jquery.floatThead.min.js',isset($secure) ? false : false)}}"></script>
+<script type="text/javascript" src="{{ asset('js/FileSaver.js',isset($secure) ? false : false)}}"></script>
+<script type="text/javascript" src="{{ asset('js/tableexport.js',isset($secure) ? false : false)}}"></script>
+<script>
+$(document).ready(function () {
+    $(".sticky-header").floatThead({scrollingTop: 77});
+
+    $('.dpStart').datepicker({
+        format: 'yyyy-mm-dd',
+        autoclose: true,
+        setDate: new Date()
+    });
+    $('.dpEnd').datepicker({
+        format: 'yyyy-mm-dd',
+        autoclose: true,
+        setDate: new Date()
+    });
+
+    // This must be a hyperlink
+    $("#export").click(function (event) {
+        // var outputFile = 'export'
+        var con = confirm("Do you really want to export to CSV file?");
+        if(con == true){
+            //var outputFile = 'trail_balance.csv';
+            // CSV
+            //exportTableToCSV.apply(this, [$('#divTab>table'), outputFile]);
+
+            // IF CSV, don't do event.preventDefault() or return false
+            // We actually need this to be a typical hyperlink
+            new TableExport(document.getElementById('trail_balance'), {
+                formats: ['csv']
+            });
+            $('button.csv').hide().click();
+            $('.tableexport-caption').remove();
+        }
+    });
+});
+
+/*
+function exportTableToCSV($table, filename) {
+    var $headers = $table.find('tr:has(th)')
+    ,$rows = $table.find('tr:has(td)')
+
+    // Temporary delimiter characters unlikely to be typed by keyboard
+    // This is to avoid accidentally splitting the actual contents
+    ,tmpColDelim = String.fromCharCode(11) // vertical tab character
+    ,tmpRowDelim = String.fromCharCode(0) // null character
+
+    // actual delimiter characters for CSV format
+    ,colDelim = '","'
+    ,rowDelim = '"\r\n"';
+
+    // Grab text from table into CSV formatted string
+    var csv = '"';
+    csv += ($('#p-header').html()).trim();
+    csv += rowDelim;
+    csv += formatRows($headers.map(grabRow));
+    csv += rowDelim;
+    csv += formatRows($rows.map(grabRow)) + '"';
+    // Data URI
+    var csvData = 'data:application/csv;charset=utf-8,' + encodeURIComponent(csv);
+
+    $(this)
+        .attr({
+        'download': filename
+            ,'href': csvData
+            //,'target' : '_blank' //if you want it to open in a new window
+    });
+
+    //------------------------------------------------------------
+    // Helper Functions
+    //------------------------------------------------------------
+    // Format the output so it has the appropriate delimiters
+    function formatRows(rows){
+        return rows.get().join(tmpRowDelim)
+            .split(tmpRowDelim).join(rowDelim)
+            .split(tmpColDelim).join(colDelim);
+    }
+    // Grab and format a row from the table
+    function grabRow(i,row){
+        console.log(row);
+        var $row = $(row);
+        //for some reason $cols = $row.find('td') || $row.find('th') won't work...
+        var $cols = $row.find('td');
+        if(!$cols.length) $cols = $row.find('th');
+
+        return $cols.map(grabCol)
+                    .get().join(tmpColDelim);
+    }
+    // Grab and format a column from the table
+    function grabCol(j,col){
+        var $col = $(col),
+            $text = $col.text();
+
+        return $text.replace('"', '""'); // escape double quotes
+
+    }
+}
+*/
+</script>
+@endsection

@@ -1,0 +1,49 @@
+@extends('layouts.app')
+
+@section('css')
+    <link href="{{ asset('css/client.css',isset($secure) ? false : false) }}" rel="stylesheet">
+    <link href="{{ asset('css/loan-style.css',isset($secure) ? false : false) }}" rel="stylesheet">
+@endsection
+@section('content')
+    <section class="panel">
+        <header class="panel-heading">
+            <span>{{ trans('sidebar.sb_co_performance') }}</span>
+        </header>
+
+        <div class="panel-body">
+            <section id="unseen" class="ox-scroll">
+                <table  class="table table-bordered table-striped table-condensed table-hover clientTable">
+                    <thead>
+                        <th style="text-align: center;">{{ trans('loan.co_id') }}</th>
+                        <th style="text-align: center;">{{ trans('multiple.co') }}</th>
+                        <th style="text-align: center;">{{ trans('loan.borrower') }}</th>
+                        <th style="text-align: center;">{{ trans('loan.loans') }}</th>
+                        <th style="text-align: center;">{{ trans('loan.balance') }}</th>
+                        <th style="text-align: center;">{{ trans('loan.disburse_amount') }}</th>
+                    </thead>
+                    <tbody>
+                        @forelse($users as $u)
+                        <tr>
+                            <td><a href="{{ route('getLoanCo') }}?co={{$u->id}}" target="_blank">{{ str_pad($u->id, 6, '0', STR_PAD_LEFT) }}</a></td>
+                            <td>{{$u->name}}</td>
+                            <td>{{$client[$u->id]}}</td>
+                            <td>{{$loan[$u->id]}}</td>
+                            <td>USD {{number_format($balance[$u->id], 2)}} / KHM {{number_format($balance_kh[$u->id]/1000000, 2)}}</td>
+                            <td>USD {{number_format($disburse_amount[$u->id], 2)}} / KHM {{number_format($disburse_amount_kh[$u->id]/1000000, 2)}}</td>
+                        </tr>
+                        @empty
+                        <tr><td colspan="6">{{ trans('multiple.m_no_result') }}</td></tr>
+                        @endforelse
+                    </tbody>
+                </table>
+                <div class="pagination">
+                    @include('partials.pagination',['results'=> $users])
+                </div>
+            </section>
+        </div>
+    </section>
+@endsection
+
+@section('js')
+    <script type="text/javascript" src="{{ asset('theme/js/bootstrap-inputmask/bootstrap-inputmask.min.js',false) }}"></script>
+@endsection

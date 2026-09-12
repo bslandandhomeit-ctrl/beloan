@@ -1,0 +1,2 @@
+id,account_no,account_name,created_by,assign_user_id,branch_id,currency_id,min_balance,max_balance,balance,open_balance,close_balance,create_date,open_time,close_time,note,status
+98,1012-000001,USD-BTB-000001,70,69,1,2,0,10000,5000,0,0,"2016-04-01 00:04:00","2016-04-28 16:04:22","2016-06-02 16:02:00","Till Account N.1",0

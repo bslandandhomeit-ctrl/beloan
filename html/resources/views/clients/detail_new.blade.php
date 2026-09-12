@@ -1,0 +1,253 @@
+@extends('layouts.app')
+
+@section('css')
+    <link href="{{ asset('css/client.css',isset($secure)?false:false) }}" rel="stylesheet">
+    <style>
+        #employer table tr td:first-child,#employer tr td:nth-child(3) {
+            font-weight: bold;
+        }
+        #spouse table tr td:first-child,#spouse tr td:nth-child(3) {
+            font-weight: bold;
+        }
+    </style>
+@endsection
+{{--{{dd($client->clientLoan)}}--}}
+@section('content')
+
+    <section class="panel">
+
+        <header class="panel-heading">
+            {{trans('customer.cus_customer_detail')}}
+            <div style="float:right;">
+                <a {{-- @if($client->status == 1) {{'disabled'}} @endif  --}}class="btn btn-primary" href="{{ route('add_client', [$client->id]) }}"><i class="fa fa-pencil"></i> {{ trans('customer.cus_edit_customer') }}</a>
+                @if(!empty($client->status))
+
+                        <a class="btn btn-success" id="add_loan" href="{{route('loan_add', [$client->id,0]) }}"><i class="fa fa-plus"></i> {{ trans('customer.cus_add_loan') }}</a>
+                        <a class="btn btn-warning" id="create_loan_account" href="{{route('add_client_loan_account',[$client->id])}}"><i class="fa fa-plus"></i>{{ trans('account.a_new_cus_loan_account') }}</a>
+                @endif
+                <!-- <button class="btn btn-primary" type="button">Add New Saving</button> -->
+                @if($client->status==0)<a class="btn btn-default" href="{{ route('audit', [$client->id]) }}"><i class="fa fa-key"></i> {{ trans('multiple.audit') }}</a>@endif
+            </div>
+        </header>
+
+        <div class="panel-body">
+            <div class="position-center" style="width:100%;">
+                <div class="row">
+                    <div class="col-lg-2">
+                        <div class="fileupload fileupload-new" data-provides="fileupload">
+                            <div class="fileupload-new thumbnail detail-preview" style="width: 200px; height: 160px;">
+                                <?PHP $file = asset('/data/clients/'.$client->general->first()->photo, isset($secure)?false:false) ?>
+                                <img style="width: 190px; height: 160px;object-fit: cover;" src="{{($client->general->first()->photo)?$file:asset('theme/images/404.png')}}" alt="" />
+                            </div>
+
+                        </div>
+                        <div class="modal fade" id="map" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true" >
+                            <div class="modal-dialog" style="width: 70%;height:90%">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                                        <h4 class="modal-title">{{ trans('multiple.m_map') }}</h4>
+                                    </div>
+                                    <div class="modal-body">
+                                        <div id="googleMap" style="width:100%;height:380px;"></div>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button data-dismiss="modal" class="btn btn-default" type="button">{{ trans('multiple.m_close') }}</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-10">
+                        <div class="row">
+                            <div class="col-lg-3 table-responsive">
+                                <table class="table table-bordered table-striped">
+                                    <tr>
+                                        <th>{{trans('multiple.en')}} {{ trans('user.u_user_name') }}</th>
+                                        <td>
+                                            {{ $client->general->first()->family_name}} {{$client->general->first()->first_name}}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>{{ trans('user.u_user_kh_name') }}</th>
+                                        <td>
+                                                {{ $client->general->first()->family_name_kh}} {{$client->general->first()->first_name_kh}}
+
+
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>{{ trans('multiple.m_gender') }}</th>
+                                        <?PHP $genders = config('static_data.gender') ?>
+                                        <td>
+                                            {{($client->general->first()->gender)?$genders[$client->general->first()->gender]:'N/A' }}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <th>{{ trans('customer.cus_nationality') }}</th>
+                                        <td>{{ $client->general->first()->national_code?$client->general->first()->national_code:'N/A' }}</td>
+                                    </tr>
+
+                                   
+                                </table>
+                            </div>
+
+                            <!-- Date of Birth -->
+                            <div class="col-lg-5">
+                                <table class="table table-bordered table-striped">
+                                    <tr>
+                                        <th style="width: 50%;">{{trans('customer.cus_birth_date') }}</th>
+                                        <td>{{UnEmptyDate($client->general->first()->date_of_birth)}}</td>
+                                    </tr>
+                                    <tr>
+                                        <th>{{ trans('multiple.m_phone', ['num'=>'']) }}</th>
+                                        <td>
+                                            @foreach($client->Contact as $contact)
+                                                {{str_replace('-','',$contact->contact_number_number)}},
+                                            @endforeach
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <?PHP $marital_status = config('static_data.marital_status') ?>
+                                        <th>{{trans('customer.maritalStatus')}}</th>
+                                        <td>
+                                            {{$marital_status[$client->general->first()->marital_status]}}
+
+                                        </td>
+                                    </tr>
+                                    <?php 
+                                        $job = '';
+                                        $job = $client->Employer->first()->occupation.' ('.$client->Employer->first()->employer_name.')';
+                                    ?>
+                                    <tr>
+                                        <th>{{ trans('customer.cus_job') }}</th>
+                                        <td>{{$job}}</td>
+                                    </tr>
+                                   
+
+                                </table>
+                            </div>
+                            <!---->
+
+                            <div class="col-lg-4">
+                                <table class="table table-bordered table-striped">
+{{--                                    @if($ID_types->first()->code == 'N')--}}
+                                    <?PHP $ident = $client->Identification->first(); ?>
+                                    <?PHP $identTypes = $client->Identification->first()->types; ?>
+                                        <tr>
+                                            <th>{{ trans('customer.cus_card_number') }} {{ trans('customer.type') }}  </th>
+                                            <td> {{$identTypes->description}} </td>
+                                        </tr>
+                                        <tr>
+                                            <th>{{ trans('customer.cus_card_number') }}</th>
+                                            <td>{{$ident->id_number }}</td>
+                                        </tr>
+
+                                        <tr>
+                                            <th>{{ trans('customer.cus_issued_date')}}</th>
+                                            <td>{{(UnEmptyDate($ident->issued_date))?UnEmptyDate($ident->issued_date):'N/A' }}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>{{  trans('customer.cus_issued_by') }}</th>
+                                            <td>{{($ident->issued_by)?$ident->issued_by : 'N/A'}}</td>
+                                        </tr>
+                                        <tr>
+                                            <th>{{ trans('customer.cus_card_expired_date')}}</th>
+                                            <td>{{(UnEmptyDate($ident->id_expiry_date))?UnEmptyDate($ident->id_expiry_date):'N/A' }}</td>
+                                        </tr>
+                                    {{--@endif--}}
+                                </table>
+                            </div>
+                        </div>
+
+                    </div>
+                </div>
+            </div>
+            <br/><br/>
+
+            <div id="exTab2">
+                <ul class="nav nav-tabs">
+                    <li class="active"><a data-target="#1" data-toggle="tab"> Current Address </a></li>
+                    <li><a data-target="#contact" data-toggle="tab">Contact</a></li>
+                    <li><a data-target="#gIn" data-toggle="tab">Identification </a></li>
+                    <li><a data-target="#photo" data-toggle="tab">Id Back & ID Front</a></li>
+                    <li><a data-target="#loan" data-toggle="tab">Loan Summary</a></li>
+                    <li><a data-target="#audit" data-toggle="tab">Audit</a></li>
+                </ul>
+                <div class="tab-content">
+
+                    @include('clients.detail.address')
+
+                    @include('clients.detail.contact')
+
+                    @include('clients.detail.identification')
+
+                    <div class="tab-pane" id="loan">
+                        <!--Loan account-->
+                        @include('clients.detail.loan_account')
+                                <!--End Loan account-->
+                    </div>
+                    <div class="tab-pane" id="audit">
+                        @include('clients.audit.audit')
+                    </div>
+                    <div class="tab-pane" id="photo">
+                        <div class="col-lg-6">
+                            <div class="col-lg-12 panel-heading">ID Back</div>
+                            <div class="panel-body">
+                                <?PHP $file = asset('/data/clients/'.$client->general->first()->photo, isset($secure)?false:false) ?>
+                                <img style="width: 190px; height: 160px;object-fit: cover;" src="{{($client->general->first()->photo)?$file:asset('theme/images/404.png')}}" alt="" />
+
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="col-lg-12 panel-heading">ID Front</div>
+                            <div class="panel-body">
+
+                                <?PHP $file = asset('/data/signatures/'.$client->general->first()->signature, isset($secure)?false:false) ?>
+                                <img style="width: 190px; height: 160px;object-fit: cover;" src="{{($client->general->first()->signature)?$file:asset('theme/images/404.png')}}" alt="" />
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+
+        </div>
+
+
+    </section>
+@endsection
+@section('js')
+
+    <script src="http://maps.googleapis.com/maps/api/js?key=AIzaSyDzHP89pTvW3oT77maAqNrcWL-C9AFMqgI"></script>
+    <script type="text/javascript">
+
+        var map;
+        var marker;
+        $('#map').on('shown.bs.modal', function () {
+            google.maps.event.trigger(map, 'resize');
+            map.panTo(marker.getPosition());
+        });
+
+        var lat = <?php echo $client->latitude?$client->latitude:11.5500;?>;
+        var long = <?php echo $client->longitude?$client->longitude:-0.1276250;?>;
+        var myCenter ={lat: parseFloat(lat), lng: parseFloat(long)};
+
+        function initialize(){
+            var mapProp = {
+                center:myCenter,
+                zoom:15,
+                mapTypeId:google.maps.MapTypeId.ROADMAP
+            };
+            map = new google.maps.Map(document.getElementById("googleMap"), mapProp);
+            marker = new google.maps.Marker({
+                position:myCenter,
+                animation:google.maps.Animation.BOUNCE
+            });
+            marker.setMap(map);
+        }
+        google.maps.event.addDomListener(window, 'load', initialize);
+
+    </script>
+    @endsection

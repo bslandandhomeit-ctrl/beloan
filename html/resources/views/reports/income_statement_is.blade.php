@@ -1,0 +1,392 @@
+@extends('layouts.app')
+
+@section('css')
+<link rel="stylesheet" type="text/css" href="{{ asset('/css/loan-style.css',isset($secure) ? false : false) }}"
+      xmlns="http://www.w3.org/1999/html"/>
+<link rel="stylesheet" type="text/css" href="{{ asset('/css/client.css',isset($secure) ? false : false) }}"/>
+<link rel="stylesheet" type="text/css" href="{{ asset('theme/js/bootstrap-datepicker/css/datepicker.css',isset($secure) ? false : false)}}" />
+<style>
+    table tr td:not(:first-child){
+        text-align:right;
+    }
+</style>
+@endsection
+<?php $currency = config('static_data.currency');?>
+@section('content')
+<section class="panel">
+    <header class="panel-heading">
+        {{ trans('sidebar.sb_income_statement') }}
+
+        @if(isset($start) && isset($end))
+        {{ trans('multiple.m_from') }} {{ date("d-M-Y", strtotime($start)) }} {{ trans('multiple.m_to') }} {{ date("d-M-Y", strtotime($end)) }}
+        @else
+        {{ isset($start)?'Report on'.date("d-M-Y", strtotime($start)):'' }}
+        {{ isset($end)?'Report on '.date("d-M-Y", strtotime($end)):'' }}
+        @endif
+
+        @if(isset($till))
+        Year to date till {{ date('d-M-Y',strtotime($till)) }}
+        @endif
+    </header>
+
+    <div class="panel-body">
+        <div class="position-center" style="width:100%;">
+            <form role="form" class="cmxform form-horizontal" method="get" action="{{ route('rpt_is') }}">
+                <table class="tb-search-box">
+                    <tr>
+                        @if(count($branch) > 1)
+                        <td>
+                            {{ trans('report.rpt_branch_name') }}<br/>
+                            <select class="form-control" id="br" name="br">
+                                <option value="">-</option>
+                                @foreach($branch as $b)
+                                <option value="{{ $b->branch_code }}"
+                                        @if(isset($branch_code))
+                                        @if($branch_code==$b->branch_code)
+                                        selected
+                                        @endif
+                                        @endif>{{ $b->branch_name}}</option>
+                                @endforeach
+                            </select>
+                        </td>
+                        @endif
+
+                        <td>
+                            {{ trans('report.rpt_from') }}<br/>
+                            <div data-date-viewmode="years" data-initialize="datepicker" data-date-format="yyyy/mm/dd" data-date="{{date('Y-m-d')}}" class="input-append date dpStart">
+                                <input type="text" name="dpStart" size="16" class="form-control" value="{{ isset($start)?$start:old('dpStart') }}">
+                                    <span class="add-on birhtdateDatepicker ptl-3">
+                                        <button class="btn btn-primary" type="button"><i class="fa fa-calendar"></i></button>
+                                    </span>
+                            </div>
+                        </td>
+
+                        <td>
+                            {{ trans('report.rpt_to') }}<br/>
+                            <div data-date-viewmode="years" data-initialize="datepicker" data-date-format="yyyy/mm/dd" data-date="{{date('Y-m-d')}}" class="input-append date dpEnd">
+                                <input type="text" name="dpEnd" size="16" class="form-control" value="{{ isset($end)?$end:old('dpEnd') }}">
+                                    <span class="add-on birhtdateDatepicker ptl-3">
+                                        <button class="btn btn-primary" type="button"><i class="fa fa-calendar"></i></button>
+                                    </span>
+                            </div>
+                        </td>
+
+                        <td>
+                            {{ trans('report.rpt_currency') }}<br/>
+                            <select class="form-control" id="cur" name="cur">
+                                <option value="100">-</option>
+                                @foreach($currency as $key => $value)
+                                <option value="{{ $key }}"
+                                        @if(isset($currency_id) && $currency_id == $key)
+                                        selected
+                                        @endif>{{ $value }}</option>
+                                @endforeach
+                            </select>
+                        </td>
+
+                        <td>
+                            <input type="checkbox" name="consolidate" value="1" {{ isset($consolidate)?$consolidate==1?'checked':'':'' }} />
+                                   {{ trans('report.rpt_consolidate') }} {{$consolidate}}<br/>
+
+                                <input type="radio" name="exchange_rate" value="1" {{ isset($exchange_rate)?$exchange_rate==1?'checked':'':'checked' }} />
+                                       {{ trans('report.rpt_khmer_riel') }}
+                                       <input type="radio" name="exchange_rate" value="2" {{ isset($exchange_rate)?$exchange_rate==2?'checked':'':'checked' }} />
+                                       {{ trans('report.rpt_us_dollar') }}<br/>
+
+                                        <input type="text" name="rate" size="16" class="form-control" value="{{ isset($rate)?$rate:old('rate') }}" placeholder="{{ trans('report.rpt_rate_usd_khr') }}" style="width:150px;" />
+
+                                        </td>
+                                        </tr>
+                                        </table>
+
+                                        <div class="row">
+                                            <div class="col-lg-12">
+                                                <button type="submit" class="btn btn-info"><i class="fa fa-search"></i> {{ trans('multiple.m_search') }}</button>
+                                                <button class="btn btn-warning" id="printer"><i class="fa fa-print"></i> {{ trans('multiple.m_print') }}</button>
+                                                <a id="export" class="btn btn-primary"><i class="fa  fa-sign-out"></i> {{ trans('report.rpt_export') }}</a>
+                                                <a id="xexport" class="btn btn-primary"><i class="fa  fa-sign-out"></i> {{ trans('report.xrpt_export') }}</a>                                            </div>
+                                        </div>
+
+                                        </form>
+                                        </div>
+                                        <br/>
+
+                                        <div id="printArea">
+                                            @include('api.report_header',['co_phone'=>!empty($co_id->co_user) ? $co_id->co_user->phone: ''])
+                                            <h4 class="sch_title"​ id="p-header">
+                                                {{ trans('sidebar.sb_income_statement') }}
+                                                @foreach($branch as $b)
+                                                @if($branch_code==$b->branch_code)
+                                                <strong>{{ trans('report.rpt_for_branch') }}: {{ $b->branch_name }}</strong><br/>
+                                                @endif
+                                                @endforeach
+                                                @foreach($currency as $key => $value)
+                                                @if(isset($currency_id))
+                                                @if($currency_id == $key)
+                                                {{ trans('report.rpt_currency') }}: ({{ $value }})<br/>
+                                                @endif
+                                                @endif
+                                                @endforeach
+
+                                                @if(isset($consolidate))
+                                                / {{ trans('report.rpt_consolidate_to') }}
+                                                @if($exchange_rate==1)
+                                                {{ trans('report.rpt_million_riel') }}
+                                                @else
+                                                {{ trans('report.rpt_usd_dollar') }}
+                                                @endif
+
+                                                (Rate = @if(isset($rate)) {{$rate}} @else USDTOKHR @endif )
+                                                <br/>
+                                                @endif
+
+                                                @if($start)
+                                                {{ trans('report.from') }}: {{$start}}<br/>
+                                                @endif
+
+                                                @if($end)
+                                                {{ trans('report.to') }}: {{$end}}
+                                                @endif
+                                            </h4>
+
+                                            <section id="unseen">
+                                                <div id="divTab">
+                                                <table class="table table-bordered table-striped table-condensed income_statement_is" style="width:50%;">
+                                                    <thead>
+                                                        <tr>
+                                                            <td><strong>DESCRIPTION</strong></td>
+                                                            <td><strong>USD</strong></td>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody id="income_statement">
+                                                        <tr>
+                                                            <td><strong>Interest incomes</strong></td>
+                                                            <td>-</td>
+                                                        </tr>
+
+                                                        <tr>
+                                                            <td>Interest Income from Loans</td>
+                                                            <td>{{number_format($iil, 2, '.', ',')}}</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Others Interest Incomes</td>
+                                                            <td>{{number_format($oii, 2, '.', ',')}}</td>
+                                                        </tr>
+
+                                                        <tr>
+                                                            <td><strong>Total Interest incomes</strong></td>
+                                                            <td><strong>{{number_format($income, 2, '.', ',')}}</strong></td>
+                                                        </tr>
+
+                                                        <tr><td colspan="2"></td></tr>
+
+                                                        <tr>
+                                                            <td><strong>Interest expense</strong></td>
+                                                            <td>-</td>
+                                                        </tr>
+
+                                                        <tr>
+                                                            <td>Interest Expense on Deposits</td>
+                                                            <td>{{number_format($ied, 2, '.', ',')}}</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Interest Expense on Borrowing</td>
+                                                            <td>{{number_format($ieb, 2, '.', ',')}}</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Others Interest Expenses</td>
+                                                            <td>{{number_format($oie, 2, '.', ',')}}</td>
+                                                        </tr>
+
+                                                        <tr>
+                                                            <td><strong>Total Interest expense</strong></td>
+                                                            <td><strong>{{number_format($expense, 2, '.', ',')}}</strong></td>
+                                                        </tr>
+
+                                                        <tr><td colspan="2"></td></tr>
+
+                                                        <tr>
+                                                            <td><strong>Net-interest income</strong></td>
+                                                            <td><strong>{{number_format($net_interest, 2, '.', ',')}}</strong></td>
+                                                        </tr>
+
+                                                        <tr><td colspan="2"></td></tr>
+
+                                                        <tr>
+                                                            <td><strong>Non-interest income</strong></td>
+                                                            <td>-</td>
+                                                        </tr>
+
+                                                        <tr>
+                                                            <td>Income from Loan commitment fees</td>
+                                                            <td>{{number_format($ilcf, 2, '.', ',')}}</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Income Other Fees and Commission</td>
+                                                            <td>{{number_format($iofc, 2, '.', ',')}}</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Income Gain on foreign exchange</td>
+                                                            <td>{{number_format($igfe, 2, '.', ',')}}</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Income Gain on disposals of property and equipment</td>
+                                                            <td>{{number_format($igdpe, 2, '.', ',')}}</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Income Recovery on loans</td>
+                                                            <td>{{number_format($rl, 2, '.', ',')}}</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Others</td>
+                                                            <td>{{number_format($onii, 2, '.', ',')}}</td>
+                                                        </tr>
+
+                                                        <tr>
+                                                            <td><strong>Total non-interest income</strong></td>
+                                                            <td><strong>{{number_format($non_interest_income, 2, '.', ',')}}</strong></td>
+                                                        </tr>
+
+                                                        <tr><td colspan="2"></td></tr>
+
+                                                        <tr>
+                                                            <td><strong>Non-interest expense</strong></td>
+                                                            <td>-</td>
+                                                        </tr>
+
+                                                        <tr>
+                                                            <td>Payroll and other staff cost</td>
+                                                            <td>{{number_format($posc, 2, '.', ',')}}</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Depreciation of property and equipment</td>
+                                                            <td>{{number_format($dpe, 2, '.', ',')}}</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Other operating expenses</td>
+                                                            <td>{{number_format($ooe, 2, '.', ',')}}</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td><strong>Total non-interest expense</strong></td>
+                                                            <td><strong>{{number_format($non_interest_expense, 2, '.', ',')}}</strong></td>
+                                                        </tr>
+
+                                                        <tr><td colspan="2"></td></tr>
+
+                                                        <tr>
+                                                            <td><strong>Operating profit before provision</strong></td>
+                                                            <td><strong>{{number_format($operating_profit_bp, 2, '.', ',')}}</strong></td>
+                                                        </tr>
+
+                                                        <tr><td colspan="2"></td></tr>
+
+                                                        <tr>
+                                                            <td>Provision for doubtful and bad debt</td>
+                                                            <td>{{number_format($pdbd, 2, '.', ',')}}</td>
+                                                        </tr>
+
+                                                        <tr><td colspan="2"></td></tr>
+
+                                                        <tr>
+                                                            <td><strong>Profit before income tax</strong></td>
+                                                            <td><strong>{{number_format($profit_bit, 2, '.', ',')}}</strong></td>
+                                                        </tr>
+
+                                                        <tr><td colspan="2"></td></tr>
+
+                                                        <tr>
+                                                            <td>Expense Income tax</td>
+                                                            <td>{{number_format($eit, 2, '.', ',')}}</td>
+                                                        </tr>
+
+                                                        <tr><td colspan="2"></td></tr>
+
+                                                        <tr>
+                                                            <td><strong>Net profit for the reporting period</strong></td>
+                                                            <td><strong>{{number_format($net_profit_rp, 2, '.', ',')}}</strong></td>
+                                                        </tr>
+
+                                                    </tbody>
+                                                </table>
+                                                </div>
+                                                <br><br>
+                                                        <div class="prepare">
+                                                            <span style="text-align: left">Prepared by : </span>
+                                                            <span style="margin-left: 150px">Verified by : </span>
+                                                            <span style="margin-left: 150px">Approved by : </span>
+                                                        </div>
+                                                        </section>
+                                                        </div>
+                                                        </div>
+                                                        </section>
+@endsection
+
+@section('js')
+<script type="text/javascript" src="{{ asset('theme/js/bootstrap-datepicker/js/bootstrap-datepicker.js',isset($secure) ? false : false)}}"></script>
+<script type="text/javascript" src="{{ asset('js/print.js',isset($secure) ? false : false)}}"></script>
+<script type="text/javascript" src="{{ asset('js/xlsx.full.min.js',isset($secure) ? false : false)}}"></script>
+<script type="text/javascript" src="{{ asset('js/Blob.min.js',isset($secure) ? false : false)}}"></script>
+<script type="text/javascript" src="{{ asset('js/FileSaver.js',isset($secure) ? false : false)}}"></script>
+<script type="text/javascript" src="{{ asset('js/tableexport.js',isset($secure) ? false : false)}}"></script>
+
+<script type="text/javascript">
+$(document).ready(function () {
+
+    $('.dpStart').datepicker({
+        format: 'yyyy-mm-dd',
+        autoclose: true,
+        setDate: new Date()
+    });
+    $('.dpEnd').datepicker({
+        format: 'yyyy-mm-dd',
+        autoclose: true,
+        setDate: new Date()
+    });
+
+    // This must be a hyperlink
+    $("#export").click(function (event) {
+        // var outputFile = 'export'
+        var con = confirm("Do you really want to export to CSV file?");
+        if(con == true){
+            new TableExport([$('#divTab>table'), {
+                        formats: ['csv'],
+                        filename: 'income_statement'
+                    });
+                    $('button.csv').hide().click();
+                    $('.tableexport-caption').remove();
+        }
+    });
+
+    $("#xexport").click(function (event) {
+            var con = confirm("Do you really want to export to Excel file?");
+            if(con == true){
+                new TableExport([$('#divTab>table'), {
+                        formats: ['xlsx'],
+                        filename: 'income_statement'
+                    }).formatConfig.xlsx.mimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+                    $('button.xlsx').hide().click();
+                    $('.tableexport-caption').remove();
+            }
+        });
+});
+var opt = '<?php echo isset($opt) ? $opt : 0; ?>';
+if (opt != 0) {
+    if (opt == 1)
+        $('.ytd').hide();
+    else
+        $('.btw').hide();
+} else {
+    $('.ytd').hide();
+}
+$('input[type="radio"][name="opt"]').change(function () {
+    if ($(this).val() == 1) {
+        $('.ytd').hide();
+        $('.btw').show();
+    } else {
+        $('.ytd').show();
+        $('.btw').hide();
+    }
+});
+
+</script>
+@endsection

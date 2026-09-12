@@ -1,0 +1,201 @@
+@extends('layouts.app')
+
+@section('css')
+    <link rel="stylesheet" type="text/css" href="{{ asset('theme/js/bootstrap-datepicker/css/datepicker.css',isset($secure) ? false : false)}}" />
+    <link rel="stylesheet" type="text/css" href="{{ asset('/css/loan-style.css',isset($secure) ? false : false) }}"/>
+    <link href="{{ asset('css/client.css',isset($secure) ? false : false) }}" rel="stylesheet">
+    <style>
+        table tr th{
+            text-align: center;
+        }
+        table tr td:first-child{
+            text-align: center;
+        }
+        table tr td:nth-child(n+3){
+            text-align: right;
+        }
+        table tr.t-bold td:nth-child(n+2){
+            text-align: right;
+        }
+    </style>
+@endsection
+@section('content')
+    <section class="panel">
+        <header class="panel-heading">
+            <span>{{ trans('sidebar.sb_trial_balance') }}
+                @if(isset($start) && isset($end))
+                    {{ trans('multiple.m_from') }} {{ date("d-M-Y", strtotime($start)) }} {{ trans('multiple.m_to') }} {{ date("d-M-Y", strtotime($end)) }}
+                @endif
+            </span>
+        </header>
+        <div class="panel-body" style="width:90%;margin:0 auto;">
+            <form role="form" class="cmxform form-horizontal" method="get" action="{{ route('trail_balance_detail') }}">
+                <div class="row">
+                    <label class="control-label col-md-1">{{ trans('multiple.m_start_date') }}</label>
+                    <div class="col-md-2">
+                        <div data-date-viewmode="years" data-initialize="datepicker" data-date-format="yyyy/mm/dd" class="input-append date start">
+                            <input type="text" name="start" size="16" class="form-control" value="{{ isset($start)?$start:old('start') }}">
+                                <span class="add-on birhtdateDatepicker ptl-3">
+                                    <button class="btn btn-primary" type="button"><i class="fa fa-calendar"></i></button>
+                              </span>
+                        </div>
+                    </div>
+                    <label class="control-label col-md-1">{{ trans('multiple.m_end_date') }}</label>
+                    <div class="col-md-2">
+                        <div data-date-viewmode="years" data-initialize="datepicker" data-date-format="yyyy/mm/dd" class="input-append date end">
+                            <input type="text" name="end" size="16" class="form-control" value="{{ isset($end)?$end:old('end') }}">
+                                <span class="add-on birhtdateDatepicker ptl-3">
+                                    <button class="btn btn-primary" type="button"><i class="fa fa-calendar"></i></button>
+                              </span>
+                        </div>
+                    </div>
+                </div>
+                <br/>
+                <div class="row">
+                    <div class="col-md-offset-4 col-md-7">
+                        <button type="submit" class="btn btn-info"><i class="fa fa-search"></i> {{ trans('multiple.m_search') }}</button>
+                        <button class="btn btn-warning" id="printer"><i class="fa fa-print"></i> {{ trans('multiple.m_print') }}</button>
+                    </div>
+                </div>
+            </form><br><br>
+            <section id="unseen" class="ox-scroll">
+                <div id="printArea">
+                    @include('api.report_header',['co_phone'=>!empty($co_id->co_user) ? $co_id->co_user->phone: ''])
+                    <h4 class="sch_title">
+                        {{ trans('sidebar.sb_trial_balance') }}
+                        @if(isset($start) && isset($end))
+                            {{ trans('multiple.m_from') }} {{ date("d-M-Y", strtotime($start)) }} {{ trans('multiple.m_to') }} {{ date("d-M-Y", strtotime($end)) }}
+                        @endif
+                    </h4>
+                    <table class="table table-bordered table-condensed table-striped trial_detail">
+                        <thead>
+                            <tr>
+                                <th rowspan="2" style="vertical-align:middle">COA</th>
+                                <th rowspan="2" style="vertical-align:middle">{{ trans('dealer.dl_dealer_account_name') }}</th>
+                                <th colspan="2">{{ trans('report.rpt_previous_balance') }}</th>
+                                <th colspan="2">{{ trans('report.rpt_transaction') }}</th>
+                                <th colspan="2">{{ trans('report.rpt_balance') }}</th>
+                            </tr>
+                            <tr>
+                                <th>{{ trans('report.rpt_debit') }}</th>
+                                <th>{{ trans('report.rpt_credit') }}</th>
+                                <th>{{ trans('report.rpt_debit') }}</th>
+                                <th>{{ trans('report.rpt_credit') }}</th>
+                                <th>{{ trans('report.rpt_debit') }}</th>
+                                <th>{{ trans('report.rpt_credit') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php $results = [];?>
+
+                            @if(!empty($entries_prev))
+                                @foreach($entries_prev as $entry)
+                                    @if(!empty($entry->detail))
+                                        @foreach($entry->detail as $trail)
+                                            <?php
+                                                if(!isset($results[$trail->account_code])) {
+                                                    $results[$trail->account_code] = [
+                                                        0 => $trail->account->account_name,
+                                                        1 => [0.00,0.00],
+                                                        2 => [0.00,0.00],
+                                                    ];
+                                                }
+                                                $results[$trail->account_code][1][0] += $trail->p_debit;
+                                                $results[$trail->account_code][1][1] += $trail->p_credit;
+                                            ?>
+                                        @endforeach
+                                    @endif
+                                @endforeach
+                            @endif
+
+                            @if(!empty($entries_btw))
+                                @foreach($entries_btw as $entry)
+                                    @if(!empty($entry->detail))
+                                        @foreach($entry->detail as $trail)
+                                            <?php
+                                                if(!isset($results[$trail->account_code])) {
+                                                    $results[$trail->account_code] = [
+                                                        0 => $trail->account->account_name,
+                                                        1 => [0.00,0.00],
+                                                        2 => [0.00,0.00],
+                                                    ];
+                                                }
+                                                $results[$trail->account_code][2][0] += $trail->p_debit;
+                                                $results[$trail->account_code][2][1] += $trail->p_credit;
+                                            ?>
+                                        @endforeach
+                                    @endif
+                                @endforeach
+                            @endif
+
+                            @if(count($results)>0)
+                               <?php
+                                 $total_result = array_fill(0, 6, 0.00);
+                               ?>
+                                @foreach($results as $key=>$items)
+                                    <tr><td>{{ $key }}</td>
+                                        @var $total_debit = 0.00
+                                        @var $total_credit = 0.00
+                                        @foreach($items as $k => $item)
+                                            @if(is_array($item))
+                                             @var $total_debit += $item[0]
+                                             @var $total_credit += $item[1]
+                                                <td>{{ $item[0] }}</td>
+                                                <td>{{ $item[1] }}</td>
+                                                <?php
+                                                    if($k == 1):
+                                                        $total_result[0] += $item[0];
+                                                        $total_result[1] += $item[1];
+                                                    elseif($k == 2):
+                                                        $total_result[2] += $item[0];
+                                                        $total_result[3] += $item[1];
+                                                    endif;
+                                                ?>
+                                            @else
+                                                <td>{{ $item }}</td>
+                                            @endif
+                                        @endforeach
+                                        <td>{{ $total_debit }}</td>
+                                        <td>{{ $total_credit }}</td>
+                                        <?php
+                                            $total_result[4] +=  $total_debit;
+                                            $total_result[5] += $total_credit;
+                                        ?>
+                                    </tr>
+                                @endforeach
+                                <tr class="t-bold">
+                                    <td colspan="2">Total</td>
+                                    @foreach($total_result as $it)
+                                        <td>{{ $it }}</td>
+                                    @endforeach
+                                </tr>
+                            @endif
+
+                        </tbody>
+                    </table>
+                    </div>
+                <div>
+                    {{-- @include('partials.pagination',['results'=>$entries]) --}}
+                </div>
+            </section>
+        </div>
+    </section>
+@endsection
+@section('js')
+    <script type="text/javascript" src="{{ asset('theme/js/bootstrap-datepicker/js/bootstrap-datepicker.js',isset($secure) ? false : false)}}"></script>
+    <script type="text/javascript" src="{{ asset('js/print.js',isset($secure) ? false : false)}}"></script>
+    <script type="text/javascript">
+        $(document).ready(function(){
+            $('.start').datepicker({
+                format: 'yyyy-mm-dd',
+                autoclose: true,
+                setDate: new Date()
+            });
+            $('.end').datepicker({
+                format: 'yyyy-mm-dd',
+                autoclose: true,
+                setDate: new Date()
+            });
+        });
+    </script>
+@endsection

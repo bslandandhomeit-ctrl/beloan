@@ -1,0 +1,435 @@
+<?php
+
+    $graph_principal_collection = array_fill(1,12,0.00);
+    $graph_interest_collection = array_fill(1,12,0.00);
+    $graph_penalty_collection = array_fill(1,12,0.00);
+    if(!empty($loan_payment) && count($loan_payment) > 0){
+        $label = config('static_data.loan_type');
+        $interest_income = array_fill(1,count($label),0.00);
+        foreach($loan_payment as $income){
+            if(count($income->payment) > 0){
+                $loan_type = $income->loan_type;
+                if(!isset($interest_income[$loan_type])) $interest_income[$loan_type] = 0.00;
+                foreach($income->payment as $p){
+                    $m = date('n',strtotime($p->repayment_date));
+                    $graph_principal_collection[$m] += $p->paid_principal;
+                    $graph_interest_collection[$m] += $p->paid_interest;
+                    $graph_penalty_collection[$m] += $p->penalty_amount;
+                }
+            }
+        }
+    }
+    /* inter */
+    $fee_income = [];
+    $fee_income[0] = 0.0; /* Early Payment */
+    if(!empty($loan_payoff) && count($loan_payoff) > 0){
+        foreach($loan_payoff as $p){
+            $fee_income[0] += $p->payoff_fee;
+            $m = date('n',strtotime($p->payoff_date));
+            $graph_penalty_collection[$m] += $p->payoff_fee;
+        }
+    }
+    if(!empty($loan_feecharge) && count($loan_feecharge) > 0){
+        foreach($loan_feecharge as $fc){
+            $key = $fc->charge_type;
+            if(!isset($fee_income[$key])) $fee_income[$key] = 0.00;
+            $fee_income[$key] += $fc->charge_amount;
+            $m = date('n',strtotime($fc->charge_date));
+            $graph_penalty_collection[$m] += $fc->charge_amount;
+        }
+    }
+?>
+@extends('layouts.app')
+
+@section('css')
+    <link rel="stylesheet" type="text/css" href="{{ asset('/css/loan-style.css',isset($secure) ? $secure : true) }}"/>
+    <link rel="stylesheet" type="text/css" href="{{ asset('/css/client.css',isset($secure) ? $secure : true) }}"/>
+@endsection
+@section('content')
+    <section class="panel">
+        <header class="panel-heading">
+            {{ trans('sidebar.sb_loan_collection_summary') }} {{$year?$year:'this year'}}
+        </header>
+
+        <div class="panel-body">
+            <div class="position-center" style="width:100%;">
+                <form role="form" class="cmxform form-horizontal" method="post" action="{{ route('rpt_loan_collection') }}">
+                    <input type="hidden" name="_token" value="{{ csrf_token() }}">
+                    <div class="row">
+                        <label class="control-label col-md-offset-1  col-md-1">{{ trans('report.rpt_for_year') }} </label>
+                        <div class="col-md-2">
+                            <select name="selYear" class="form-control">
+                                @for($i=date('Y');$i>1999;$i--)
+                                    <option value="{{$i}}" {{ isset($year)?($year==$i?'selected':''):old('selYear') }}>{{$i}}</option>;
+                                @endfor
+                            </select>
+                        </div>
+                    </div><br/>
+                    <div class="row">
+                        <label class="control-label col-md-offset-1  col-md-1"></label>
+                        <div class="col-md-5">
+                            <button type="submit" class="btn btn-info"><i class="fa fa-search"></i> {{ trans('multiple.m_search') }}</button>
+                            <button class="btn btn-warning" id="printer"><i class="fa fa-print"></i> {{ trans('multiple.m_print') }}</button>
+                            <a id="export" class="btn btn-primary"><i class="fa  fa-sign-out"></i> {{ trans('report.rpt_export') }}</a>
+                            <a id="xexport" class="btn btn-primary"><i class="fa  fa-sign-out"></i> {{ trans('report.xrpt_export') }}</a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <br/><br/><br/>
+            <?php
+                $loan_type_label = config('static_data.loan_type');
+                $fee_charge_label = config('static_data.fee_charge');
+                $cost_fee_label = config('static_data.fee_cost_type');
+
+                $interest_collection = array_fill(1,count($loan_type_label),array_fill(1,12,0.0));
+                $principal_collection = array_fill(1,count($loan_type_label),array_fill(1,12,0.0));
+                $penalty_collection = array_fill(0,count($fee_charge_label) + 2,array_fill(1,12,0.0));
+                $month_arr = [1=>'Jan',2=>'Feb',3=>'Mar',4=>'Apr',5=>'May',6=>'Jun',7=>'Jul',8=>'Aug',9=>'Sep',10=>'Oct',11=>'Nov',12=>'Dec'];
+
+                if(!empty($loan_payment) && count($loan_payment)>0){
+                    foreach($loan_payment as $loan){
+                        if(!empty($loan->payment) && count($loan->payment)>0){
+                            $loan_type = $loan->loan_type;
+                            foreach($loan->payment as $p){
+                                $repayment_month = date('n', strtotime($p->repayment_date));
+                                $interest_collection[$loan_type][$repayment_month] += $p->paid_interest;
+                                $principal_collection[$loan_type][$repayment_month] +=$p->paid_principal;
+                                $penalty_collection[0][$repayment_month] += $p->penalty_amount;
+                            }
+                        }
+                    }
+                }
+                if(!empty($loan_payoff) && count($loan_payoff)>0){
+                    foreach($loan_payoff as $loan){
+                        if(!empty($loan->payoff)){
+                            $payoff_month = date('n', strtotime($loan->payoff->payoff_date));
+                            if(array_key_exists($payoff_month,$month_arr)){
+                                  $penalty_collection[1][$payoff_month] += $loan->payoff->payoff_fee;
+                            }
+                        }
+                    }
+                }
+                if(!empty($loan_feecharge) && count($loan_feecharge)>0){
+                    foreach($loan_feecharge as $loan){
+                        if(!empty($loan->feecharge) && count($loan->feecharge)>0){
+                            foreach($loan->feecharge as $c){
+                                $charge_month = date('n', strtotime($c->charge_date));
+                                if(array_key_exists($charge_month,$month_arr)){
+                                    $charge_type = $c->charge_type;
+                                    $penalty_collection[$charge_type+1][$charge_month] += $c->charge_amount;
+                                }
+                            }
+                        }
+                    }
+                }
+            ?>
+            <section class="ox-scroll">
+            <div id="printArea">
+                @include('api.report_header',['co_phone'=>!empty($co_id->co_user) ? $co_id->co_user->phone: ''])
+                    <h4 class="sch_title" id="p-header">
+                        {{ trans('sidebar.sb_loan_collection_summary') }} {{$year?$year:'this year'}}
+                    </h4>
+                <section id="unseen" style="clear: both">
+                    <div id="divTab">
+                        <table class="ddd table table-bordered table-striped table-condensed loan_collection_summary">
+                            <thead class="th-center">
+                                <tr>
+                                    <th></th>
+                                    @foreach($month_arr as $m)
+                                        <th>{{ $m }}</th>
+                                    @endforeach
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <?php
+                                    $total_principal_collection = array_fill(1,12,0.00);
+                                    $total_interest_collection = array_fill(1,12,0.00);
+                                    $total_penalty_collection = array_fill(1,12,0.00);
+                                ?>
+                                @foreach($principal_collection as $key => $pc)
+                                    @if(is_array($pc))
+                                        @foreach($pc as $k=> $p)
+                                           <?php
+                                              $total_principal_collection[$k] += $p;
+                                           ?>
+                                        @endforeach
+                                    @endif
+                                @endforeach
+                                <tr align="center">
+                                    <td class="t-bold" align="left">Principle collection</td>
+                                    @foreach($total_principal_collection as $tp)
+                                        <td align="right">{{ number_format($tp,2) }}</td>
+                                    @endforeach
+                                    <td align="right">{{ number_format(array_sum($total_principal_collection),2) }}</td>
+                                </tr>
+                                @foreach($interest_collection as $key => $mv)
+                                    @if(is_array($mv))
+                                        @foreach($mv as $k=> $m)
+                                           <?php
+                                              $total_interest_collection[$k] += $m;
+                                           ?>
+                                        @endforeach
+                                    @endif
+                                @endforeach
+                                <tr align="center">
+                                    <td class="t-bold" align="left">Interest Collection</td>
+                                    @foreach($total_interest_collection as $ti)
+                                        <td align="right">{{ number_format($ti,2) }}</td>
+                                    @endforeach
+                                    <td align="right">{{ number_format(array_sum($total_interest_collection),2) }}</td>
+                                </tr>
+                                @foreach($penalty_collection as $key => $pec)
+                                    @if(is_array($pec))
+                                        @foreach($pec as $k=> $c)
+                                           <?php
+                                              $total_penalty_collection[$k] += $c;
+                                           ?>
+                                        @endforeach
+                                    @endif
+                                @endforeach
+                                <tr align="center">
+                                    <td class="t-bold" align="left">Penalty and Other Fees</td>
+                                    @foreach($total_penalty_collection as $tpc)
+                                        <td align="right">{{ number_format($tpc,2) }}</td>
+                                    @endforeach
+                                    <td align="right">{{ number_format(array_sum($total_penalty_collection),2) }}</td>
+                                </tr>
+                                <tr style="background-color:#ddd" align="center">
+                                    <td class="t-bold" align="left">Total</td>
+                                    <?php
+                                       $total_income = array_fill(1,12,0.00);
+                                       $total = 0.00;
+                                        for($i = 1; $i<=12 ; $i ++){
+                                            $t = $total_interest_collection[$i] + $total_interest_collection[$i];
+                                            $total += $t;
+                                            $total_income[$i] = $t;
+                                            echo '<td align="right">'.number_format($t,2).'</td>';
+                                        }
+                                        echo '<td align="right">'.number_format($total,2).'</td>';
+                                    ?>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+            </div>
+
+                <div class="col-md-12">
+                    <div class="panel">
+                        <header class="panel-heading">
+                            Graphic of Monthly Loans Collection Classify by Type For ({{ date('Y') }})
+                        </header>
+                        <div class="panel-body" style="position: relative;">
+                            <table style="position:absolute;top:0;right:35px;;font-size:smaller;color:#545454">
+                                <tbody>
+                                    <tr>
+                                        <td class="legendColorBox">
+                                            <div style="border:1px solid #ccc;padding:1px">
+                                                <div style="width:4px;height:0;border:5px solid rgb(121,209,207);overflow:hidden">
+                                                </div>
+                                            </div>
+                                        </td>
+                                        <td class="legendLabel">&nbsp;Principal Collection</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="legendColorBox">
+                                            <div style="border:1px solid #ccc;padding:1px">
+                                                <div style="width:4px;height:0;border:5px solid rgb(230,122,119);overflow:hidden"></div>
+                                            </div>
+                                        </td>
+                                        <td class="legendLabel">&nbsp;Interest Collection</td>
+                                    </tr>
+                                    <tr>
+                                        <td class="legendColorBox">
+                                            <div style="border:1px solid #ccc;padding:1px">
+                                                <div style="width:4px;height:0;border:5px solid rgb(230,172,149);overflow:hidden"></div>
+                                            </div>
+                                        </td>
+                                        <td class="legendLabel">&nbsp;Penalty and Other Fees</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <br/><br/>
+                            <div class="chartJS">
+                                <canvas id="bar-chart-js" height="250" width="800" ></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+        </div>
+    </section>
+@endsection
+
+@section('js')
+        <script type="text/javascript" src="{{asset('theme/js/chart-js/Chart.js' ,isset($secure) ? $secure : true)}}"></script>
+        {{--<script language="javascript" type="text/javascript" src="/js/jquery_002.js"></script>--}}
+       	<script type="text/javascript" src="{{ asset('js/print.js',isset($secure) ? $secure : true)}}"></script>
+        
+        <script type="text/javascript" src="{{ asset('js/xlsx.full.min.js',isset($secure) ? $secure : true)}}"></script>
+        <script type="text/javascript" src="{{ asset('js/Blob.min.js',isset($secure) ? $secure : true)}}"></script>
+        <script type="text/javascript" src="{{ asset('js/FileSaver.js',isset($secure) ? $secure : true)}}"></script>
+        <script type="text/javascript" src="{{ asset('js/tableexport.js',isset($secure) ? $secure : true)}}"></script>
+        <script type="text/javascript">
+            $(document).ready(function(){
+                /*function exportTableToCSV($table, filename) {
+                    var $headers = $table.find('tr:has(th)')
+                        ,$rows = $table.find('tr:has(td)')
+
+                        // Temporary delimiter characters unlikely to be typed by keyboard
+                        // This is to avoid accidentally splitting the actual contents
+                        ,tmpColDelim = String.fromCharCode(11) // vertical tab character
+                        ,tmpRowDelim = String.fromCharCode(0) // null character
+
+                        // actual delimiter characters for CSV format
+                        ,colDelim = '","'
+                        ,rowDelim = '"\r\n"';
+
+                        // Grab text from table into CSV formatted string
+                        var csv = '"';
+                        csv += ($('#p-header').html()).trim();
+                        csv += rowDelim;
+                        csv += formatRows($headers.map(grabRow));
+                        csv += rowDelim;
+                        csv += formatRows($rows.map(grabRow)) + '"';
+                        // Data URI
+                        var csvData = 'data:application/csv;charset=utf-8,' + encodeURIComponent(csv);
+
+                    $(this)
+                        .attr({
+                        'download': filename
+                            ,'href': csvData
+                            //,'target' : '_blank' //if you want it to open in a new window
+                    });
+
+                        //------------------------------------------------------------
+                        // Helper Functions
+                        //------------------------------------------------------------
+                        // Format the output so it has the appropriate delimiters
+                        function formatRows(rows){
+                            return rows.get().join(tmpRowDelim)
+                                .split(tmpRowDelim).join(rowDelim)
+                                .split(tmpColDelim).join(colDelim);
+                        }
+                        // Grab and format a row from the table
+                        function grabRow(i,row){
+
+                            var $row = $(row);
+                            //for some reason $cols = $row.find('td') || $row.find('th') won't work...
+                            var $cols = $row.find('td');
+                            if(!$cols.length) $cols = $row.find('th');
+
+                            return $cols.map(grabCol)
+                                        .get().join(tmpColDelim);
+                        }
+                        // Grab and format a column from the table
+                        function grabCol(j,col){
+                            var $col = $(col),
+                                $text = $col.text();
+
+                            return $text.replace('"', '""'); // escape double quotes
+
+                        }
+                    }
+
+                    // This must be a hyperlink
+                    $("#export").click(function (event) {
+                        // var outputFile = 'export'
+                        var con = confirm("Do you really want to export to CSV file?");
+                        if(con == true){
+                            var outputFile = 'loan_collection_summary.csv';
+                            // CSV
+                            exportTableToCSV.apply(this, [$('#divTab>table'), outputFile]);
+
+                            // IF CSV, don't do event.preventDefault() or return false
+                            // We actually need this to be a typical hyperlink
+                        }
+
+                    });*/
+                    $("#export").click(function (event) {
+                        var con = confirm("Do you really want to export to CSV file?");
+                        if(con == true){
+                            new TableExport($('#divTab>table'), {
+                                    formats: ['csv'],
+                                    filename: 'loan_collection_summary'
+                                });
+                                $('button.csv').hide().click();
+                                $('.tableexport-caption').remove();
+                        }
+                    });
+                    $("#xexport").click(function (event) {
+                        var con = confirm("Do you really want to export to Excel file?");
+                        if(con == true){
+                            new TableExport($('#divTab>table'), {
+                                    formats: ['xlsx'],
+                                    filename: 'loan_collection_summary'
+                                }).formatConfig.xlsx.mimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+                                $('button.xlsx').hide().click();
+                                $('.tableexport-caption').remove();
+                        }
+                    });
+            });
+            $(function(){
+                var t;
+                function size(animate){
+                    if (animate == undefined){
+                        animate = false;
+                    }
+                    clearTimeout(t);
+                    t = setTimeout(function(){
+                        $("#bar-chart-js").each(function(i,el){
+                            $(el).attr({
+                                "width":$(el).parent().width(),
+                                "height":$(el).parent().outerHeight()
+                            });
+                        });
+                        redraw(animate);
+                        var m = 0;
+                        $(".chartJS").height("");
+                        $(".chartJS").each(function(i,el){ m = Math.max(m,$(el).height()); });
+                        $(".chartJS").height(m);
+                    }, 30);
+                }
+                $(window).on('resize', function(){ size(false); });
+
+                function redraw(animation){
+                    var options = {};
+                    if (!animation){
+                        options.animation = true;
+                    } else {
+                        options.animation = true;
+                    }
+                    var dataJson1 = <?php echo json_encode($graph_principal_collection);?>;
+                    var dataJson2 = <?php echo json_encode($graph_interest_collection);?>;
+                    var dataJson3 = <?php echo json_encode($graph_penalty_collection);?>;
+                    var data1 =  $.map(dataJson1, function(el) { return el; });
+                    var data2 =  $.map(dataJson2, function(el) { return el; });
+                    var data3 =  $.map(dataJson3, function(el) { return el; });
+                    var barChartData = {
+                        labels : ["January","February","March","April","May","June","July","August","September","October","November","December"],
+                        datasets : [
+                            {
+                                fillColor : "#79D1CF",
+                                strokeColor : "#79D1CF",
+                                data : data1
+                            },
+                            {
+                                fillColor : "#E67A77",
+                                strokeColor : "#E67A77",
+                                data : data2
+                            },
+                            {
+                                fillColor : "#E6B431",
+                                strokeColor : "#E67A77",
+                                data : data3
+                            }
+                        ]
+                    };
+                    var myLine = new Chart(document.getElementById("bar-chart-js").getContext("2d")).Bar(barChartData);
+                }
+                size(true);
+            });
+        </script>
+@endsection

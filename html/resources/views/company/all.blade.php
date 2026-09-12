@@ -1,0 +1,65 @@
+@extends('layouts.app')
+
+@section('css')
+   <link href="{{ asset('theme/css/table-responsive.css',isset($secure) ? false : false) }}" rel="stylesheet" />
+   <link href="{{ asset('css/loan-style.css',isset($secure) ? false : false) }}" rel="stylesheet" />
+@endsection
+
+@section('content')
+   <div class="row">
+       <div class="col-sm-12">
+           <section class="panel">
+                <header class="panel-heading">
+                    <span>{{ trans('company.com_company_all_branch') }}</span>
+                    <span style="float: right"><a href="{{route ('add_branch') }}" class="btn btn-success"><i class="fa fa-plus"></i> {{ trans('sidebar.sb_add_branch') }}</a></span>
+                </header>
+                <div class="panel-body">
+                    <section id="flip-scroll">
+                         <table class="table table-bordered table-striped table-condensed cf">
+                            <thead class="cf">
+                                <tr>
+                                    <th>{{ trans('multiple.m_no') }}</th>
+                                    <th>{{ trans('report.rpt_branch_name') }}</th>
+                                    <th>{{ trans('report.rpt_branch_short_name') }}</th>
+                                    <th>{{ trans('company.com_branch_code') }}</th>
+                                    <th>{{ trans('company.address_one') }}</th>
+                                    <th>{{ trans('company.contact_number') }}</th>
+                                    <th>{{ trans('company.dynamic_nav') }}</th>
+                                    {{-- <th>{{ trans('multiple.m_location') }}</th> --}}
+                                    <th>{{ trans('multiple.m_status') }}</th>
+                                    <th style="text-align: center">{{ trans('multiple.m_action') }}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                               @if(!empty($branches))
+                                   @foreach($branches as $b)
+                                       <tr>
+                                           <td>{{ $b->id }}</td>
+                                           <td>{{ $b->branch_name }}</td>
+                                           <td>{{ $b->short_name }}</td>
+                                           <td>{{ $b->branch_code }}</td>
+                                           <td>{{ $b->address_one }}</td>
+                                           <td>{{ $b->contact_number }}</td>
+                                           <td>{{ $b->dynamic_nav }}</td>
+                                           {{-- <td>{{ date('d F Y',strtotime($b->address_one))}}</td> --}}
+                                           {{-- <td>{{ $b->location }}</td> --}}
+                                           <td>{{ $b->status? "Active":"Inactive" }}</td>
+                                           <td align="center">
+                                               <a href="{{ route('edit_branch',[$b->id]) }}" class="btn btn-default btn-xs" title="Edit"><i class="fa fa-pencil"></i></a>
+                                               @if($b->status == 0)
+                                                   <a href="{{route('enable_branch',[$b->id])}}" class="btn btn-default btn-xs" title="Activate"><i class="fa fa-check-circle"></i></a>
+                                               @else
+                                                   <a href="{{route('disable_branch',[$b->id])}}" class="btn btn-default btn-xs" title="Inactivate"><i class="fa fa-times-circle"></i></a>
+                                               @endif
+                                           </td>
+                                       </tr>
+                                   @endforeach
+                               @endif
+                            </tbody>
+                         </table>
+                    </section>
+                </div>
+           </section>
+       </div>
+   </div>
+@endsection

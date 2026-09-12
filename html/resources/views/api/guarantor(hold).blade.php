@@ -1,0 +1,146 @@
+@if(!empty($guarantor) && count($guarantor) > 0)
+<?php $gn =0;?>
+@foreach($guarantor as $gu)
+<?php $gn++;?>
+#{{ $gn }}
+<hr style="margin-top: 0px;"/>
+<div class="row">
+    <div class="col-md-2">
+        <div class="fileupload-new thumbnail" style="width: 200px; height: 150px;">
+            <img style="width: 200px; height: 140px;" src="{{ $gu->photo?asset('/data/guarantors/'.$gu->photo, isset($secure)?false:false):asset('images/noimage.gif', isset($secure)?false:false) }}" alt="Profile Picture" />
+        </div>
+         @if(!empty($gu->location_latitude) && !empty($gu->location_longitude))
+            <a href="javascript:;" class="client-view view-map"
+            data-lat="{{ $gu->location_latitude }}"
+            data-long="{{$gu->location_longitude}}"
+            >View Map</a> &nbsp;
+         @endif
+         @if(!empty($gu->signature))
+         <a href="javascript:;" class="client-view guarantor-signature"
+                data-mfp-src="{{ asset('data/guarantors_signature/'.$gu->signature, isset($secure)?false:false)}}"
+                 >View Guarantor Signature</a>
+         @endif
+         <br/>
+    </div>
+    <div class="col-md-10">
+        <div class="row">
+            <div class="col-md-4">
+                <table class="table-condensed">
+                    <tr>
+                        <th>{{ trans('customer.cus_customer_name') }} : </th>
+                        <td>{{ $gu->name }}</td>
+                    </tr>
+                    <tr>
+                        <th>{{ trans('user.u_user_kh_name') }} : </th>
+                        <td>{{ $gu->kh_name?$gu->kh_name:'N/A' }}</td>
+                    </tr>
+                    <tr>
+                        <th>{{ trans('multiple.m_gender') }} : </th>
+                        <td>{{ $gu->gender?$gu->gender:'N/A' }}</td>
+                    </tr>
+                    <tr>
+                        <th>{{ trans('customer.cus_nationality') }} : </th>
+                        <td>{{ $gu->nationality?$gu->nationality:'N/A' }}</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="col-md-4">
+                <table class="table-condensed">
+                    <tr>
+                        <th>{{ trans('customer.cus_birth_date') }} : </th>
+                        <td>{{ $gu->birth_date?$gu->birth_date:'N/A' }}</td>
+                    </tr>
+                    <tr>
+                        <th>{{ trans('multiple.m_phone',['num'=>'']) }} : </th>
+                        <td>{{ $gu->phone1}}{{ $gu->phone2? '/'. $gu->phone2:''}}</td>
+                    </tr>
+                    <tr>
+                        <th>{{ trans('multiple.m_address') }} : </th>
+                        <td>{{ $gu->address? $gu->address:'N/A' }}</td>
+                    </tr>
+                    <tr>
+                        <th>{{ trans('customer.cus_job') }} : </th>
+                        <td>{{ $gu->job?$gu->job:'N/A' }}</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="col-md-4">
+                <table class="table-condensed">
+                <span class="pull-right"><a href="{{route('edit_guarantor',[$gu->id]) }}" class="btn btn-info btn-xs"><i class="fa fa-pencil"></i> {{ trans('loan.l_edit_guarantor') }}</a></span>
+                    <tr>
+                        <th>{{ trans('customer.cus_card_number') }} : </th>
+                        <td>{{ $gu->card_number }}</td>
+                    </tr>
+                    <tr>
+                        <th>{{ trans('customer.cus_issued_date') }} : </th>
+                        <td>{{ $gu->card_date?$gu->card_date:'N/A' }}</td>
+                    </tr>
+                    <tr>
+                        <th>{{ trans('customer.cus_issued_by') }} : </th>
+                        <td>{{ $gu->card_issued_by?$gu->card_issued_by:'N/A'}}</td>
+                    </tr>
+                    <tr>
+                        <th>{{ trans('customer.cus_card_expired_date') }} : </th>
+                        <td>{{ $gu->card_expired_date?$gu->card_expired_date:'N/A' }}</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+<div class="row">
+    <div class="col-sm-12">
+     @if(!empty($gu->collateral) && count($gu->collateral) > 0)
+        <div >
+            <h4>{{ trans('loan.l_guarantor_collateral') }}</h4>
+        </div>
+        <section id="flip-scroll">
+            <table class="table table-bordered table-striped table-condensed cf">
+                <tr>
+                    <th style="text-align: center">{{ trans('multiple.m_type') }}</th>
+                    <th style="text-align: center">{{ trans('multiple.m_no') }}</th>
+                    <th style="text-align: center">{{ trans('report.rpt_value') }}</th>
+                    <th style="text-align: center">{{ trans('multiple.m_address') }}</th>
+                    <th style="text-align: center">{{ trans('multiple.m_note') }}</th>
+                    <th style="text-align: center;">{{ trans('multiple.m_retrieve_date') }}</th>
+                    <th style="text-align: center">{{ trans('multiple.m_photo') }}</th>
+                    <th style="text-align: center">{{ trans('multiple.m_action') }}</th>
+                </tr>
+                @foreach($gu->collateral as $c)
+                    <tr>
+                        <td align="center">{{ $c->collateral_type }}</td>
+                        <td align="center">{{ $c->collateral_no }}</td>
+                        <td align="center">{{ number_format($c->collateral_value,2,',','.') }}</td>
+                        <td>{{ !empty($c->collateral_address) ? $c->collateral_address : '-' }}</td>
+                        <td align="center">{{ !empty($c->note)? $c->note : '-' }}</td>
+                        <td align="center">{{ !empty($c->retrieve_date)? $c->retrieve_date : '-' }}</td>
+                        <td align="center">
+                            @if(!empty($c->collateral_photo))
+                                <a href="javascript:;" data-mfp-src="{{ asset('data/guarantors_collateral/'.$c->collateral_photo, isset($secure)?false:false) }}" class="guarantor-collateral">
+                                    <img class="listPhoto" src="{{ asset('data/guarantors_collateral/'.$c->collateral_photo, isset($secure)?false:false) }}" class="small-imag"/>
+                                </a>
+                            @else
+                                -
+                            @endif
+                        </td>
+                        <td align="center">
+                        	<a href="{{route('edit_guarantor_collateral',[$c->id])}}" class="btn btn-default btn-xs" title="Edit"><i class="fa fa-pencil"></i></a>
+                        	<a href="2/{{ $c->id }}" class="btn btn-default btn-xs pop-retrieve-date" title="{{ trans('loan.l_guarantor_collateral') }} Retrieve date #{{ $c->id }}"><i class="fa fa-lock"></i></a>
+                        </td>
+                    </tr>
+                @endforeach
+            </table>
+        </section>
+     @endif
+     @if(count($gu->collateral) < 3)
+        <div style="text-align: center">
+             <a href="{{ route('add_guarantor_collateral',[$gu->id]) }}" class="btn btn-primary">{{ trans('loan.l_add_guarantor_collateral') }}</a>
+        </div>
+     @endif
+    </div>
+</div>
+<br/>
+@endforeach
+@else
+    No data
+@endif

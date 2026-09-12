@@ -1,0 +1,2 @@
+id,n_user_id,n_group_code_id,n_source_id,chief_till_account_id,n_activity_type,n_create_times,n_description,n_status,url,updated_at,created_at,teller_till_account_id,n_amount
+1,,11,291,0,"Disburse Loan","2016-06-13 10:06:54",0,0,,"2016-06-13 10:42:54","2016-06-13 10:42:54",0,0

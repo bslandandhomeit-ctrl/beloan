@@ -1,0 +1,237 @@
+/* (A) WRAPPER */
+* {
+  font-family: arial, sans-serif;
+  box-sizing: border-box;
+}
+html {
+  text-rendering: optimizeLegibility !important;
+  -webkit-font-smoothing: antialiased !important;
+}
+body {
+  display: flex;
+  /*min-height: 100vh;*/
+  margin: 0 auto;
+  color:#767676;
+  background:#f1f2f7;
+  font-family:'Open Sans',sans-serif,'Suwannaphum' !important;
+  padding:0px !important;
+  margin:0px !important;
+  font-size:13px;
+  text-rendering:optimizeLegibility;
+}
+#poslist { width: 100%; }
+#poscart { width: 100%; }
+
+/* (B) PRODUCTS LIST */
+#poslist {
+  display: grid;
+  grid-template-columns: auto auto auto auto;
+}
+.pwrap {
+  margin: 10px;
+  padding: 10px;
+  border: 1px solid #ddd;
+  background: #fbfbfb;
+  cursor: pointer;
+  text-align: center;
+}
+.pimg { max-width: 50px; max-height: 50px; }
+.pname { font-weight: 700; }
+.pprice { color: #639aff; }
+
+/* (C) CART */
+#poscart {
+  padding: 10px;
+}
+.citem > * { box-sizing: border-box; }
+.citem, .cname { width: 100%: }
+.citem { padding: 10px; }
+.cname{ display: block; }
+.cdel { width: 25%; }
+.cqty { width: 75%; }
+#ctotal { font-weight: 700; padding: 10px;text-align: right; }
+.cdel, .cqty, #cempty, #ccheckout { padding: 10px;width: 100%; }
+.cdel, #cempty, #ccheckout {
+  background: #1fb5ad;
+  border: 1px solid #1fb5ad;
+  color: #fff;
+  font-weight: 700;
+  cursor: pointer;
+  border-radius: 4px;
+}
+#cempty, #ccheckout { margin: 5px; }
+
+/* (D) RECEIPT */
+#posreceipt { display: none; }
+
+.form-control {
+  display: block;
+  width: 100%;
+  padding: 0.375rem 0.75rem;
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.5;
+  color: #212529;
+  background-color: #fff;
+  background-clip: padding-box;
+  border: 1px solid #ced4da;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  border-radius: 0.25rem;
+  transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+}
+form.pos-form input {
+  padding: 10px;
+  font-size: 17px;
+  border: 1px solid grey;
+  float: left;
+  width: 100%;
+}
+
+form.pos-form button {
+  float: left;
+  width: 20%;
+  padding: 10px;
+  background: #1fb5ad;
+  color: white;
+  font-size: 17px;
+  border: 1px solid grey;
+  border-left: none;
+  cursor: pointer;
+}
+
+form.pos-form button:hover {
+  background: #0b7dda;
+}
+
+form.pos-form::after {
+  content: "";
+  clear: both;
+  display: table;
+}
+
+.form-control {
+  display: block;
+  width: 100%;
+  padding: 0.375rem 0.75rem;
+  font-size: 1rem;
+  font-weight: 400;
+  line-height: 1.5;
+  color: #212529;
+  background-color: #fff;
+  background-clip: padding-box;
+  border: 1px solid #ced4da;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  border-radius: 0.25rem;
+  transition: border-color .15s ease-in-out,box-shadow .15s ease-in-out;
+}
+.validation {
+  border:1px solid #99182c !important;
+  border-radius: 4px;
+}
+span.arrow {
+  margin-left: 6px;
+  height:17px;
+  background: url('http://i45.tinypic.com/f9ifz6.png') no-repeat left center;
+}
+label.error {
+  height:17px;
+  border-top:1px solid #99182c;
+  border-right:1px solid #99182c;
+  border-bottom:1px solid #99182c;
+  margin-left:9px;
+  padding:1px 5px 0px 5px;
+  font-size:small;
+}
+.text-validation{
+  height: 17px;
+  font-size: small;
+  color: #99182c;
+  margin-top: 5px;
+  font-weight: normal;
+  float: left;
+  width: 100%;
+}
+.action .cdel, #cempty, #ccheckout{
+  width: 120px;
+}
+.action .cdel, #cempty{
+  background-color: gray;
+  border-color: gray;
+}
+.journal-helper td, th {
+  padding: 5px;
+}
+.cdel{
+  background: red;
+  border-color: red;
+  width: 50px;
+}
+.panel{
+  margin: 5px;
+  height: 100%;
+}
+.panel-body {
+  padding: 15px;
+  overflow-y: auto;
+}
+table tfoot td{
+  min-width: 200px;
+  display: inline-block;
+}
+#poscart td{
+  border-bottom: 1px dotted #ddd;
+  border-top: none;
+}
+#loading{
+  width: 100%;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 9999;
+}
+#loading img{
+  width: 100px;
+}
+.item-header{
+  background: #ddd;
+  border: 1px solid #ddd !important;
+}
+.item-header th{
+  border-bottom: none !important;
+}
+#client{
+  margin-bottom: 10px;
+}
+.ui-menu .ui-menu-item{
+  font-size: 13px;
+}
+#Total_Payable{
+  font-weight: bold;
+  color: red;
+  font-size: 21px;
+}
+.Total_Payable{
+  font-weight: bold;
+  color: red;
+  font-size: 21px;
+}
+.total{
+  font-weight: bold;
+}
+#res-total-deposit{
+  background: #1fb5ad;
+  color: #fff;
+  padding: 5px 10px;
+  border-radius: 4px;
+}
+.res-grand-total{
+    color: #1fb5ad;
+    font-weight: bold;
+}
+.view_schedule_deposit{
+  padding: 5px 15px;
+}

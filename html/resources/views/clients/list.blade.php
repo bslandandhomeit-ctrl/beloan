@@ -1,0 +1,188 @@
+@extends('layouts.app')
+
+@section('css')
+<link href="{{ asset('css/client.css',isset($secure) ? false : false) }}" rel="stylesheet">
+<link href="{{ asset('css/loan-style.css',isset($secure) ? false : false) }}" rel="stylesheet">
+@endsection
+@section('content')
+<section class="panel">
+    <header class="panel-heading">
+        <span>{{ trans('sidebar.sb_client_summary') }}</span>
+        <span style="float: right"><a href="{{route ('add_client') }}" class="btn btn-success"><i class="fa fa-plus"></i> {{ trans('sidebar.sb_add_client') }}</a></span>
+    </header>
+
+    <div class="panel-body">
+        <div class="position-center" style="width:90%;">
+            <form role="form" class="cmxform form-horizontal" method="get" action="{{ route('list_client') }}" id="search_frm">
+                <div class="row">
+                    <div class="col-lg-6">
+                        <div class="form-group">
+                            <label for="Name" class="col-lg-3 control-label">{{ trans('customer.cus_customer_name') }}</label>
+                            <div class="col-lg-7">
+                                <input type="text" class="form-control" id="client_name" value="{{$name}}" name="name">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="Phone" class="col-lg-3 control-label">{{ trans('multiple.m_phone',['num'=>'']) }}</label>
+                            <div class="col-lg-7">
+                                <input type="text" class="form-control" value="{{$phone}}" id="phone1" name="phone" data-mask="999-999-999?9">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="form-group">
+                            <label for="inputCardnumber" class="col-lg-3 control-label">{{ trans('customer.cus_card_number') }}</label>
+                            <div class="col-lg-7">
+                                <input type="text" class="form-control" value="{{$cardNumber}}" id="card_number" name="card">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="inputCardnumber" class="col-lg-3 control-label">{{ trans('customer.cus_customer_id') }}</label>
+                            <div class="col-lg-7">
+                                <input type="text" class="form-control" value="{{$code}}" id="client_code" name="code">
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <div class="col-lg-offset-3 col-lg-9">
+                                <input type="hidden" name="offset" />
+                                <button type="submit" class="btn btn-info"><i class="fa fa-search"></i> {{ trans('multiple.m_search') }}</button>
+                                <button class="btn btn-warning" id="printer"><i class="fa fa-print"></i> {{ trans('multiple.m_print') }}</button>
+                                <a id="export" class="btn btn-primary"><i class="fa  fa-sign-out"></i> {{ trans('report.rpt_export') }}</a>
+                                <a id="xexport" class="btn btn-primary"><i class="fa  fa-sign-out"></i> {{ trans('report.xrpt_export') }}</a>
+                            </div>
+                        </div>
+                        <div class="page">
+                            <div class="custom-pagi">
+                                <span class="pagi_label">Number of Rows:</span>
+                                <input type="text" class="form-control" name="set_offset" value="<?php echo $offset ?>" />
+                                <input type="hidden" class="form-control" name="status" value="<?php echo $_GET['status'] ?>" />
+                                <a href="#" class="btn btn-danger">Go</a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <br/><br/>
+        <section id="unseen" class="ox-scroll">
+            <table  class="table table-bordered table-striped table-condensed table-hover clientTable">
+                <thead>
+                <th style="text-align: center;">{{ trans('multiple.m_no') }}</th>
+                <th style="text-align: center;">{{ trans('customer.cus_customer_id') }}</th>
+
+                <th style="text-align: center;">{{ trans('multiple.m_photo') }}</th>
+                <th style="text-align: center;">{{ trans('customer.cus_customer_name') }}</th>
+                <th style="text-align: center;">{{ trans('multiple.m_gender') }}</th>
+                <th style="text-align: center;">{{ trans('customer.identification') }}</th>
+                <th style="text-align: center;">{{ trans('customer.cus_job') }}</th>
+                <th style="text-align: center;">{{ trans('multiple.m_phone',['num'=>'']) }}</th>
+                <th style="text-align: center;">{{ trans('multiple.m_status') }}</th>
+                <th style="text-align: center;">{{ trans('multiple.m_action') }}</th>
+                </thead>
+                <tbody>
+                    @forelse($listClient as $list)
+                    <tr>
+                        <td class="isVerticalalign" align="center">{{ $unit->id}}</td>
+                        <td align="center">{{ $list->cus_acc }}</td>
+                        <?php 
+                            $url = '';
+                            if($list->photo){
+                                if(file_exists('data/clients/'.$list->photo)){
+                                    $url = asset('data/clients/'.$list->photo);
+                                }else{
+                                    $url = asset('images/noimage.gif');
+                                }
+                            }else{
+                                $url = asset('images/noimage.gif');
+                            }
+
+                        ?>
+                        <td align="center"><img class="listPhoto" src="{{ $url }}"></td>
+                        <td>{{$list->client_name}}</td>
+                        <td align="center">{{$list->gender ? $list->gender : '-'}}</td>
+                        <td align="center">{{$list->card_number}}</td>
+                        <td align="center">{{$list->job ? $list->job : '-'}}</td>
+                        <td align="center">{{$list->phone1}}{{ !empty($list->phone2) ? ' / '.$list->phone2  : ''}}</td>
+                        <td align="center">
+                            @if($list->status == 1)
+                            Active
+                            @else
+                            Inactive
+                            @endif
+                        </td>
+                        <td align="center" class="define-width">
+                            <a href="{{ route('client_detail', [$list->id]) }}" class="btn btn-xs btn-default" title="Detail"><i class="fa fa-search-minus"></i></a>
+                            <a href="{{route('edit_client', [$list->id])}}" class="btn btn-xs btn-default" title="Edit"><i class="fa fa-pencil"></i></a>
+                            @if($list->status == 1)
+                            <a href="{{ route('loan_add',[$list->id,0]) }}" class="btn btn-xs btn-default" title="Add Loan"><i class="fa fa-plus"></i></a>
+                            @else
+                            <a style="background-color: #ddd" href="{{ route('loan_add',[$list->id,0]) }}" class="btn btn-xs btn-default" disabled><i class="fa fa-plus"></i></a>
+                            @endif
+                        </td>
+                    </tr>
+                    @empty
+                    <tr><td colspan=9>{{ trans('multiple.m_no_result') }}</td></tr>
+                    @endforelse
+                </tbody>
+            </table>
+            <div class="page">
+                <?PHP
+                echo $listClient->appends([
+                    'name' => Input::get('name'),
+                    'card' => Input::get('card'),
+                    'phone'=> Input::get('phone'),
+                    'code' => Input::get('code'),
+                    'offset' => Input::get('offset')
+                ])->render();
+                ?>
+            </div>
+        </section>
+    </div>
+</section>
+@endsection
+
+@section('js')
+<script type="text/javascript" src="{{ asset('theme/js/bootstrap-inputmask/bootstrap-inputmask.min.js', isset($secure)?false:false) }}"></script>
+<script type="text/javascript" src="{{ asset('js/print.js',isset($secure) ? false : false)}}"></script>
+<script type="text/javascript" src="{{ asset('js/xlsx.core.min.js',isset($secure) ? false : false)}}"></script>
+<script type="text/javascript" src="{{ asset('js/Blob.min.js',isset($secure) ? false : false)}}"></script>
+<script type="text/javascript" src="{{ asset('js/FileSaver.js',isset($secure) ? false : false)}}"></script>
+<script type="text/javascript" src="{{ asset('js/tableexport.js',isset($secure) ? false : false)}}"></script>
+
+<script type="text/javascript">
+$(document).ready(function () {
+//pagination
+$('.custom-pagi a').on('click', function () {
+    val = $(this).parent().find('input[name="set_offset"]').val();
+    $('input[name="offset"]').val(val);
+    $('#search_frm').submit();
+    return false;
+});
+
+$("#export").click(function (event) {
+        var con = confirm("Do you really want to export to CSV file?");
+        if(con == true){
+            new TableExport(document.getElementById('trail_balance'), {
+                formats: ['csv'],
+                filename:'List client'
+            });
+            $('button.csv').hide().click();
+            $('.tableexport-caption').remove();
+        }
+    });
+});
+
+$("#xexport").click(function (event) {
+    var con = confirm("Do you really want to export to Excel file?");
+    if(con == true){
+        new TableExport(document.getElementById('trail_balance'), {
+                formats: ['xlsx'],
+                filename: 'List client'
+            }).formatConfig.xlsx.mimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+            $('button.xlsx').hide().click();
+            $('.tableexport-caption').remove();
+    }
+});
+
+</script>
+@endsection

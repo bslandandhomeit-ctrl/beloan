@@ -1,0 +1,46 @@
+@extends('layouts.app')
+@section('css')
+    <link rel="stylesheet" type="text/css" href="{{ asset('theme/js/bootstrap-datepicker/css/datepicker.css',isset($secure) ? false : false)}}" />
+@endsection
+@section('content')
+    <section class="panel">
+        <header class="panel-heading header-title">
+            {{ trans('report.cb_report') }}
+        </header>
+        <form method="get" class="form-horizontal" action="{{route('CBC_Report')}}">
+            <div class="panel-body">
+             <div class="col-lg-2">
+                 <div class="form-group">
+                     <label class="control-label">Export with Header</label>
+                     <input name="header" class="form-control" type="checkbox" value="1" style="height:35px; width:35px;"/>
+
+                 </div>
+
+                 <div class="form-group">
+                     <label class="control-label">Export Date</label>
+                     <input name="as_of_date" class="form-control" type="text" id="ex_date"/>
+                 </div>
+
+                 <div class="form-roup">
+                     <input type="submit" value="Export" >
+                     {{--<a href="" class="btn btn-info btn-lg">Generate your report</a>--}}
+                 </div>
+
+             </div>
+            </div>
+
+        </form>
+    </section>
+@endsection
+@section('js')
+    <script type="text/javascript" src="{{ asset('theme/js/bootstrap-datepicker/js/bootstrap-datepicker.js',isset($secure) ? false : false)}}"></script>
+<script>
+    $(document).ready(function(){
+        $('#ex_date').datepicker({
+            format: 'yyyy-mm-dd',
+            autoclose: true,
+            setDate: new Date()
+        });
+    });
+</script>
+@endsection

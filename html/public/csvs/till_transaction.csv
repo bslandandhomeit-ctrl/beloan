@@ -1,0 +1,2 @@
+id,till_account_id,from_account,to_account,till_user_id,branch_id,operate_by,tranx_time,type,cash_in,cash_out,balance,description,status,approve_status
+380,99,"Cash in Vault and on Hand"," chiefteller1 ( 1012-000099/USD-BTB-000099) ",0,1,70,"2016-05-04 17:05:12","Issue Till",20000,0,20000,20000,1,0

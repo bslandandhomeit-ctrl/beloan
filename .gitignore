@@ -1,0 +1,19 @@
+# Local DB data (Docker MySQL volume) - never version raw DB files
+/mysql/
+
+# Laravel app
+/html/vendor/
+/html/node_modules/
+/html/.env
+/html/storage/framework/cache/data/*
+/html/storage/framework/sessions/*
+/html/storage/framework/views/*
+/html/storage/logs/*.log
+/html/bootstrap/cache/*.php
+!/html/storage/framework/cache/data/.gitignore
+!/html/storage/framework/sessions/.gitignore
+!/html/storage/framework/views/.gitignore
+!/html/storage/logs/.gitignore
+
+.DS_Store
+Thumbs.db

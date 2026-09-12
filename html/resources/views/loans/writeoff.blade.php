@@ -1,0 +1,80 @@
+@extends('layouts.app')
+
+@section('css')
+    <link rel="stylesheet" type="text/css" href="{{ asset('theme/js/bootstrap-datepicker/css/datepicker.css',isset($secure) ? false : false)}}" />
+    <link href="{{ asset('css/client.css',isset($secure) ? false : false) }}" rel="stylesheet">
+@endsection
+@section('content')
+    <section class="panel">
+        <header class="panel-heading">
+            {{ trans('loan.l_write_off_loan') }}
+        </header>
+
+        <div class="panel-body">
+            @if(Session::has('msg'))
+                <div class="alert alert-success fade in">
+                    <button class="close close-sm" data-dismiss="alert">x</button>
+                    {{ Session::get('msg') }}
+                </div>
+            @endif
+            @if($errors->has())
+                <div class="alert alert-danger fade in">
+                    <button type="button" class="close" data-dismiss="alert"></button>
+                    {{ HTML::ul($errors->all()) }}
+                </div>
+            @endif
+
+            @if(Session::has('danger'))
+                <div class="alert alert-danger fade in">
+                    <button class="close close-sm" data-dismiss="alert">x</button>
+                    {{ Session::get('danger') }}
+                </div>
+            @endif
+            
+            <form class="cmxform form-horizontal" method="post" action="{{ route('loan_writeoff',[$loan_id]) }}" id="frmWriteoffon" enctype="multipart/form-data">
+                <input type="hidden" name="_token" value="{{ csrf_token() }}"/>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">{{ trans('loan.l_write_off_date') }} <span class="red">*</span></label>
+                    <div class="input-append date dpYears col-sm-6" data-date-viewmode="years" data-initialize="datepicker" data-date-format="dd/mm/yyyy" data-date="{{date('Y-m-d')}}">
+                        <input type="text" value="{{date('Y-M-d')}}" class="form-control" name="write_off_on" id="write_off_on">
+                            <span class="add-on offonDatepicker">
+                                <button class="btn btn-primary" type="button"><i class="fa fa-calendar"></i></button>
+                        </span>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">{{ trans('report.rpt_amount') }} <span class="red">*</span></label>
+                    <div class="col-sm-6">
+                        <input type="text" value={{$outstanding['balance']}} class="form-control" name="amount" id="amount" />
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3 control-label">{{ trans('multiple.m_note') }}</label>
+                    <div class="col-sm-6">
+                        <textarea  class="form-control" id="note" name="note"></textarea>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="col-sm-3"></label>
+                    <div class="col-sm-6">
+                        <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i>&nbsp;&nbsp;{{ trans('multiple.m_save') }}</button>
+                        <a href="javascript:history.back();" class="btn btn-danger"><i class="fa fa-times-circle"></i>&nbsp;&nbsp;{{ trans('multiple.m_cancel') }}</a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </section>
+@endsection
+
+@section('js')
+    <script type="text/javascript" src="{{ asset('theme/js/bootstrap-datepicker/js/bootstrap-datepicker.js',isset($secure) ? false : false)}}"></script>
+    <script type="text/javascript" src="{{ asset('theme/js/jquery.validate.min.js',isset($secure) ? false : false) }}"></script>
+    <script type="text/javascript" src="{{ asset('js/form.v.js',isset($secure) ? false : false) }}"></script>
+    <script type="text/javascript">
+        $('.dpYears').datepicker({
+            format: 'yyyy-mm-dd',
+            autoclose: true,
+            setDate: new Date()
+        }); 
+    </script>
+ @endsection

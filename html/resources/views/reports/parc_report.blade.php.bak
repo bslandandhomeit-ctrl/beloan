@@ -1,0 +1,516 @@
+@extends('layouts.app')
+
+@section('css')
+<link rel="stylesheet" type="text/css" href="{{ asset('theme/js/advanced-datatable/css/jquery.dataTables.css',isset($secure) ? false : false) }}"/>
+<link rel="stylesheet" type="text/css" href="{{ asset('/css/client.css',isset($secure) ? false : false) }}" />
+<link rel="stylesheet" type="text/css" href="{{ asset('/css/loan-style.css',isset($secure) ? false : false) }}"/>
+<link rel="stylesheet" type="text/css" href="{{ asset('theme/css/table-responsive.css',isset($secure) ? false : false) }}"/>
+<link rel="stylesheet" type="text/css" href="{{ asset('theme/js/bootstrap-datepicker/css/datepicker.css',isset($secure) ? false : false)}}" />
+<style>
+    @media print {
+      @page {size: landscape}
+      a[href]:after {
+        content: none !important;
+      }
+      .dataTables_length{
+        display:none;
+      }
+      .dataTables_filter{
+        display: none;
+      }
+    }
+</style>
+@endsection
+
+@section('content')
+<?php
+    //$loan_type = config('static_data.loan_type');
+?>
+<section class="panel">
+    <header class="panel-heading header-title">
+        PAR REPORT
+    </header>
+    <div class="panel-body">
+    	<form role="form" method="get" action="{{ route('parc_report') }}" id="search_frm">
+                <table class="tb-search-box">
+                	<tr>
+                		@if(count($branch) > 1)
+                		<td>
+                			{{ trans('report.rpt_branch_name') }}<br/>
+                			<select class="form-control" id="br" name="br">
+                            <option value="">-</option>
+                            @foreach($branch as $b)
+                            <option value="{{ $b->id }}"
+                                    @if(isset($company_branch_id))
+                                    @if($company_branch_id==$b->id)
+                                    selected
+                                    @endif
+                                    @endif>{{ $b->branch_name}}</option>
+                            @endforeach
+                        	</select>
+                		</td>
+                		@endif
+
+                        <td>Loan Type<br/>
+                            <select class="form-control" id="loan_type" name="loan_type">
+                            <option value="">-</option>
+                            @foreach($loan_types as $val)
+                            <option value="{{ $val->id }}"  @if($loan_type_id==$val->id) selected @endif>{{$val->products_type_name}} ( {{$val->code}} )</option>
+                            @endforeach
+                            </select>
+                        </td>
+
+                		<td>
+                			{{ trans('report.rpt_date_till') }}<br/>
+                			<div data-date-viewmode="years" data-initialize="datepicker" data-date-format="yyyy/mm/dd" data-date="{{date('Y-m-d')}}" class="input-append date dpStart">
+                                <input type="text" name="dpStart" size="16" class="form-control" value="{{ $dpStart }}">
+                                <span class="add-on birhtdateDatepicker ptl-3">
+                                	<button class="btn btn-primary" type="button"><i class="fa fa-calendar"></i></button>
+                                </span>
+                            </div>
+                		</td>
+
+                		<td>
+                			{{ trans('report.borrow_name') }}<br/>
+                			<input type="text" name="borrow_name" size="16" class="form-control" value="{{ $borrow_name }}" />
+                		</td>
+
+                		<td>
+                			{{ trans('report.rpt_loan_ref') }}<br/>
+                			<input type="text" name="loan_ref" size="16" class="form-control" value="{{ $loan_ref }}" />
+                		</td>
+
+                		@if(count($co) > 1)
+                		<td>
+                			{{ trans('report.rpt_co_name') }}<br/>
+                			<select class="form-control" id="co_id" name="co_id">
+                            <option value="">-</option>
+                            @foreach($co as $c)
+                            <option value="{{ $c->id }}"
+                                    @if(isset($co_id))
+                                    @if($co_id==$c->id)
+                                    selected
+                                    @endif
+                                    @endif>{{ $c->name}}</option>
+                            @endforeach
+                        	</select>
+                		</td>
+                		@endif
+
+                		<td>
+                			{{ trans('report.rpt_product_category') }}<br/>
+                			<select class="form-control" id="category_id" name="category_id">
+                            <option value="">-</option>
+                            @foreach($product_categories as $p)
+                            <option value="{{ $p->id }}"
+                                    @if(isset($category_id))
+                                    @if($category_id==$p->id)
+                                    selected
+                                    @endif
+                                    @endif>{{ $p->category_name}}</option>
+                            @endforeach
+                        	</select>
+                		</td>
+
+                		<td>
+                			{{ trans('report.overdue') }}<br/>
+                			<input type="text" name="overdue" size="16" class="form-control" value="{{ $overdue || $overdue==0?$overdue:30 }}" />
+                		</td>
+
+                	</tr>
+                </table>
+
+                <div class="row">
+                	<?php
+                		$current_url = Request::fullUrl();
+                		$boo = strpos($current_url, '?') ;
+                		$exs = $boo?'&':'?';
+                	?>
+                    <div class="col-sm-offset-6 col-sm-6">
+                    	<input type="hidden" name="offset" />
+                        <button type="submit" class="btn btn-info"><i class="fa fa-search"></i> {{ trans('multiple.m_search') }}</button>
+                        <button class="btn btn-warning" id="printer"><i class="fa fa-print"></i> {{ trans('multiple.m_print') }}</button>
+                        <a id="export" class="btn btn-primary"><i class="fa  fa-sign-out"></i> {{ trans('report.rpt_export') }}</a>
+                        <a id="xexport" class="btn btn-primary"><i class="fa  fa-sign-out"></i> {{ trans('report.xrpt_export') }}</a>
+                    </div>
+                </div>
+            </form>
+    	<br/><br/><br/>
+
+    	<div id="printArea">
+                @include('api.report_header')
+                <h4 class="sch_title" id="p-header">
+                    {{ trans('sidebar.sb_parc_report') }}
+                    @foreach($branch as $b)
+                    @if($company_branch_id==$b->id)
+                    <strong>{{ trans('report.rpt_for_branch') }}: {{ $b->branch_name }}</strong><br/>
+                    @endif
+                    @endforeach
+
+                    @if($dpStart)
+                    	{{ trans('report.rpt_date_till') }}: {{$dpStart}}<br/>
+                    @endif
+
+                    @if($borrow_name)
+                    	{{ trans('report.borrow_name') }}: {{$borrow_name}}<br/>
+                    @endif
+
+                     @if($loan_ref)
+                    	{{ trans('report.rpt_loan_ref') }}: {{$loan_ref}}<br/>
+                    @endif
+
+                     @if($co_id)
+                    	{{ trans('report.rpt_co_name') }}: {{$co_id}}<br/>
+                    @endif
+
+                     @if($category_id)
+                    	{{ trans('report.rpt_product_category') }}: {{$category_id}}<br/>
+                    @endif
+
+                     @if($overdue)
+                    	{{ trans('report.overdue') }}: {{$overdue}}<br/>
+                    @endif
+                </h4>
+            <div id="divTab">
+	        <table class="table table-bordered table-striped table-condensed" id="parc-table">
+                <thead style="background-color: #ffffff">
+					<tr class="data-center header">
+						<td rowspan="3">No.</td>
+						<td rowspan="3">Branch</td>
+						<td rowspan="3">Loan Ref.Number</td>
+						<td rowspan="3">Borrower's Name</td>
+						<td rowspan="3">CO</td>
+						<td rowspan="3">Phone</td>
+						<td rowspan="3">Address</td>
+						<td rowspan="3">Product Type and Model</td>
+						<td rowspan="3">Sale Price (SPA)</td>
+						<td colspan="2" rowspan="2">Down Payment</td>
+						<td rowspan="3">Loan Amount(Approval Limit)</td>
+						<td colspan="2" rowspan="1">O/S Balance of Loan</td>
+						<td rowspan="3">Varaince (loan amount & principal)</td>
+						<td colspan="3" rowspan="1">Product Resale Price</td>
+						<td rowspan="3">Remain Amount of principal</td>
+						<td rowspan="3">Overdue (Days)</td>
+            <td colspan="5" style="vertical-align:middle;">{{ trans('report.rpt_pass_due') }}</td>
+					</tr>
+					<tr class="data-center">
+						<td colspan="1" rowspan="2">Principal</td>
+						<td colspan="1" rowspan="2">Interest</td>
+						<td colspan="2" rowspan="1">Place at Dealers Site</td>
+						<td>Place at Customer Site</td>
+
+                        <td style="vertical-align: middle;" rowspan="2">{{ trans('report.rpt_principal') }}</td>
+                        <td style="vertical-align: middle;" rowspan="2">{{ trans('report.rpt_interest') }}</td>
+                        <td style="vertical-align: middle;" rowspan="2">{{ trans('report.rpt_fee') }}</td>
+                        <td style="vertical-align: middle;" rowspan="2">{{ trans('report.rpt_penalty') }}</td>
+                        <td style="vertical-align: middle;" rowspan="2">{{ trans('report.rpt_total') }}</td>
+					</tr>
+					<tr class="data-center">
+						<td>%</td>
+						<td>Amount</td>
+						<td>% according to MOU</td>
+						<td>Resale Price</td>
+						<td>Estimated Price</td>
+					</tr>
+				</thead>
+
+				<tbody>
+					<?php
+                        $n = 1;
+                        $t_passdue_prin = 0;
+                        $t_passdue_int = 0;
+                        $t_passdue_penal = 0;
+                        $t_passdue_total = 0;
+			$ex_rate = 1;
+                        $test_arr = [];
+                    ?>
+					@foreach($act_loans as $s)
+                    	@foreach($loans[$s->id] as $r)
+                            <?php
+			    if($s->client_loan_account->currency == 1) $ex_rate = 4000;
+			    if($s->client_loan_account->currency == 2) $ex_rate = 1;
+                            $l = $r;
+                            $addr = $r->client->Address;
+                            $cbc_addr = "";
+                            foreach($addr as $ad){
+                                $cbc_addr .= ($ad->address_en1!="")?$ad->address_en1.",":"";
+                                $cbc_addr .= $ad->Village->en_name .",".$ad->Commune->en_name.",".$ad->District->eng_name.",".$ad->province->eng_name; 
+                                if(count($addr) > 1){
+                                    $cbc_addr .= "¥n";
+                                }
+                            }
+
+                            ?>
+
+		                	<tr>
+		                		<?php
+		                			$A = $A_[] = $r->product_price / $ex_rate ;
+		                			$C = $C_[] = ($r->down_payment < 0)? 0 : $r->down_payment / $ex_rate ;
+		                			$B = $B_[] = ($C / $A) * 100;
+		                			$D = $D_[] = $A - $C;
+		                			$E = $E_[] = $r->transaction_req_last[0]->balance / $ex_rate; //$r->balance;
+		                			$G = $G_[] = $D - $E;
+		                			$s_interest = $s_interest_[] = ($r->schedule[0]->s_interest - $r->transaction_req[0]->t_interest)/$ex_rate;
+//		                			dd($r->schedule[0]->s_interest);
+		                			$H = $r->mou_price/$ex_rate;
+		                			$IJ = ($A * $H)/100;
+		                			$I = $I_[] = $r->p_status!=6 && $r->p_status!=7?$IJ:'';
+		                			$J = $J_[] = $r->p_status==6 || $r->p_status==7?$IJ:'';
+                                    $K = $K_[] = $E - ($I + $J);
+                          $product_str = $loan_types[$r->loan_type]->code;
+                          if($r->category_name) $product_str .= ' / '.$r->category_name;
+                          if($r->brand_name) $product_str .= ' / '.$r->brand_name;
+                          if($r->product_type) $product_str .= ' / '.$r->product_type;
+		                			//$TOS[] = $r->transaction_reqLastBalance[0]->balance;
+		                		?>
+		                		<td style="text-align: center">{{$n}}</td>
+		                		<td style="text-align: center">{{$branch[$r->company_branch_id]->branch_name}}</td>
+						<td><a href="{{ route('loan_detail', [$r->id])}}">{{$r->contract_id}}</a></td>
+		                		<td>{{$r->client_name}}</td>
+						<td>{{$r->co_user->name}}</td>
+                                <td>{{$r->client->phone1 . (($r->client->phone2!="")? (" / " . $r->client->phone2):"")}}</td>
+                                <td>{{($r->client->address != "" && count($r->client->address) > 10) ? $r->client->address : $cbc_addr}}</td>
+                                <td>{{$product_str}}</td>
+
+		                		<td style="text-align: right">{{number_format($A,2,'.',',')}}</td>
+		                		<td style="text-align: center">{{number_format($B,2,'.',',')}}</td>
+		                		<td style="text-align: right">{{number_format($C,2,'.',',')}}</td>
+		                		<td style="text-align: right">{{number_format($D,2,'.',',')}}</td>
+		                		<td style="text-align: right">{{number_format($E,2,'.',',')}}</td>
+		                		<td style="text-align: right">{{number_format($s_interest,2,'.',',')}}</td>
+		                		<td style="text-align: right">{{number_format($G,2,'.',',')}}</td>
+		                		<td style="text-align: right">{{number_format($H,2,'.',',')}}</td>
+		                		<td style="text-align: right">{{number_format($I,2,'.',',')}}</td>
+		                		<td style="text-align: right">{{number_format($J,2,'.',',')}}</td>
+		                		<td style="text-align: right">{{number_format($K,2,'.',',')}}</td>
+		                		<td style="text-align: center">{{$overdue_[$s->id]}}</td>
+
+                                <td align="right">{{ number_format($pass_due[$s->id]->principal / $ex_rate, 2, '.', ',') }}</td>
+                                <td align="right">{{ number_format($pass_due[$s->id]->interest / $ex_rate, 2, '.', ',') }}</td>
+                                <td align="right">{{ number_format($pass_due[$s->id]->fee / $ex_rate, 2, '.', ',') }}</td>
+                                <td align="right">{{ number_format($pass_due[$s->id]->penalty / $ex_rate, 2, '.', ',') }}</td>
+                                <td align="right">{{ number_format($pass_due[$s->id]->total / $ex_rate, 2, '.', ',') }}</td>
+
+		                	</tr>
+		                	<?php
+		                	    $n++;
+		                	    $t_passdue_prin  += $pass_due[$s->id]->principal / $ex_rate;
+		                	    $t_passdue_int   += $pass_due[$s->id]->interest / $ex_rate;
+					    $t_passdue_fee   += $pass_due[$s->id]->fee / $ex_rate;
+		                	    $t_passdue_penal += $pass_due[$s->id]->penalty / $ex_rate;
+		                	    $t_passdue_total += $pass_due[$s->id]->total / $ex_rate;
+		                	?>
+			            @endforeach
+
+			        @endforeach
+                </tbody>
+                <tfoot>
+			        <tr class="bolder" style="border-top: double; font-weight: bold;">
+			        	<td colspan="8" class="text-right">Total:</td>
+			        	<td style="text-align: right"><?php echo number_format(array_sum($A_),2,'.',',')?></td>
+			        	<td></td>
+			        	<td style="text-align: right"><?php echo number_format(array_sum($C_),2,'.',',')?></td>
+			        	<td style="text-align: right"><?php echo number_format(array_sum($D_),2,'.',',')?></td>
+			        	<td style="text-align: right"><?php echo number_format(array_sum($E_),2,'.',',')?></td>
+			        	<td style="text-align: right"><?php echo number_format(array_sum($s_interest_),2,'.',',')?></td>
+			        	<td style="text-align: right"><?php echo number_format(array_sum($G_),2,'.',',')?></td>
+			        	<td></td>
+			        	<td style="text-align: right"><?php echo number_format(array_sum($I_),2,'.',',')?></td>
+			        	<td style="text-align: right"><?php echo number_format(array_sum($J_),2,'.',',')?></td>
+			        	<td style="text-align: right"><?php echo number_format(array_sum($K_),2,'.',',')?></td>
+			        	<td></td>
+                        <td align="right" rowspan="3">{{number_format($t_passdue_prin,2,'.',',')}}</td>
+                        <td align="right" rowspan="3">{{number_format($t_passdue_int,2,'.',',')}}</td>
+                        <td align="right" rowspan="3">{{number_format($t_passdue_fee,2,'.',',')}}</td>
+			<td align="right" rowspan="3">{{number_format($t_passdue_penal,2,'.',',')}}</td>
+                        <td align="right" rowspan="3">{{number_format($t_passdue_total,2,'.',',')}}</td>
+			        </tr>
+			        <tr class="bolder" >
+			        	<td colspan="8"></td>
+			        	<td style="text-align: right; font-weight: bold; color:red;"><?php echo number_format((array_sum($E_)/$TOS)*100,2,'.',',');?>%</td>
+			        	<td colspan="3"></td>
+			        	<td colspan="3" style="font-weight: bold">Total Out Standing Balance of Loans: <p style="color:red;"><?php echo number_format($TOS,2,'.',',')?></p></td>
+			        	<td colspan="5" ></td>
+			        </tr>
+
+			        <tr class="bolder">
+			        	<td colspan="12"></td>
+			        	<td colspan="3" style="font-weight: bold">Loans Arrears at Risk: <p style="color:red;"><?php echo number_format((array_sum($K_)/$TOS)*100,2,'.',',')?>%</p></td>
+			        	<td colspan="5"></td>
+			        </tr>
+			    </tfoot>
+			</table>
+
+			<?php echo getFooter(true);?>
+			</div>
+
+
+
+		</div>
+
+		<!-- <div class="page">
+			<div class="custom-pagi">
+				<input type="text" class="form-control" name="set_offset" value="<?php //echo $_GET['offset']?>" />
+				<a href="#" class="btn btn-primary">Go</a>
+            </div>
+            <?php //echo $repayments->appends([
+//             		'sort' =>'loans.id',
+//             		'br'=>Input::get('br'),
+//             		'dpStart'=>Input::get('dpStart'),
+//             		'borrow_name'=>Input::get('borrow_name'),
+//             		'loan_ref'=>Input::get('loan_ref'),
+//             		'co_id'=>Input::get('co_id'),
+//             		'category_id'=>Input::get('category_id'),
+//             		'overdue'=>Input::get('overdue'),
+//             		'offset'=>Input::get('offset')
+//             ])->render();
+			?>
+        </div>-->
+    </div>
+</section>
+@endsection
+@section('js')
+    <script type="text/javascript" src="{{ asset('js/print.js',isset($secure) ? false : false)}}"></script>
+    <script type="text/javascript" src="{{ asset('js/jquery.floatThead.min.js',isset($secure) ? false : false)}}"></script>
+    <script type="text/javascript" src="{{ asset('theme/js/bootstrap-datepicker/js/bootstrap-datepicker.js',isset($secure) ? false : false)}}"></script>
+    <script src="{{ asset('js/dataTables.js',isset($secure) ? false : false) }}"></script>
+    
+    <script type="text/javascript" src="{{ asset('js/xlsx.full.min.js',isset($secure) ? false : false)}}"></script>
+    <script type="text/javascript" src="{{ asset('js/Blob.min.js',isset($secure) ? false : false)}}"></script>
+    <script type="text/javascript" src="{{ asset('js/FileSaver.js',isset($secure) ? false : false)}}"></script>
+    <script type="text/javascript" src="{{ asset('js/tableexport.js',isset($secure) ? false : false)}}"></script>
+    <script type="text/javascript">
+    // This must be a hyperlink
+
+        TableExport.prototype.charset = "charset=utf-8";
+        $("#export").click(function (event) {
+            var con = confirm("Do you really want to export to CSV file?");
+            if(con == true){
+                new TableExport(document.getElementById('parc-table'), {
+                        formats: ['csv'],
+                        filename: 'parc_report'
+                    });
+                    $('button.csv').hide().click();
+                    $('.tableexport-caption').remove();
+            }
+        });
+
+        $("#xexport").click(function (event) {
+            var con = confirm("Do you really want to export to Excel file?");
+            if(con == true){
+                new TableExport(document.getElementById('parc-table'), {
+                        formats: ['xlsx'],
+                        filename:'parc_report'
+                    }).formatConfig.xlsx.mimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+                    $('button.xlsx').hide().click();
+                    $('.tableexport-caption').remove();
+            }
+        });
+
+        
+        $(document).ready(function(){
+          /*$('#parc-table').dataTable({
+            "paging":   true,
+            "ordering": true,
+            "info":     true,
+            "iDisplayLength": 10000000,
+            "pageLength": 1000
+          });
+		  */
+        	$('.dpStart').datepicker({
+                format: 'yyyy-mm-dd',
+                autoclose: true,
+                setDate: new Date()
+            });
+
+            $('.custom-pagi a').on('click', function(){
+        				val = $(this).parent().find('input[name="set_offset"]').val();
+        				$('input[name="offset"]').val(val);
+        				$('#search_frm').submit();
+        				return false;
+            });
+
+            /*$(".sticky-header").floatThead({scrollingTop:77});
+
+            tss = $('.table-striped').attr('style');
+          	tss = tss.split('min-width: ');
+          	tss = tss[1].split(';');
+          	$('.prepare').css('min-width', tss[0]);
+            dosorting();*/
+
+
+        });
+
+        function dosorting(){
+            //sorting *****************
+
+            $('#divTab table').DataTable( {
+                "paging":   true,
+                "ordering": true,
+                "info":     true,
+                "iDisplayLength": 10000000,
+                "pageLength": 1000
+            } );
+        }
+        /*
+        function exportTableToCSV($table, filename) {
+            var $headers = $table.find('tr:has(th)')
+                ,$rows = $table.find('tr:has(td)')
+
+                // Temporary delimiter characters unlikely to be typed by keyboard
+                // This is to avoid accidentally splitting the actual contents
+                ,tmpColDelim = String.fromCharCode(11) // vertical tab character
+                ,tmpRowDelim = String.fromCharCode(0) // null character
+
+                // actual delimiter characters for CSV format
+                ,colDelim = '","'
+                ,rowDelim = '"\r\n"';
+
+                // Grab text from table into CSV formatted string
+                var csv = '"';
+                csv += ($('#p-header').html()).trim();
+                csv += rowDelim;
+                csv += formatRows($headers.map(grabRow));
+                csv += rowDelim;
+                csv += formatRows($rows.map(grabRow)) + '"';
+                // Data URI
+                var csvData = 'data:application/csv;charset=utf-8,' + encodeURIComponent(csv);
+
+            $(this)
+                .attr({
+                'download': filename
+                    ,'href': csvData
+                    //,'target' : '_blank' //if you want it to open in a new window
+            });
+
+            //------------------------------------------------------------
+            // Helper Functions
+            //------------------------------------------------------------
+            // Format the output so it has the appropriate delimiters
+            function formatRows(rows){
+                return rows.get().join(tmpRowDelim)
+                    .split(tmpRowDelim).join(rowDelim)
+                    .split(tmpColDelim).join(colDelim);
+            }
+            // Grab and format a row from the table
+            function grabRow(i,row){
+
+                var $row = $(row);
+                //for some reason $cols = $row.find('td') || $row.find('th') won't work...
+                var $cols = $row.find('td');
+                if(!$cols.length) $cols = $row.find('th');
+
+                return $cols.map(grabCol)
+                            .get().join(tmpColDelim);
+            }
+            // Grab and format a column from the table
+            function grabCol(j,col){
+                var $col = $(col),
+                    $text = $col.text();
+
+                return $text.replace('"', '""'); // escape double quotes
+
+            }
+        }*/
+    </script>
+@endsection

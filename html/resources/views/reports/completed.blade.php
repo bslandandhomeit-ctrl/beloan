@@ -1,0 +1,252 @@
+@extends('layouts.app')
+
+@section('css')
+    <link rel="stylesheet" type="text/css" href="{{ asset('/css/loan-style.css',isset($secure) ? false : false) }}"/>
+    <link rel="stylesheet" type="text/css" href="{{ asset('/css/client.css',isset($secure) ? false : false) }}"/>
+    <link rel="stylesheet" type="text/css" href="{{ asset('theme/js/bootstrap-datepicker/css/datepicker.css',isset($secure) ? false : false)}}" />
+@endsection
+@section('content')
+    <section class="panel">
+        <header class="panel-heading">
+            {{ trans('sidebar.sb_completed_loans') }}
+            @if(isset($start) && isset($end))
+                {{ trans('multiple.m_from') }} {{ date("d-M-Y", strtotime($start)) }} {{ trans('multiple.m_to') }} {{ date("d-M-Y", strtotime($end)) }}
+            @else
+                {{ isset($start)?'Loan completed on '.date("d-M-Y", strtotime($start)):'' }}
+                {{ isset($end)?'Loan completed on '.date("d-M-Y", strtotime($end)):'' }}
+            @endif
+            @foreach($branch as $b)
+                @if(isset($branch_id))
+                    @if($branch_id==$b->id)
+                        ({{ $b->branch_name }})
+                    @endif
+                @endif
+            @endforeach
+        </header>
+        <div class="panel-body">
+            <div class="position-center" style="width:100%;">
+                <form role="form" method="get" action="{{ route('rpt_completed') }}">
+                    <div class="row">
+                        <label class="control-label col-md-1 padding-top">{{ trans('multiple.m_start_date') }}</label>
+                        <div class="col-md-2">
+                            <div data-date-viewmode="years" data-initialize="datepicker" data-date-format="yyyy/mm/dd" data-date="{{date('Y-m-d')}}" class="input-append date dpStart">
+                                <input type="text" name="dpStart" size="16" class="form-control" value="{{ isset($start)?$start:old('dpStart') }}">
+                                    <span class="add-on birhtdateDatepicker ptl-3">
+                                        <button class="btn btn-primary" type="button"><i class="fa fa-calendar"></i></button>
+                                  </span>
+                            </div>
+                        </div>
+                        <label class="control-label col-md-1 padding-top">{{ trans('multiple.m_end_date') }}</label>
+                        <div class="col-md-2">
+                            <div data-date-viewmode="years" data-initialize="datepicker" data-date-format="yyyy/mm/dd" data-date="{{date('Y-m-d')}}" class="input-append date dpEnd">
+                                <input type="text" name="dpEnd" size="16" class="form-control" value="{{ isset($end)?$end:old('dpEnd') }}">
+                                    <span class="add-on birhtdateDatepicker ptl-3">
+                                        <button class="btn btn-primary" type="button"><i class="fa fa-calendar"></i></button>
+                                  </span>
+                            </div>
+                        </div>
+                        <label class="control-label col-md-2 padding-top">{{ trans('report.rpt_branch_name') }}</label>
+                        <div class="col-md-2">
+                            <select class="form-control" id="selBrand" name="selBrand">
+                                <option value="">-</option>
+                                @foreach($branch as $b)
+                                    <option value="{{ $b->id }}"
+                                        @if(isset($branch_id))
+                                            @if($branch_id==$b->id)
+                                                selected
+                                            @endif
+                                        @endif>{{ $b->branch_name}}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div><br/>
+                    <div class="row">
+                        <div class="col-lg-offset-6 col-lg-6">
+                            <button type="submit" class="btn btn-info"><i class="fa fa-search"></i> {{ trans('multiple.m_search') }}</button>
+                            <button class="btn btn-warning" id="printer"><i class="fa fa-print"></i> {{ trans('multiple.m_print') }}</button>
+                            <a id="export" class="btn btn-primary"><i class="fa  fa-sign-out"></i> {{ trans('report.rpt_export') }}</a>
+                            <a id="xexport" class="btn btn-primary"><i class="fa  fa-sign-out"></i> {{ trans('report.xrpt_export') }}</a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <br/><br/>
+            <div id="printArea" style="clear: both">
+            @include('api.report_header',['co_phone'=>!empty($co_id->co_user) ? $co_id->co_user->phone: ''])
+            <h4 class="sch_title">
+                {{ trans('sidebar.sb_completed_loans') }}
+                @if(isset($start) && isset($end))
+                    {{ trans('multiple.m_from') }} {{ date("d-M-Y", strtotime($start)) }} {{ trans('multiple.m_to') }} {{ date("d-M-Y", strtotime($end)) }}
+                @else
+                    {{ isset($start)?'Loan completed on '.date("d-M-Y", strtotime($start)):'' }}
+                    {{ isset($end)?'Loan completed on '.date("d-M-Y", strtotime($end)):'' }}
+                @endif
+                @foreach($branch as $b)
+                    @if(isset($branch_id))
+                        @if($branch_id==$b->id)
+                            ({{ $b->branch_name }})
+                        @endif
+                    @endif
+                @endforeach
+            </h4>
+                <section id="unseen">
+                    <table class="table table-bordered table-striped table-condensed completed" id="completed">
+                        <thead class="th-center">
+                            <tr>
+                                <th rowspan=2 style="vertical-align:middle;">{{ trans('multiple.m_no') }}</th>
+                                <th rowspan=2 style="vertical-align:middle;">{{ trans('customer.cus_customer_name') }}</th>
+                                <th rowspan=2 style="vertical-align:middle;">{{ trans('report.rpt_contract_id') }}</th>
+                                <th rowspan=2 style="vertical-align:middle;">{{ trans('report.rpt_loan_type') }}</th>
+                                <th rowspan=2 style="vertical-align:middle;">{{ trans('report.rpt_loan_amount') }}</th>
+                                <th rowspan=2 style="vertical-align:middle;">{{ trans('report.rpt_interest') }}<br>P.M</th>
+                                <th colspan=4 style="vertical-align:middle;">{{ trans('loan.l_total_paid_amount') }}</th>
+                                <th rowspan=2 style="vertical-align:middle;">{{ trans('report.rpt_principal_balance') }}</th>
+                                <th rowspan=2 style="vertical-align:middle;">{{ trans('report.rpt_settlement_date') }}</th>
+                                <th colspan=2 style="vertical-align:middle;">{{ trans('report.rpt_contract_agreement') }}</th>
+                            </tr>
+                            <tr>
+                                <th>{{ trans('loan.l_last_paid_date') }}</th>
+                                <th>{{ trans('report.rpt_interest') }}</th>
+                                <th>{{ trans('report.rpt_principal') }}</th>
+                                <th>{{ trans('report.rpt_penalty') }}</th>
+                                <th>{{ trans('multiple.m_start_date') }}</th>
+                                <th>{{ trans('report.rpt_maturity_date') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php
+                                $totalA = 0.0;
+                                $i=1;
+                                $totalPB = 0.0;
+                                $totalIn = 0.0;
+                                $totalPr = 0.0;
+                                $totalPe = 0.0;
+                                $principal_bal = 0.0;
+
+                                $static = config('static_data');
+                            ?>
+                            @forelse($completed as $set)
+                                <?php
+                                    $total_int = 0.0;
+                                    $total_principal = 0.0;
+                                    $total_penalty = 0.0;
+                                    $temp_date = null;
+                                    foreach($set->payment as $p){
+                                        $total_int += floatval($p->paid_interest);
+                                        $total_principal += floatval($p->paid_principal);
+                                        $total_penalty += floatval($p->penalty_amount);
+                                        if($temp_date == null){
+                                            $temp_date = $p->repayment_date;
+                                        }else{
+                                            if(strtotime($temp_date) < strtotime($p->repayment_date)){
+                                                $temp_date = $p->repayment_date;
+                                            }
+                                        }
+                                    }
+                                    $principal_bal = $set->loan_amount-$total_principal;
+                                    $totalA += floatval($set->loan_amount);
+                                    $totalIn += $total_int;
+                                    $totalPr += $total_principal;
+                                    $totalPe += $total_penalty;
+                                    $totalPB += $principal_bal;
+                                ?>
+                                <tr>
+                                    <td>{{ $i }}</td>
+                                    <td>{{ $set->client->client_name }}</td>
+                                    <td align="center"><a href="{{ route('loan_detail',[$set->id]) }}">{{ $set->contract_id }}</a></td>
+                                    <td align="center">{{ $static['loan_type'][$set->loan_type] }}</td>
+                                    <td align="right">{{ number_format($set->loan_amount,2,'.',',') }}</td>
+                                    <td align="center">{{ number_format($set->interest_rate,2) }}%</td>
+                                    <td align="center"> {{((count($set->payment) != 0)? Date("d-M-Y", strtotime($temp_date)) : '-') }}</td>
+                                    <td align="right">{{ ((count($set->payment) != 0) ? number_format($total_int,2,',','.') : '-') }}</td>
+                                    <td align="right">{{ ((count($set->payment) != 0) ? number_format($total_principal,2,',','.'): '-') }}</td>
+                                    <td align="right">{{ ((count($set->payment) != 0) ? number_format($total_penalty,2,',','.') : '-') }}</td>
+                                    <td align="right">{{ number_format($principal_bal,2,',','.') }}</td>
+                                    <td align="center">{{ Date("d-M-Y", strtotime($set->settlement_date)) }}</td>
+                                        <?php
+                                            $old_date = date_create($set->submitted_on);
+                                            date_add($old_date, date_interval_create_from_date_string('1 month'));
+                                            $new_date = date_format($old_date, 'Y-M-d');
+                                            echo '<td align="center">'.$new_date.'</td>';
+
+                                            $old_date = date_create($new_date);
+                                            date_add($old_date, date_interval_create_from_date_string($set->loan_duration.' months'));
+                                            $new_date = date_format($old_date, 'Y-M-d');
+                                            echo '<td align="center">'.$new_date.'</td>';
+                                        ?>
+                                </tr>
+                                <?php $i+=1;?>
+                            @empty
+                                <tr><td colspan=14>{{ trans('multiple.m_no_result') }}</td></tr>
+                            @endforelse
+                                <tr class="totalBorder" style="font-weight: bold; text-align: right;">
+                                    <td class="bbl br"></td>
+                                    <td class="bbl br"></td>
+                                    <td class="bbl"></td>
+                                    <td class="sh">{{ trans('report.rpt_total') }}</td>
+                                    <td align="right">{{ number_format($totalA,2,'.',',') }}</td>
+                                    <td colspan="2"></td>
+                                    <td align="right">{{number_format($totalIn,2,'.',',')}}</td>
+                                    <td align="right">{{number_format($totalPr,2,'.',',')}}</td>
+                                    <td align="right">{{number_format($totalPe,2,'.',',')}}</td>
+                                    <td align="right">{{ number_format($totalPB,2,'.',',') }}</td>
+                                </tr>
+                        </tbody>
+                    </table>
+                    <div style="float:right;">
+                        @include('partials.pagination',['results'=>$completed])
+                    </div>
+                </section>
+            </div>
+        </div>
+    </section>
+@endsection
+
+@section('js')
+    <script type="text/javascript" src="{{ asset('theme/js/bootstrap-datepicker/js/bootstrap-datepicker.js',isset($secure) ? false : false)}}"></script>
+    <script type="text/javascript" src="{{ asset('js/print.js',isset($secure) ? false : false)}}"></script>
+    <script type="text/javascript" src="{{ asset('js/xlsx.full.min.js',isset($secure) ? false : false)}}"></script>
+    <script type="text/javascript" src="{{ asset('js/Blob.min.js',isset($secure) ? false : false)}}"></script>
+    <script type="text/javascript" src="{{ asset('js/FileSaver.js',isset($secure) ? false : false)}}"></script>
+    <script type="text/javascript" src="{{ asset('js/tableexport.js',isset($secure) ? false : false)}}"></script>
+    <script type="text/javascript">
+        $(document).ready(function(){
+            $('.dpStart').datepicker({
+                format: 'yyyy-mm-dd',
+                autoclose: true,
+                setDate: new Date()
+            });
+            $('.dpEnd').datepicker({
+                format: 'yyyy-mm-dd',
+                autoclose: true,
+                setDate: new Date()
+            });
+        });
+
+        $("#export").click(function (event) {
+            var con = confirm("Do you really want to export to CSV file?");
+            if(con == true){
+                new TableExport(document.getElementById('completed'), {
+                    formats: ['csv'],
+                    filename:"completed"
+                });
+                $('button.csv').hide().click();
+                $('.tableexport-caption').remove();
+            }
+            event.preventDefault();
+        });
+        
+        $("#xexport").click(function (event) {
+            var con = confirm("Do you really want to export to Excel file?");
+            if(con == true){
+                new TableExport(document.getElementById('completed'), {
+                        formats: ['xlsx'],
+                        filename: 'completed'
+                    }).formatConfig.xlsx.mimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+                    $('button.xlsx').hide().click();
+                    $('.tableexport-caption').remove();
+            }
+        });
+
+    </script>
+@endsection

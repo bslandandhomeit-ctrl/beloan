@@ -1,0 +1,362 @@
+@extends('layouts.app')
+
+@section('css')
+<link href="{{ asset('css/client.css',isset($secure) ? false : false) }}" rel="stylesheet">
+<link href="{{ asset('css/loan-style.css',isset($secure) ? false : false) }}" rel="stylesheet">
+@endsection
+@section('content')
+
+<section class="panel">
+    <header class="panel-heading">
+        <span>{{ trans('sidebar.slip_deposit') }}</span>
+        <span style="float: right"><a href="#" id="printer" class="btn btn-success"><i class="fa fa-plus"></i> {{ trans('print') }}</a></span>
+    </header>
+
+    <div class="panel-body" id="printArea">
+        <div class="docmargin" style="width:770px;max-width:770px;min-width:770px;">
+        <form id="my_form">
+            <table border="1" cellpadding="0" cellspacing="0" style="width:770px;max-width:770px;min-width:770px; font-size: 10px;" >
+                <tbody style=" font-size: 10px;">
+                <tr>
+                    <td colspan="15" rowspan="3" valign="top" style=" font-size: 10px; width:556px;min-width:556px;max-width:556px" >
+                        <div class="hidden-print"><p  style="font-size: 10px;">គ្រឹះស្ងានមីក្រូហិរញ្ញវត្ថ ធី&amp;ហ្គូ ហ្វាយនែន ភីអិលស៊ី</p>
+                            <p>T &amp; Go finanace Plc</p></div>
+                    </td>
+                    <td colspan="4">កាលបរិច្ឆេទ/Date</td>
+                    <td colspan="3">&nbsp;</td>
+                </tr>
+                <tr>
+                    <td colspan="4">ម៉ោង/Time:</td>
+                    <td colspan="3">&nbsp;</td>
+                </tr>
+                <tr>
+                    <td height="28" colspan="4" >
+                        <p style="line-height:12px;" >លេខប្រត្រិបត្តិការ</p>
+                        <p style="line-height:1px;" >Trqansaction ID</p></td>
+                    <td colspan="3"><div style="border:0.001em inset rgba(0, 0, 0, 0.42); padding:6px;"></div></td>
+                </tr>
+                <tr>
+                    <td colspan="4" valign="top" style="width:160px;min-width:160px; max-width:160px">ឈ្នោះគណនី/account number</td>
+                    <td colspan="11" valign="top">&nbsp;</td>
+                    <td colspan="4"> <input type="checkbox" name="vehicle" value="Bike" style="margin-left: 5px;">
+                    <span style="position: absolute; margin-top: 3px;"> I ប្រាក់រៀល/KHR</span> </td>
+                    <td colspan="3"> <input type="checkbox" name="vehicle" value="Bike" style="margin-left: 5px;"><span style="position: absolute; margin-top: 3px;">ប្រាក់ដុល្លា/USD</span></td>
+                </tr>
+                <tr>
+                    <td colspan="4" style="width:160px;min-width:160px; max-width:160px">ឈ្នោះគណនី/account number</td>
+                    <td colspan="11">&nbsp;</td>
+                    <td colspan="7"> <input type="checkbox" name="vehicle" value="Bike"  style="margin-left: 5px;">
+                        <span style="position: absolute; margin-top: 3px;">ដាក់សាច់ប្រាក់/Cash Deposit</span></td>
+                </tr>
+                <tr>
+                    <td colspan="11" rowspan="3" valign="top" style="width:378px;min-width:378px; max-width:378px"><p>ចំនួនទឹកប្រាក់/Amount:</p>
+                    <textarea name="amount_char" id="amount_char" style="width:370px;min-width:370px; max-width:370px;   resize: none;border:none; overflow:hidden" ></textarea></td>
+                    <td colspan="3" rowspan="3"><div style="border:0.001em inset rgba(0, 0, 0, 0.42); padding:6px;">200</div></td>
+                    <td rowspan="3">&nbsp;</td>
+                    <td colspan="7"> <input type="checkbox" name="vehicle" value="Bike"  style="margin-left: 5px;">
+                        <span style="position: absolute; margin-top: 3px;">ដាក់ជាមូលប្បទានប័ន្រ/CheckDeposit</span></td>
+                </tr>
+                <tr>
+                    <td colspan="7">លេខមួលប្បទានប័ត្រ/Check:<input name="check" id="check" type="text" style="width:70px;border:none;" placeholder="...." /></td>
+                </tr>
+                <tr>
+                    <td colspan="7">ឈ្នោះធនាគារ/Bank Name: <input type="text" name="bank" id="bank" style="width:70px; border:none;" placeholder="......"/></td>
+                </tr>
+                <tr>
+                    <td colspan="10" rowspan="2" valign="top"  style="width:375px;min-width:375px; max-width:375px"><p>អធិប្បាយ/Description</p>
+                        <textarea name="description" id="descr" style="width:370px; min-width:370px; max-width:370px; min-height:100px; max-height:100px; height:100px; border:none; resize: none; overflow:hidden" placeholder="hello" ></textarea>
+
+                  </td>
+                    <td colspan="5" rowspan="2" valign="top"><p>សត្ថលេខាអ្នកដាក់ប្រាក់</p>
+                        <p>Pay's signature</p></td>
+                    <td height="59" colspan="4" valign="top"><p>ធារីចំណូល</p>
+                        <p>Teller</p></td>
+                    <td colspan="3" rowspan="2" valign="top"><p>អនុម័ត្តដោយ</p>
+                        <p>authorized by:</p></td>
+                </tr>
+                <tr>
+                    <td height="61" colspan="4" valign="top"><p>អ្នកពិនិត្យ</p>
+                        <p>Checked by</p></td>
+                </tr>
+                <tr >
+                    <td width="1" height="19"  style="border:none;">&nbsp;</td>
+                    <td width="1"  style="border:none;">&nbsp;</td>
+                    <td width="1"  style="border:none;">&nbsp;</td>
+                    <td width="163" style="border:none;">&nbsp;</td>
+                    <td width="135"  style="border:none;">&nbsp;</td>
+                    <td width="1"  style="border:none;">&nbsp;</td>
+                    <td width="1" style="border:none;">&nbsp;</td>
+                    <td width="1" style="border:none;">&nbsp;</td>
+                    <td width="1" style="border:none;">&nbsp;</td>
+                    <td width="59" style="border:none;">&nbsp;</td>
+                    <td width="1" style="border:none;">&nbsp;</td>
+                    <td width="69" style="border:none;">&nbsp;</td>
+                    <td width="1" style="border:none;">&nbsp;</td>
+                    <td width="80" style="border:none;">&nbsp;</td>
+                    <td width="13" style="border:none;">&nbsp;</td>
+                    <td width="42" style="border:none;">&nbsp;</td>
+                    <td width="2" style="border:none;">&nbsp;</td>
+                    <td width="21" style="border:none;">&nbsp;</td>
+                    <td width="36" style="border:none;">&nbsp;</td>
+                    <td width="2" style="border:none;">&nbsp;</td>
+                    <td widthdr="4" style="border:none;">&nbsp;</td>
+                    <td width="89" style="border:none;">&nbsp;</td>
+                </tr>
+                </tbody>
+            </table>
+        </form>
+        </div>
+
+    </div>
+    <hr/>
+    <h4>Withdraw form</h4>
+
+    <div id="printWithdraw">
+        <div class="panel-body" id="printArea" >
+            <div class="docmargin" style="width:770px;max-width:770px;min-width:770px;">
+                <form id="my_form">
+                    <table height="372" border="1" cellpadding="0" cellspacing="0" style="width:770px;max-width:770px;min-width:770px; font-size: 10px;" >
+                        <tbody style=" font-size: 10px;">
+                        <tr>
+                            <td colspan="15" rowspan="3" valign="top" style=" font-size: 10px; width:556px;min-width:556px;max-width:556px" >
+                                <div class="hidden-print"><p  style="font-size: 10px;">គ្រឹះស្ងានមីក្រូហិរញ្ញវត្ថ ធី&amp;ហ្គូ ហ្វាយនែន ភីអិលស៊ី</p>
+                                    <p>T &amp; Go finanace Plc</p></div>
+                            </td>
+                            <td colspan="4">កាលបរិច្ឆេទ/Date</td>
+                            <td colspan="3">&nbsp;</td>
+                        </tr>
+                        <tr>
+                            <td colspan="4">ម៉ោង/Time:</td>
+                            <td colspan="3">&nbsp;</td>
+                        </tr>
+                        <tr>
+                            <td height="28" colspan="4" >
+                                <p style="line-height:12px;" >លេខប្រត្រិបត្តិការ</p>
+                                <p style="line-height:1px;" >Trqansaction ID</p></td>
+                            <td colspan="3"><div style="border:0.001em inset rgba(0, 0, 0, 0.42); padding:6px;"></div></td>
+                        </tr>
+                        <tr>
+                            <td colspan="4" valign="top" style="width:160px;min-width:160px; max-width:160px">ឈ្នោះគណនី/account number</td>
+                            <td colspan="11" valign="top">&nbsp;</td>
+                            <td colspan="4"> <input type="checkbox" name="vehicle" value="Bike" style="margin-left: 5px;">
+                                <span style="position: absolute; margin-top: 3px;"> I ប្រាក់រៀល/KHR</span> </td>
+                            <td colspan="3"> <input type="checkbox" name="vehicle" value="Bike" style="margin-left: 5px;"><span style="position: absolute; margin-top: 3px;">ប្រាក់ដុល្លា/USD</span></td>
+                        </tr>
+                        <tr>
+                            <td colspan="4" style="width:160px;min-width:160px; max-width:160px">ឈ្នោះគណនី/account number</td>
+                            <td colspan="11">&nbsp;</td>
+                            <td colspan="7"> <input type="checkbox" name="vehicle" value="Bike"  style="margin-left: 5px;">
+                                <span style="position: absolute; margin-top: 3px;">ដកជាសាក់ប្រាក់/Cash withdrawal</span></td>
+                        </tr>
+                        <tr>
+                            <td colspan="11" rowspan="3" valign="top" style="width:378px;min-width:378px; max-width:378px"><p>ចំនួនទឹកប្រាក់/Amount:</p>
+                                <textarea name="amount_char" id="amount_char" style="width:360px;min-width:360px; max-width:360px;   resize: none;border:none; overflow:hidden" ></textarea></td>
+                            <td colspan="3" rowspan="3"><div style="border:0.001em inset rgba(0, 0, 0, 0.42); padding:6px;">200</div></td>
+                            <td rowspan="3">&nbsp;</td>
+                            <td colspan="7"> <input type="checkbox" name="vehicle" value="Bike"  style="margin-left: 5px;">
+                                <span style="position: absolute; margin-top: 3px;">ដាក់ជាមូលប្បទានប័ន្រ/Check withdrawal</span></td>
+                        </tr>
+                        <tr>
+                            <td colspan="7">លេខមួលប្បទានប័ត្រ/Check:<input name="check" id="check" type="text" style="width:70px;border:none;" placeholder="...." /></td>
+                        </tr>
+                        <tr>
+                            <td colspan="7">ឈ្នោះធនាគារ/Bank Name: <input type="text" name="bank" id="bank" style="width:70px; border:none;" placeholder="......"/></td>
+                        </tr>
+                        <tr>
+                            <td colspan="15" valign="top"  style="width:375px;min-width:375px; max-width:375px"><p>អធិប្បាយ/Description</p>
+                                <textarea name="description" id="descr" style="width:550px; min-width:550px; max-width:550px; min-height:50px; max-height:50px; height:50px; border:none; resize: none; overflow:hidden" placeholder="hello" ></textarea>
+
+                            </td>
+                            <td colspan="4" valign="top"><p>ធារីចំណូល</p>
+                                <p>Teller                        </p>
+                                <p>&nbsp;</p></td>
+                            <td colspan="3" rowspan="2" valign="top"><p>អនុម័ត្តដោយ</p>
+                                <p>authorized by:</p></td>
+                        </tr>
+                        <tr>
+                            <td height="82" colspan="9" valign="top" ><p>ហតថេលខមចស់គណនី</p>
+                                <p>Applicant’s signature(s)</p></td>
+                            <td colspan="6" valign="top" ><p>ហតថេលខអនកទទួល្របក់ ឬ មូលបបទនប័្រត</p>
+                                <p>Payee’s signature</p></td>
+                            <td colspan="4" valign="top"><p>អ្នកពិនិត្យ</p>
+                                <p>Checked by</p></td>
+                        </tr>
+                        <tr >
+                            <td width="1" height="19"  style="border:none;">&nbsp;</td>
+                            <td width="1"  style="border:none;">&nbsp;</td>
+                            <td width="1"  style="border:none;">&nbsp;</td>
+                            <td width="162" style="border:none;">&nbsp;</td>
+                            <td width="1"  style="border:none;">&nbsp;</td>
+                            <td width="1"  style="border:none;">&nbsp;</td>
+                            <td width="1" style="border:none;">&nbsp;</td>
+                            <td width="1" style="border:none;">&nbsp;</td>
+                            <td width="89" style="border:none;">&nbsp;</td>
+                            <td width="99" style="border:none;">&nbsp;</td>
+                            <td width="10" style="border:none;">&nbsp;</td>
+                            <td width="137" style="border:none;">&nbsp;</td>
+                            <td width="1" style="border:none;">&nbsp;</td>
+                            <td width="21" style="border:none;">&nbsp;</td>
+                            <td width="2" style="border:none;">&nbsp;</td>
+                            <td width="65" style="border:none;">&nbsp;</td>
+                            <td width="1" style="border:none;">&nbsp;</td>
+                            <td width="1" style="border:none;">&nbsp;</td>
+                            <td width="33" style="border:none;">&nbsp;</td>
+                            <td width="5" style="border:none;">&nbsp;</td>
+                            <td width="3" style="border:none;">&nbsp;</td>
+                            <td width="88" style="border:none;">&nbsp;</td>
+                        </tr>
+                        </tbody>
+                    </table>
+                </form>
+            </div>
+
+        </div>
+    </div>
+    <hr/>
+    <h4>Debit form</h4>
+    <a href="#" id="printDebit" class="btn btn-success"><i class="fa fa-plus"></i> {{ trans('print') }}</a>
+    <div id="printDebitData">
+        <div class="panel-body" id="printArea" >
+            <div class="docmargin" style="width:770px;max-width:770px;min-width:770px;">
+                <form id="my_form">
+                    <table border="1" style="width:770px;max-width:770px;min-width:770px; font-size:11px;">
+                        <tbody>
+                        <tr>
+                            <td height="42" colspan="8" style="border:none;">&nbsp;</td>
+                            <td colspan="12" style="border:none;">&nbsp;</td>
+                        </tr>
+                        <tr>
+                            <td style="border:none;width:57px;max-width:57px;min-width:57px;height: 19px;">កាលបរិច្ចេទ</td>
+                            <td colspan="5" rowspan="2" style="border:none;width:80px; max-width: 80px; min-width: 80px; ">
+                                <div style="border:1px solid red;height:30px;"></div>
+                            </td>
+                            <td colspan="3" rowspan="2" valign="top" style="border:none; width:200px;">
+                                <input type="checkbox" style="margin-left:107px;"/>
+                                <span style="position:absolute; margin-top:1.5px;"> ប្រាក់រៀល/KHR</span>
+                                <input type="checkbox" style="margin-left:126px"/>
+                                <span style="position: absolute; margin-top: 1.5px;">ប្រាក់ដុល្លា/USD</span></td>
+                            <td width="10" rowspan="7" style="border:none;">&nbsp;</td>
+                            <td width="1" style="border:none;">&nbsp;</td>
+                            <td width="28" style="border:none;">&nbsp;</td>
+                            <td colspan="3" style="border:none; width:90px;">លេចខប្រតិប្តិការ</td>
+                            <td width="172" colspan="5" rowspan="2" style="border:none;"><div style="height:30px;border:1px solid black;">asfasdf</div></td>
+                        </tr>
+                        <tr>
+                            <td style="border:none;">Date</td>
+                            <td style="border:none;">&nbsp;</td>
+                            <td style="border:none;">&nbsp;</td>
+                            <td colspan="3" style="border:none;">Transaction ID</td>
+                        </tr>
+                        <tr>
+                            <td height="46" colspan="9" valign="top" style="max-width:498px;width: 498px; min-width:498px;">ឈ្មោះគណនីឥណទាន្ធ/Debit Account Name
+                                <input type="text" style="width:100%;border:none;" placeholder="......................." /></td>
+                            <td colspan="10" valign="top">លេខគណនីឥណទាន/Debit Account Number
+                                <input type="text" placeholder="......." style="width:100%;border:none;" /></td>
+                        </tr>
+                        <tr style="height:1px!important;">
+                            <td colspan="9" style="height:1px;max-height:1px;border:none;line-height: 0.3;">&nbsp;</td>
+                            <td colspan="10" style="border:none;line-height: 0.3; width:200px;">&nbsp;</td>
+                        </tr>
+                        <tr>
+                            <td height="45" colspan="9" valign="top">ឈ្នោះគណនីឥណទាន/Credit account Name:
+                                <input type="text" style="width:100%;border:none;"  placeholder="................."/></td>
+                            <td colspan="10" valign="top">លេខគណនីឥណទាន/Credit account Number:
+                                <input type="text" style="width:100%;border:none;"  placeholder="................."/></td>
+                        </tr>
+                        <tr>
+                            <td colspan="9" style="border:none;line-height: 0.3;">&nbsp;</td>
+                            <td colspan="10" style="border:none;line-height: 0.3;">&nbsp;</td>
+                        </tr>
+                        <tr>
+                            <td height="90" colspan="9" valign="top">អធិប្បាយ/Description
+                                <textarea name="descr" id="descr" style="resize:none;height:65px; width:100%;border:none; overflow:hidden;"></textarea></td>
+                            <td colspan="10" valign="top"><span style="position:absolute; margin-top:10px;">ចំនួន/Amount</span>
+                                <input type="text" style="width:70%;border:none;;float:right; height:30px;"  placeholder="................."/>
+                                <textarea name="descr" id="descr" placeholder="................" style="resize:none;height:47px; width:100%;border:none;"></textarea></td>
+                        </tr>
+                        </tbody>
+                    </table>
+
+                </form>
+            </div>
+
+        </div>
+    </div>
+
+    <h4>Credit form</h4>
+    <a href="#" id="printDebit" class="btn btn-success"><i class="fa fa-plus"></i> {{ trans('print') }}</a>
+    <div id="printDebitData">
+        <div class="panel-body" id="printArea" >
+            <div class="docmargin" style="width:770px;max-width:770px;min-width:770px;">
+                <form id="my_form">
+                    <table border="1" style="width:770px;max-width:770px;min-width:770px; font-size:11px; font-weight:">
+                        <tbody>
+                        <tr>
+                            <td height="42" colspan="8" style="border:none;">&nbsp;</td>
+                            <td colspan="12" style="border:none;">&nbsp;</td>
+                        </tr>
+                        <tr>
+                            <td style="border:none;width:57px;max-width:57px;min-width:57px;height: 19px;">កាលបរិច្ចេទ</td>
+                            <td colspan="5" rowspan="2" style="border:none;width:80px; max-width: 80px; min-width: 80px; ">
+                                <div style="border:1px solid red;height:30px;"></div>
+                            </td>
+                            <td colspan="3" rowspan="2" valign="top" style="border:none; width:200px;">
+                                <input type="checkbox" style="margin-left:107px;"/>
+                                <span style="position:absolute; margin-top:1.5px;"> ប្រាក់រៀល/KHR</span>
+                                <input type="checkbox" style="margin-left:126px"/>
+                                <span style="position: absolute; margin-top: 1.5px;">ប្រាក់ដុល្លា/USD</span></td>
+                            <td width="10" rowspan="7" style="border:none;">&nbsp;</td>
+                            <td width="1" style="border:none;">&nbsp;</td>
+                            <td width="28" style="border:none;">&nbsp;</td>
+                            <td colspan="3" style="border:none; width:90px;">លេចខប្រតិប្តិការ</td>
+                            <td width="172" colspan="5" rowspan="2" style="border:none;"><div style="height:30px;border:1px solid black;">asfasdf</div></td>
+                        </tr>
+                        <tr>
+                            <td style="border:none;">Date</td>
+                            <td style="border:none;">&nbsp;</td>
+                            <td style="border:none;">&nbsp;</td>
+                            <td colspan="3" style="border:none;">Transaction ID</td>
+                        </tr>
+                        <tr>
+                            <td height="46" colspan="9" valign="top" style="max-width:498px;width: 498px; min-width:498px;">ឈ្មោះគណនីឥណទាន្ធ/Debit Account Name
+                                <input type="text" style="width:100%;border:none;" placeholder="......................." /></td>
+                            <td colspan="10" valign="top">លេខគណនីឥណទាន/Debit Account Number
+                                <input type="text" placeholder="......." style="width:100%;border:none;" /></td>
+                        </tr>
+                        <tr style="height:1px!important;">
+                            <td colspan="9" style="height:1px;max-height:1px;border:none;line-height: 0.3;">&nbsp;</td>
+                            <td colspan="10" style="border:none;line-height: 0.3; width:200px;">&nbsp;</td>
+                        </tr>
+                        <tr>
+                            <td height="45" colspan="9" valign="top">ឈ្នោះគណនីឥណទាន/Credit account Name:
+                                <input type="text" style="width:100%;border:none;"  placeholder="................."/></td>
+                            <td colspan="10" valign="top">លេខគណនីឥណទាន/Credit account Number:
+                                <input type="text" style="width:100%;border:none;"  placeholder="................."/></td>
+                        </tr>
+                        <tr>
+                            <td colspan="9" style="border:none;line-height: 0.3;">&nbsp;</td>
+                            <td colspan="10" style="border:none;line-height: 0.3;">&nbsp;</td>
+                        </tr>
+                        <tr>
+                            <td height="90" colspan="9" valign="top">អធិប្បាយ/Description
+                                <textarea name="descr" id="descr" style="resize:none;height:65px; width:100%;border:none; overflow:hidden;"></textarea></td>
+                            <td colspan="10" valign="top"><span style="position:absolute; margin-top:10px;">ចំនួន/Amount</span>
+                                <input type="text" style="width:70%;border:none;;float:right; height:30px;"  placeholder="................."/>
+                                <textarea name="descr" id="descr" placeholder="................" style="resize:none;height:47px; width:100%;border:none;"></textarea></td>
+                        </tr>
+                        </tbody>
+                    </table>
+
+                </form>
+            </div>
+
+        </div>
+    </div>
+
+</section>
+ @endsection
+@section('js')
+<script type="text/javascript" src="{{ asset('js/print.js',isset($secure) ? false : false)}}"></script>
+<script type="text/javascript" src="{{ asset('js/jquery.floatThead.min.js',isset($secure) ? false : false)}}"></script>
+<script type="text/javascript" src="{{ asset('theme/js/bootstrap-inputmask/bootstrap-inputmask.min.js',false) }}"></script>
+@endsection

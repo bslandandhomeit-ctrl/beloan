@@ -1,0 +1,191 @@
+@extends('layouts.app')
+
+@section('css')
+    <link rel="stylesheet" type="text/css" href="{{ asset('theme/js/bootstrap-fileupload/bootstrap-fileupload.css',isset($secure)?false:false)}}" />
+    <link rel="stylesheet" type="text/css" href="{{ asset('theme/js/bootstrap-datepicker/css/datepicker.css',isset($secure)?false:false)}}" />
+    <link rel="stylesheet" type="text/css" href="{{ asset('theme/js/select2/select2.css',isset($secure)?false:false) }}" />
+    <link href="{{ asset('css/client.css',isset($secure)?false:false) }}" rel="stylesheet">
+@endsection
+@section('content')
+    <section class="panel">
+        @if(Session::has('message'))
+            <p class="alert {{ Session::get('alert-class', 'alert-success') }}">{{ Session::get('message') }}</p>
+        @endif
+        <header class="panel-heading">
+            {{ trans('sidebar.sb_add_asset') }}
+        </header>
+        <div class="panel-body">
+            @if(Session::has('error'))
+                <div class="alert alert-danger fad in">
+                    <button type="button" class="close close-sm" data-dismiss="alert">x</button>
+                    {{ Session::get('error') }}
+                </div>
+            @endif
+            <form action="{{route('add_asset')}}" method="POST" class="cmxform form-horizontal" id="assetForm">
+                <input type="hidden" name="_token" value="{{ csrf_token() }}">
+                <fieldset>
+                    <table class="table table-4 borderless">
+                        <tr>
+                            <td class="i-label">{{ trans('multiple.branch') }}<span class="red"> *</span></td>
+                            <td>
+                                <select class="form-control" name="branch" id="branch">
+                                    <option value="0">-</option>
+                                    @foreach($branches as $a)
+                                        <option value="{{ $a->id }}">{{ $a->branch_name }}</option>
+                                    @endforeach
+                                </select>
+                            </td>
+                            <td class="i-label">{{ trans('asset.asset_name') }}<span class="red"> *</span></td>
+                            <td><input type="text" name="asset_name" class="form-control" id="asset_name" /></td>
+                        </tr>
+
+                        <tr>
+                            <td class="i-label">{{ trans('multiple.category') }}<span class="red"> *</span></td>
+                            <td>
+                                <select class="select2_type category" style="width: 300px;"  name="category" id="category">
+                                    <option value="0">-</option>
+                                    @foreach($asset_categories as $key=>$val)
+                                        <option value="{{ $key }}">{{$key}} - {{ $val }}</option>
+                                    @endforeach
+                                </select>
+                            </td>
+                            <td class="i-label">{{ trans('asset.purchased_date') }}<span class="red"> *</span></td>
+                            <td>
+                                <div data-date-viewmode="years" data-initialize="datepicker" data-date-format="dd/mm/yyyy" class="input-append date dpYears">
+                                    <input type="text" name="purchased_date" size="16" class="form-control">
+                                    <span class="add-on birhtdateDatepicker">
+                                        <button class="btn btn-primary" type="button"><i class="fa fa-calendar"></i></button>
+                                    </span>
+                                </div>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td class="i-label">{{ trans('multiple.location') }}<span class="red"> *</span></td>
+                            <td>
+                                <select class="select2_type location" style="width: 300px;" name="location" id="location">
+                                    <option value="0">-</option>
+                                    @foreach($asset_locations as $key=>$val)
+                                        <option value="{{ $key }}">{{ $val }}</option>
+                                    @endforeach
+                                </select>
+                            </td>
+                            <td class="i-label">{{ trans('asset.original_cost') }}<span class="red"> *</span></td>
+                            <td><input type="text" name="original_cost" class="form-control" id="original_cost" /></td>
+                        </tr>
+
+                        <tr>
+                            <td class="i-label">{{ trans('asset.classification') }}<span class="red"> *</span></td>
+                            <td>
+                                <select class="form-control" name="classification" id="classification">
+                                    <option value="0">-</option>
+                                    @foreach($asset_classifications as $key=>$val)
+                                        <option value="{{ $key }}">{{ $val }}</option>
+                                    @endforeach
+                                </select>
+                            </td>
+
+                            <td class="i-label">{{ trans('asset.payment_meth') }}<span class="red"> *</span></td>
+                            <td>
+                                <select class="select2_type payment_meth" style="width: 400px;" name="credit_coa" id="credit_coa">
+                                    @foreach($coas as $key=>$coa)
+                                        <option value="{{ $coa->id }}">{{$coa->account_code}} - {{ $coa->name }} ({{$currency[$coa->currency]}})</option>
+                                    @endforeach
+                                </select>
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td class="i-label">{{ trans('asset.currency') }}<span class="red"> *</span></td>
+                            <td>
+                                <select class="form-control" name="currency" id="currency">
+                                    <option value="0">-</option>
+                                    @foreach($currency as $key=>$val)
+                                        <option value="{{ $key }}">{{ $val }}</option>
+                                    @endforeach
+                                </select>
+                            </td>
+
+                            <td class="i-label">{{ trans('asset.depre_year') }}<span class="red"> *</span></td>
+                            <td>
+                                <input type="text" name="depre_year" class="form-control" id="depre_year" />
+                            </td>
+                        </tr>
+
+                        <tr>
+                            <td class="i-label">{{ trans('asset.invoice_num') }}<span class="red"> *</span></td>
+                            <td><input type="text" name="invoice_num" class="form-control" id="invoice_num" /></td>
+                            <td class="i-label">{{ trans('asset.rate') }}<span class="red"> *</span></td>
+                            <td><input type="text" name="rate" class="form-control" id="rate" /></td>
+
+                        </tr>
+
+                        <tr>
+                            <td class="i-label">{{ trans('asset.tag_num') }}<span class="red"> *</span></td>
+                            <td><input type="text" name="tag_num" class="form-control" id="tag_num" /></td>
+                            <td class="i-label">{{ trans('asset.supplier') }}<span class="red"> *</span></td>
+                            <td><input type="text" name="supplier" class="form-control" id="supplier" /></td>
+                        </tr>
+
+                        <tr>
+                            <td class="i-label">{{ trans('asset.remark') }}</td>
+                            <td colspan="3"><textarea name="remark" class="form-control" id="remark"></textarea></td>
+                        </tr>
+
+                        <tr>
+                            <td></td>
+                            <td colspan="3">
+                                <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> {{ trans('multiple.m_save') }}</button>
+                                <a href="javascript:history.go(-1)" class="btn btn-danger"><i class="fa fa-times-circle"></i>&nbsp;{{ trans('multiple.m_cancel') }}</a>
+                            </td>
+                        </tr>
+
+
+                    </table>
+                </fieldset>
+            </form>
+        </div>
+    </section>
+@endsection
+
+@section('js')
+<script type="text/javascript" src="{{ asset('theme/js/bootstrap-fileupload/bootstrap-fileupload.js',isset($secure)?false:false)}}"></script>
+<script type="text/javascript" src="{{ asset('theme/js/bootstrap-datepicker/js/bootstrap-datepicker.js',isset($secure)?false:false)}}"></script>
+<script type="text/javascript" src="{{ asset('theme/js/bootstrap-inputmask/bootstrap-inputmask.min.js',isset($secure)?false:false) }}"></script>
+<script type="text/javascript" src="{{ asset('theme/js/jquery.validate.min.js',isset($secure)?false:false) }}"></script>
+<script src="{{ asset('theme/js/select2/select2.js',isset($secure)?false:false) }}"></script>
+<script type="text/javascript" src="{{ asset('js/form.v.js',isset($secure)?false:false) }}"></script>
+<script type="text/javascript">
+    $(document).ready(function(){
+        $('.dpYears').datepicker({
+            format: 'yyyy-mm-dd',
+            autoclose: true,
+            setDate: new Date()
+        });
+
+        $(document).on('change', '#category', function () {
+           ajax_tag_num();
+        });
+
+        $(document).on('change', '#classification', function () {
+           ajax_tag_num();
+        });
+
+        $(document).on('change', '#branch', function () {
+           ajax_tag_num();
+        });
+    });
+
+    function ajax_tag_num(){
+         $.ajax({
+            url: "{{route('ajax_tag_num')}}",
+            type:'GET',
+            data:'category='+$('#category').val()+'&classification='+$('#classification').val()+'&branch='+$('#branch').val(),
+            success:function(res){
+                $('#tag_num').val(res);
+            }
+        });
+    }
+    $(".select2_type").select2();
+</script>
+@endsection

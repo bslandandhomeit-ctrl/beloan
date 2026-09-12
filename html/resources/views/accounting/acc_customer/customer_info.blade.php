@@ -1,0 +1,195 @@
+<div id="customer_info" class="modal fade" tabindex="1" role="dialog">
+<link rel="stylesheet" type="text/css" href="{{ asset('theme/js/bootstrap-datepicker/css/datepicker.css',false)}}"/>
+    <div class="modal-dialog" role="document" style="min-width: 1100px;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">Account Customer information</h4>
+            </div>
+            <div class="modal-body">
+                <div class="row">
+                    <div class="col-lg-12 col-md-12 col-sm-12">
+                        <table class="table table-responsive table-bordered">
+                            <tbody>
+                            <?PHP foreach($account as $item):
+                                $journal_prop = $item;
+                            endforeach;
+                            ?>
+                            <tr>
+                                <td>Company Name</td>
+                                <td>{{$journal_prop->company_name}}</td>
+                                <td style="border:none"></td>
+                                <td> Phone</td>
+                                <td>{{$journal_prop->main_phone}}</td>
+                            </tr>
+                            <tr>
+                                <td>Full Name</td>
+                                <td>{{$journal_prop->fname}}</td>
+                                <td style="border:none"></td>
+                                <td>Email</td>
+                                <td>{{$journal_prop->main_email}}</td>
+                            </tr>
+                            <tr>
+                                <td>Billed From</td>
+                                <td>From Billed</td>
+                                <td style="border:none"></td>
+                                <td>Address</td>
+                                <td>{{$journal_prop->address}}</td>
+                            </tr>
+
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                        <h4>Transaction</h4>
+                        <hr/>
+                    </div>
+                    <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                        <form class="form-inline" id="search">
+                            <div class="form-group">
+                                <label for="from">From:</label>
+                                <input type="text" name="from" class="form-control dpYears" id="dateStart" placeholder="From"  value="<?PHP echo date("Y-m-d", strtotime("first day of previous month")) ?>">
+                            </div>
+                            <div class="form-group">
+                                <label for="todate">To:</label>
+                                <input type="text" name="todate" class="form-control dpYears" id="dateEnd" value="<?PHP echo date("Y-m-d", strtotime("+1 day", time())) ?>">
+                            </div>
+                        </form>
+                        <table class="table table-responsive table-bordered transaction">
+                            <thead>
+                            <tr>
+                                <th>No</th>
+                                <th>Type</th>
+                                <th>Ref. Num</th>
+                                <th>Date</th>
+                                <th>Account</th>
+                                <th>Amount</th>
+                                <th>Description</th>
+                            </tr>
+                            </thead>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <input type="hidden" style="display: none" value="{{$journal_req}}" id="jsondata" />
+            <div class="modal-footer">
+                <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="text/javascript" src="{{ asset('theme/js/bootstrap-datepicker/js/bootstrap-datepicker.js',false)}}"></script>
+    <script type="text/javascript" src="{{ asset('js/accounting.min.js',false)}}"></script>
+
+    <script>
+
+        $(document).ready(function () {
+
+            var trans_types = JSON.parse('<?php echo json_encode(config('static_data.trans_type')); ?>');
+            var dataSource = <?PHP echo $journal_req ?>;
+
+            $("#dateStart, #dateEnd").datepicker({
+                format: 'yyyy-mm-dd',
+                autoclose: true,
+                setDate: new Date()
+            });
+            $(function () {
+                var $dTable = $("table.transaction").dataTable({
+                    "aaSorting": [[0, 'asc']],
+                    "aaData": dataSource,
+                    "deferRender": true,
+                    fixedHeader: true,
+                    "aLengthMenu": [[-1,10,15,25,50,100,200,250,300,-2],["All",10,15,25,50,100,200,250,300,"Only Mark"]],
+                    select: true,
+                    "aoColumns": [
+                        {"mData":'id'},
+                        {
+                            "mData": function (oObj) {
+
+                                return trans_types[parseFloat(oObj.trans_type)]
+                            }
+                        },
+                        {
+                            "mData": function (oObj) {//referal
+                                return padToiex(oObj.id)
+                            }
+                        },
+                        {
+                            "mData": function (oObj) {
+                                var entry_date = new Date(oObj.entry_date).toISOString().slice(0, 10)
+                                return entry_date;
+                            }
+                        },
+                        {
+                            "mData": function (oObj) {
+
+                                for (var keys in oObj.detail) {
+                                    var val = oObj.detail[keys];
+                                    if (parseFloat(val.credit) !== 0) {
+
+                                        console.log(val.account.name);
+
+                                        return val.account.name;
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "mData": function (oObj) {
+                                for (var keys in oObj.detail) {
+                                    var val = oObj.detail[keys];
+                                    if (parseFloat(val.credit) !== 0) {
+                                        return accounting.formatMoney(val.credit, '');
+                                    }
+                                }
+                            }
+                        },
+                        {
+                            "mData": function (oObj) {
+                                for (var keys in oObj.detail) {
+                                    var val = oObj.detail[keys];
+                                    if (parseFloat(val.credit) !== 0) {
+                                        return val.description;
+                                    }
+                                }
+                            }
+                        }
+                    ]
+                });
+
+                $("#dateStart").keyup(function () {
+                    $dTable.fnDraw();
+                });
+                $("#dateStart").change(function () {
+                    $dTable.fnDraw();
+                });
+                $("#dateEnd").keyup(function () {
+                    $dTable.fnDraw();
+                });
+                $("#dateEnd").change(function () {
+                    $dTable.fnDraw();
+                });
+            });
+            $.fn.dataTableExt.afnFiltering.push(
+                    function (oSettings, aData, iDataIndex) {
+
+                        var dateStart = new Date($("#dateStart").val()).toISOString().slice(0, 10).replace(/-|\s/g, "");
+                        var dateEnd = new Date($("#dateEnd").val()).toISOString().slice(0, 10).replace(/-|\s/g, "");
+                        var evalDate = new Date(aData[3]).toISOString().slice(0, 10).replace(/-|\s/g, "");
+
+                        if (evalDate >= dateStart && evalDate <= dateEnd) {
+                            return true;
+                        } else {
+                            return false;
+                        }
+                    }
+            );
+        });
+
+        function padToiex(number) {
+            if (number<=99999999) { number = ("0000000"+number).slice(-9); }
+            return number;
+        }
+    </script>
+</div>

@@ -1,0 +1,158 @@
+@extends('layouts.app')
+
+@section('css')
+<link href="{{ asset('css/client.css',isset($secure) ? false : false) }}" rel="stylesheet">
+@endsection
+<?php
+$performance = config('static_data.performance');
+?>
+@section('content')
+<section class="panel">
+    <header class="panel-heading">
+        <?php $static = config('static_data');?>
+        {{ trans('report.rpt_loan_account_number') }}:
+        <span style="font-weight: bold;color:blue;"> {{ $loan_accounts->account_no }}</span>
+
+        @if($loan_accounts->status==0)<a class="btn btn-default pull-right" href="{{ route('cla_audit', [$loan_accounts->id]) }}"><i class="fa fa-key"></i> {{ trans('multiple.audit') }}</a>@endif
+
+    </header>
+
+    <div class="panel-body">
+        <section id="unseen">
+            <h4><strong>Loan Account Detail</strong></h4>
+            <div class="col-md-6">
+                <table class="table table-bordered table-striped table-condensed">
+                    <tr>
+                        <th style="width: 25%;">{{ trans('loan.l_acc_name') }}</th>
+                        <td>{{ $loan_accounts->account_name }}</td>
+                    </tr>
+                    <tr>
+                        <th>{{ trans('dealer.dl_dealer_account_number') }}</th>
+                        <td>{{ $loan_accounts->account_no }}</td>
+                    </tr>
+                    <tr>
+                        <th>{{ trans('product.p_loan_reference') }}</th>
+                        <td>{{ $loan_accounts->loan_ref }}</td>
+                    </tr>
+                    <tr>
+                        <th>{{ trans('loan.l_create_on') }}</th>
+                        <td>{{ $loan_accounts->created_on }}</td>
+                    </tr>
+                    <tr>
+                        <th>{{ trans('report.rpt_created_by') }}</th>
+                        <td>{{ $created_by }}</td>
+                    </tr>
+                </table>
+            </div>
+            <div class="col-md-6">
+                <table class="table table-bordered table-striped table-condensed">
+                    <tr>
+                        <th style="width: 25%;">{{ trans('account.a_bal') }}Balance</th>
+                        <td>{{ $loan_accounts->balance }}</td>
+                    </tr>
+                    <tr>
+                        <th>{{ trans('account.currency') }}</th>
+                        <td>
+                          <?php
+                          foreach($currency_tbl as $cur){
+                            if($cur->id == $loan_accounts->currency){
+                              echo $cur->code;
+                              break;
+                            }
+                          }
+                          ?>
+                    </tr>
+                    <tr>
+                        <th>{{ trans('staff.s_staff_branch') }}</th>
+                        <td>{{ $loan_accounts->branch_name }}</td>
+                    </tr>
+                    <tr>
+                        <th>{{ trans('loan.l_activated_on') }}</th>
+                        <td>{{ $loan_accounts->activated_on }}</td>
+                    </tr>
+                    <tr>
+                        <th>{{ trans('multiple.m_status') }}</th>
+                        <td style="color:#ff0000; font-weight: bold;">{{ $static['client_loan_account_status'][$loan_accounts->status] }}</td>
+                    </tr>
+                </table>
+            </div>
+            <br/><br/>
+            <h4><strong>{{ trans('loan.l_chart_of_account_id') }}</strong></h4>
+            <table class="table table-bordered table-striped table-condensed table-hover">
+                <thead>
+                    <tr>
+                        <th colspan="2" style="text-align: center; vertical-align: middle;">{{ trans('dealer.dl_dealer_account_id') }}</th>
+                        <th colspan="2" style="text-align: center; vertical-align: middle;">{{ trans('loan.l_accrued_int_rec_id') }}</th>
+                        <th colspan="2" style="text-align: center; vertical-align: middle;">{{ trans('loan.l_int_inc_acc_id') }}</th>
+                        <th colspan="2" style="text-align: center; vertical-align: middle;">{{ trans('loan.l_sus_id') }}</th>
+                    </tr>
+                </thead>
+                <?php $n = 1;?>
+                    <tbody>
+                       <?php while ($n <= 4):
+                           $category = null;
+                           $acc = null;
+                            foreach ($cate as $p){
+                                if($p->id == $loan_accounts->coa_id && $n == 1){
+                                    $category = $p;
+                                    $acc = $loan_accounts->journal_detail_coa[0];
+                                    break;
+                                }elseif($p->id == $loan_accounts->air_id && $n == 2){
+                                     $category = $p;
+                                     $acc = $loan_accounts->journal_detail_air[0];
+                                     break;
+                                }
+                                elseif($p->id == $loan_accounts->int_inc_id && $n == 3 ){
+                                     $category = $p;
+                                     $acc = $loan_accounts->journal_detail_int_inc[0];
+                                     break;
+                                }
+                                elseif($p->id == $loan_accounts->sus_id && $n == 4){
+                                     $category = $p;
+                                     $acc = $loan_accounts->journal_detail_sus[0];
+                                     break;
+                                }
+                            }
+                           ?>
+                        @if(!empty($category))
+                             <td  colspan="2" align="center"><span style="color: red;">{{ $category->account_code }}</span><br>{{$category->name}}
+                               <br>Dr = {{number_format($acc->sum_debit,2)}}  ||  Cr = {{number_format($acc->sum_credit,2)}}
+                             </td>
+                             @else
+                            <td align="center">-</td>
+                        @endif
+                        <?php
+                            $n++;
+                        endwhile;?>
+                    </tbody>
+            </table>
+
+            <h5><strong>{{ trans('multiple.audit_title') }}</strong></h5>
+            <table class="table table-bordered table-condensed">
+                <tr>
+                    <th>{{ trans('multiple.action') }}</th>
+                    <th>{{ trans('multiple.by') }}</th>
+                    <th>{{ trans('multiple.date') }}</th>
+                    <th>{{ trans('multiple.status') }}</th>
+                </tr>
+                @foreach($audit as $au)
+                    <tr>
+                        <td>{{ trans('multiple.audit_created') }}</td>
+                        <td>{{$au->audit1->name}}</td>
+                        <td>{{$au->created_at}}</td>
+                        <td>{{ trans('multiple.unauthorized') }}</td>
+                    </tr>
+                     @if($au->audit2)
+                    <tr>
+                        <td>{{ trans('multiple.audit_updated') }}</td>
+                        <td>{{$au->audit2->name}}</td>
+                        <td>{{$au->updated_at}}</td>
+                        <td>{{ trans('multiple.authorized') }}</td>
+                    </tr>
+                    @endif
+                @endforeach
+            </table>
+        </section>
+    </div>
+</section>
+@endsection

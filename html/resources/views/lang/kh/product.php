@@ -1,0 +1,28 @@
+<?php
+
+return array (
+  'p_product_id' => 'លេខសំគាល់ទំនិញ',
+  'p_product_name' => 'ឈ្មោះទំនិញ',
+  'p_product_category' => 'ប្រភេទ',
+  'p_product_brand' => 'ម៉ាក',
+  'p_product_model' => 'ម៉ូ​ឌែ​ល',
+  'p_product_serial' => 'លេខ​ស៊េរី',
+  'p_product_engine' => 'លេខ​ម៉ាស៊ីន',
+  'p_product_price' => 'តំលៃ​លក់',
+  'p_product_year' => 'ឆ្នាំ',
+  'p_product_add_category' => 'បង្កើតប្រភេទ',
+  'p_product_add_brand' => 'បង្កើតម៉ាក',
+  'p_product_edit' => 'កែប្រែទំនិញ',
+  'p_product_return' => 'យកផលិតផលមកវិញ',
+  'p_product_detail' => 'លំអិតពីផលិតផល',
+  'p_product_info' => 'ពត័មានទំនិញ',
+  'p_product_records' => 'កំណត់ត្រាផលិតផល',
+  'p_loan_reference' => 'ប្រាក់កម្ចីយោង',
+  'p_action_type' => 'ប្រភេទសកម្មភាព',
+  'p_location' => 'ទីតាំង',
+  'p_date' => ' កាលបរិច្ឆេទ',
+  'p_price' => 'តម្លៃ',
+  'p_remark' => 'សំគាល់',
+  'p_type' => 'ប្រភេទសកម្មភាព',
+  'p_product_update' => 'កែសម្រួលផលិតផល',
+);

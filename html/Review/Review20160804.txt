@@ -1,0 +1,65 @@
++Customer Management
+1. Differrent user can not view other customer's summary.
+ -> coz the branch_id was 0.
+**** Can't find bug
+
+2. At Dashboard, beside admin can see unauthorized list. 
+   -> Other users should see all  the unauthorized list...
+**** Done
+
++log in
+3. Sometimes after auto logout, user can not login back.
+  error : Failed to load resource: the server responded with a status of 500 (OK)
+  -> when there are two tabs with the same user account, we can not login.
+
+
++Dealer Management
+4. When one bank account has been selected to one dealer, still the bank account can be added to other dealer.
+******** Done
+
+5. in Add New Dealer, when Add New Bank Account, it can not be added.
+--------************** set route please test***************
+
++Permission
+6. New created page like customer account summary,drawdown account summary are not in permissiin list.
+7. No product detail in permission list
+******** Done **********
+
++Drawdown Account
+8. Can not see the record of authorization like customer detail
+9. Drawdown account should has status column like customer account
+********* Done******
+
+
++Schedule
+10. Annual Yield needs to be changed the formula
+11. When printing, "round" button should be hidden. ******* Done *********
+12. When print, should be prepare header well.
+
++Dashboard
+13. The number in unauthorized list is not correct
+*****Done*******
+
++Loan Disbursement
+14. Can not select teller.
+15. No need Invoice input -> it will replace by Entry ID.
+**********Done*************
+
++Export DB
+16. Can not export DB. -> The file "backups/2016080521.sql" does not exist
+*******Done*******
+
++Add Company Branch
+17. Add shortcut column in the form.
+****** Done **********
+
++Add Payment
+18. This is for Reaksmey, But I think T&Go may have the bug too.
+   -> In case that customer paid all the principal(mean Principal Balance = 0), 
+      loan status will be become "Completed". 
+      In fact, there are some pass due that customer need to pay. 
+      So, please set a condition that "if(principal balance = 0 && Passdue amount = 0) the status will become complete".
+
++DB
+19. no need to jump by 2 per transaction. 
+******Done**********

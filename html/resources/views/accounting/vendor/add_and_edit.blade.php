@@ -1,0 +1,174 @@
+<div id="add_vendor" class="modal fade" tabindex="1" role="dialog">
+    <div class="modal-dialog" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title">Add Vendor Account</h4>
+            </div>
+
+            <form class="form-horizontal" id="form_add_vendor" method="post" action="#" onsubmit="return false;">
+
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-lg-12 col-md-12 col-sm-12">
+
+                            <div class="form-group">
+                                <label for="company_name" class="col-sm-3 control-label">Company Name</label>
+                                <div class="col-sm-9">
+                                    <input type="text" class="form-control" name="company_name" value="{{isset($vendor->company_name)? $vendor->company_name:''}}">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="fname" class="col-sm-3 control-label">Full Name </label>
+                                <div class="col-sm-9">
+                                    <input type="text" class="form-control" name="fname" value="{{isset($vendor->fname)?$vendor->fname:''}}">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="lname" class="col-sm-3 control-label">Last Name </label>
+                                <div class="col-sm-9">
+                                    <input type="text" class="form-control" name="lname" value="{{isset($vendor->lname)?$vendor->lname:''}}">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="job_title" class="col-sm-3 control-label">Job Title</label>
+                                <div class="col-sm-9">
+                                    <input type="text" class="form-control" name="job_title" value="{{isset($vendor->job_title)?$vendor->job_title:''}}">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="main_phone" class="col-sm-3 control-label">Main Phone</label>
+                                <div class="col-sm-9">
+                                    <input type="text" class="form-control" name="main_phone" value="{{isset($vendor->main_phone)?$vendor->main_phone:''}}">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="work_phone" class="col-sm-3 control-label">Work Phone</label>
+                                <div class="col-sm-9">
+                                    <input type="text" class="form-control" name="work_phone" value="{{isset($vendor->work_phone)?$vendor->work_phone:''}}">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="fax" class="col-sm-3 control-label">Fax</label>
+                                <div class="col-sm-9">
+                                    <input type="text" class="form-control" name="fax" value="{{isset($vendor->fax)?$vendor->fax:''}}">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="mobile" class="col-sm-3 control-label">Mobile</label>
+                                <div class="col-sm-9">
+                                    <input type="text" class="form-control" name="mobile" value="{{isset($vendor->mobile)?$vendor->mobile:''}}">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="main_email" class="col-sm-3 control-label">Email</label>
+                                <div class="col-sm-9">
+                                    <input type="email" class="form-control" name="main_email" value="{{isset($vendor->main_email)?$vendor->main_email:''}}">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="website" class="col-sm-3 control-label">Website</label>
+                                <div class="col-sm-9">
+                                    <input type="text" class="form-control" name="website" value="{{isset($vendor->website)?$vendor->website:''}}">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="address" class="col-sm-3 control-label">address</label>
+                                <div class="col-sm-9">
+                                    <textarea class="form-control" name="address"> {{isset($vendor->address)?$vendor->address:''}}</textarea>
+                                </div>
+                            </div>
+                            <input type="hidden" value="0" id="vedor_id">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <input type="submit" value="Submit" id="submitid" class="btn btn-info"/>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</div>
+
+<script type="text/javascript" src="{{ asset('theme/js/jquery.validate.min.js',false) }}"></script>
+<script>
+    $(document).ready(function () {
+
+        $('#form_add_vendor').validate({
+            rules:{
+                company_name : {
+                    required: true
+                },fname:{
+                    required: true
+                },lname:{
+                    required:true
+                },job_title:{
+                    required:true
+                },phone:{
+                    required:true
+                },workphone:{
+                    required:true
+                },mobile:{
+                    required:true
+                },main_email:{
+                    required:true
+                }
+            },
+            messages:{
+                company_name:{
+                    required: "Please enter a role"
+                },
+                fname:{
+                    required: "Please enter a role name"
+                }
+            },submitHandler:function(){
+
+                var vedor_id = parseInt($('#vedor_id').val())?parseInt($('#vedor_id').val()):0;
+               if(confirm("Are you sure?")) {
+                   $('#loading').remove();
+                   $('<div id="loading"></div>').appendTo('body');
+                   imgLoading(true,'Loading...',5,'warning');
+
+                   $.ajax({
+                      url: "post_add_vendor_act/"+vedor_id,
+                       method: 'post',
+                       dataType: 'json',
+                       timeout: 3000,
+                       headers: {
+                           'X-CSRF-Token': $('meta[name="_token"]').attr('content')
+                       },
+                       data: $('#form_add_vendor').serialize() + '&_token=' + $('meta[name="_token"]').attr('content'),
+                       success: function (data, status) {
+                           if (status !== 'success' && data.save !== true) {
+                               return imgLoading(true,'Please try again',9,'warning');
+
+                           }
+                           $('#loading').remove();
+                           $('<div id="loading"></div>').appendTo('body');
+                           imgLoading(true,'Successfully',5,status);
+                           delete_allModel('.modal');
+                           window.location.reload();
+                       }, error: function (xhr, status, errorThrown) {
+                           xhr.status;
+                           xhr.responseText;
+                       }
+                   })
+               }
+            }
+        });
+
+    });
+</script>

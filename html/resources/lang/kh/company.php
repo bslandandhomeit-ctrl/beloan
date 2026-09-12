@@ -1,0 +1,30 @@
+<?php
+
+return array (
+  'com_company_all_branch' => 'គ្រប់ក្រុមហ៊ុនទាំងអស់',
+  'com_branch_code' => 'លេខសំគាល់ក្រុមហ៊ុន',
+  'com_opened_on' => 'បើកនៅថ្ងៃទី',
+  'com_location_in_detail' => 'ទីតាំងលំអិត',
+  'com_create_ip' => 'បង្កើតចន្លោះអាយភី',
+  'com_ip_list' => 'បញ្ជីចន្លោះអាយភី',
+  'com_ip_start' => 'ចាប់ផ្តើមចន្លោះ',
+  'com_ip_end' => 'បញ្ចប់ចន្លោះ',
+  'com_no_permission' => 'មិនមានការអនុញ្ញាតដើម្បីភ្ជាប់',
+  'com_user_activity' => 'មើលសកម្មភាពអ្នកប្រើប្រាស់',
+  'com_activity' => 'សកម្មភាព',
+  'com_add_language' => 'បង្កើតភាសាថ្មី',
+  'com_add_tran' => 'បន្ថែមការបកប្រែ',
+  'com_key_word' => 'ពាក្យគន្លឹះ',
+  'com_text' => 'ពាក្យ',
+  'group' => 'ក្រុម',
+  'address_one' => 'Address Line 1',
+  'address_two' => 'Address Line 2',
+  'contact_number'=> 'Contact Phone Number',
+  'email'=> 'Email Address',
+  'website'=> 'Website',
+  'tax_no'  => 'Tax No',
+  'issued_date'=> 'Issued Date',
+  'commercial_licence_no'=> 'Commercial Licence No',
+  'dynamic_nav' => 'Dynamic NAV Company Code',
+  'company' => 'ក្រុមហ៊ុន'
+);

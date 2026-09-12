@@ -1,0 +1,347 @@
+@extends('layouts.app')
+
+@section('css')
+<link rel="stylesheet" type="text/css" href="{{ asset('theme/js/advanced-datatable/css/jquery.dataTables.css',isset($secure) ? false : false) }}"/>
+<link rel="stylesheet" type="text/css" href="{{ asset('/css/loan-style.css',isset($secure) ? false : false) }}"/>
+<link rel="stylesheet" type="text/css" href="{{ asset('/css/client.css',isset($secure) ? false : false) }}"/>
+<link rel="stylesheet" type="text/css" href="{{ asset('theme/css/table-responsive.css',isset($secure) ? false : false) }}"/>
+<link rel="stylesheet" type="text/css" href="{{ asset('theme/js/bootstrap-datepicker/css/datepicker.css',isset($secure) ? false : false)}}" />
+<style type="text/css">
+    .loading{
+        position: absolute;
+        left: 100%;
+        top: 20px;
+        display: block;
+        width: 40px;
+        height: 40px;
+        background: transparent url("{{ asset('images/loading.gif',isset($secure) ? false : false) }}") no-repeat scroll center center / contain;
+    }
+</style>
+@endsection
+@section('content')
+<section class="panel">
+    <header class="panel-heading">
+        {{ trans('sidebar.sb_irregular_repayment') }}
+    </header>
+    <div class="panel-body">
+        <div class="position-center">
+            <form role="form" class="cmxform" method="get" action="{{ route('irregular_repayment_report',null) }}" id="search_frm">
+                <div class="row">
+                    <div class="col-lg-4">
+                        <div class="form-group">
+                            <label for="Contract ID" class="control-label">{{ trans('report.rpt_contract_id') }}</label>
+                            <input type="text" id="contract_id" name="contract_id" class="form-control">
+                        </div>
+                        <div class="form-group">
+                            <label for="Client Name" class="control-label">{{ trans('customer.cus_customer_name') }}</label>
+                            <input type="text" name="name" id="client_name" class="form-control">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="CO Name" class="control-label">{{ trans('multiple.co') }}</label>
+                            
+                                <select class="form-control" id="co" name="co">
+                                    <option value="">-</option>
+                                    @foreach($users as $u)
+                                    <option value="{{ $u->id }}" @if($_GET['co']==$u->id) selected @endif>{{ $u->name}}</option>
+                                    @endforeach
+                                </select>
+                            
+                        </div>
+
+                        <div class="form-group">
+                                <span class="loading" id="loading"></span>
+                            
+                        </div>
+                    </div>
+                    <div class="col-lg-8">
+                        <div class="form-group">
+                            <label for="Phone" class="control-label">{{ trans('multiple.m_phone',['num'=>'']) }}</label>
+                            
+                                <input type="text" name="phone" id="phone" data-mask="999-999-999?9" class="form-control">
+                          
+                        </div>
+                        <div class="form-group">
+                            <label for="inputCardnumber" class="control-label">{{ trans('report.rpt_branch_name') }}</label>
+                            
+                                <select class="form-control" id="selBrand" name="selBrand">
+                                    <option value="">-</option>
+                                    @foreach($branch as $b)
+                                    <option value="{{ $b->id }}"
+                                            @if(isset($branch_id))
+                                            @if($branch_id==$b->id)
+                                            selected
+                                            @endif
+                                            @endif>{{ $b->branch_name}}</option>
+                                    @endforeach
+                                </select>
+                           
+                        </div>
+                        <div class="form-group">
+                            <input type="hidden" name="offset" />
+                            <button type="button" id="search-loan"  class="btn btn-info"><i class="fa fa-search"></i> {{ trans('multiple.m_search') }}</button>
+                            <button class="btn btn-warning" id="printer"><i class="fa fa-print"></i> {{ trans('multiple.m_print') }}</button>
+                            <a id="export" class="btn btn-primary"><i class="fa  fa-sign-out"></i> {{ trans('report.rpt_export') }}</a>
+                            <a id="xexport" class="btn btn-primary"><i class="fa  fa-sign-out"></i> {{ trans('report.xrpt_export') }}</a>                            
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+        <div class="page">
+            <div class="custom-pagi">
+                <span class="pagi_label">Number of Rows:</span>
+                <input type="text" class="form-control" name="set_offset" value="<?php echo $offset ?>" />
+                <a href="#" class="btn btn-danger">Go</a>
+            </div>
+        </div>
+        <br/><br/>
+        <section>
+            <ul class="nav nav-tabs">
+                <li class="active"><a data-toggle="tab" href="#irregular">{{ trans('sidebar.sb_irregular_repayment') }}</a></li>
+                <li><a data-toggle="tab" href="#detail_irregular">{{ trans('sidebar.sb_todo_payment_for_today') }}</a></li>
+            </ul>
+            <div class="panel-body ox-scroll">
+                <div id="printArea">
+                    @include('api.report_header',['co_phone'=>!empty($co_id->co_user) ? $co_id->co_user->phone: ''])
+                    <h4 class="sch_title">{{ trans('report.rpt_irregular_loan_repayment_report') }}</h4>
+                    <div class="tab-content">
+                        <div id="irregular" class="tab-pane active">
+                            @include('partials.irregular',['loans'=>$loans])
+                        </div>
+                        <div id="detail_irregular" class="tab-pane">
+
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <input type="hidden" id="url-name" value="{{ route('irregular_repayment_report',null) }}" />
+        <div aria-hidden="true" aria-labelledby="myModalLabel" role="dialog" tabindex="-1" id="myModal" class="modal fade">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button aria-hidden="true" data-dismiss="modal" class="close" type="button">×</button>
+                        <h4 class="modal-title">{{ trans('report.rpt_todo_payment') }}</h4>
+                    </div>
+                    <div class="modal-body">
+                        <form role="form" method="get" id="updateModal" class="cmxform">
+                            <input type="hidden" name="_token" id="_token" value="{{ csrf_token() }}">
+                            <div class="form-group">
+                                <label for="Reason">{{ trans('report.rpt_reason') }}</label>
+                                <textarea class="form-control" id="reason" name="reason"></textarea>
+                            </div>
+                            <div class="form-group">
+                                <label for="Action">{{ trans('report.rpt_action_taken') }}</label>
+                                <input type="text" class="form-control" id="action_taken" name="action_taken">
+                            </div>
+                            <div class="form-group">
+                                <label for="Name">{{ trans('report.rpt_todo_payment') }}</label>
+                                <div data-date-viewmode="years" data-initialize="datepicker" data-date-format="yyyy-mm-dd" class="input-append date todo">
+                                    <input type="text" id="todo_payment" name="todo_payment" value="{{date('Y-m-d')}}" size="16" class="form-control" placeholder="Select todo payment date">
+                                    <span class="add-on date">
+                                        <button class="btn btn-primary" type="button"><i class="fa fa-calendar"></i></button>
+                                    </span>
+                                </div>
+                            </div>
+                            <button type="button" id="save" class="btn btn-primary"><i class="fa fa-save"></i> {{ trans('multiple.m_save') }}</button>
+                            <input type="hidden" id="getID">
+                            <a data-dismiss="modal" class="btn btn-danger"><i class="fa fa-times-circle"></i> {{ trans('multiple.m_cancel') }}</a>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+@endsection
+
+@section('js')
+<script type="text/javascript" src="{{ asset('theme/js/bootstrap-inputmask/bootstrap-inputmask.min.js',isset($secure) ? false : false) }}"></script>
+<script type="text/javascript" src="{{ asset('theme/js/bootstrap-datepicker/js/bootstrap-datepicker.js',isset($secure) ? false : false)}}"></script>
+<script type="text/javascript" src="{{ asset('js/irregular-loan-list.js',isset($secure) ? false : false) }}"></script>
+<script type="text/javascript" src="{{ asset('js/print.js',isset($secure) ? false : false)}}"></script>
+<script type="text/javascript" src="{{ asset('js/jquery.floatThead.min.js',isset($secure) ? false : false)}}"></script>
+<script src="{{ asset('js/dataTables.js',isset($secure) ? false : false) }}"></script>
+<script type="text/javascript" src="{{ asset('js/xlsx.full.min.js',isset($secure) ? false : false)}}"></script>
+<script type="text/javascript" src="{{ asset('js/Blob.min.js',isset($secure) ? false : false)}}"></script>
+
+<script type="text/javascript" src="{{ asset('js/FileSaver.js',isset($secure) ? false : false)}}"></script>
+<script type="text/javascript" src="{{ asset('js/tableexport.js',isset($secure) ? false : false)}}"></script>
+<script type="text/javascript">
+/*
+function exportTableToCSV($table, filename) {
+    var $headers = $table.find('tr.header:has(th)')
+            , $rows = $table.find('tr:has(td)')
+
+            // Temporary delimiter characters unlikely to be typed by keyboard
+            // This is to avoid accidentally splitting the actual contents
+            , tmpColDelim = String.fromCharCode(11) // vertical tab character
+            , tmpRowDelim = String.fromCharCode(0) // null character
+
+            // actual delimiter characters for CSV format
+            , colDelim = '","'
+            , rowDelim = '"\r\n"';
+
+    var $header1 = $table.find('tr.head-1:has(th)')
+            , $rows = $table.find('tr:has(td)')
+
+            // Temporary delimiter characters unlikely to be typed by keyboard
+            // This is to avoid accidentally splitting the actual contents
+            , tmpColDelim = String.fromCharCode(11) // vertical tab character
+            , tmpRowDelim = String.fromCharCode(0) // null character
+
+            // actual delimiter characters for CSV format
+            , colDelim = '","'
+            , rowDelim = '"\r\n"';
+
+// Grab text from table into CSV formatted string
+    var csv = '"';
+    csv += ($('#p-header').html()).trim();
+    csv += rowDelim;
+    var csvx = formatRows($headers.map(grabRow));
+    csvx = csvx.split(',');
+    csv += csvx[0] + ',' + csvx[1] + ',' + csvx[2] + ',';
+    csv += csvx[3] + ',' + ',' + ',' + ',' + csvx[4] + ',' + csvx[5] + ',' + csvx[6] + ',' + csvx[7] + ',' + csvx[8] + ',' + csvx[9] + ',' + ',' + ',' + ',' + csvx[10] + ',' + csvx[11] + ',' + csvx[12] + ',' + csvx[13] + ',' + csvx[14] + '';
+
+
+    csv += rowDelim;
+    var csvs = formatRows($header1.map(grabRow));
+    csvs = csvs.split(',');
+    var temp = '';
+    for (var i = 0; i < 3; i++) {
+        if (i == 0) {
+            temp += '",';
+        } else {
+            temp += '" ",';
+        }
+
+    }
+    for (var i = 0; i < 4; i++) {
+        temp += csvs[i] + ',';
+    }
+    for (var i = 0; i < 5; i++) {
+        temp += '" ",';
+    }
+    for (var i = 4; i < csvs.length; i++) {
+        temp += csvs[i] + ',';
+    }
+    csv += temp;
+//console.log(aaa); return false;
+
+
+    csv += rowDelim;
+    csv += formatRows($rows.map(grabRow)) + '"';
+// Data URI
+    var csvData = 'data:application/csv;charset=utf-8,' + encodeURIComponent(csv);
+
+    $(this)
+            .attr({
+                'download': filename
+                , 'href': csvData
+                        //,'target' : '_blank' //if you want it to open in a new window
+            });
+
+//------------------------------------------------------------
+// Helper Functions
+//------------------------------------------------------------
+// Format the output so it has the appropriate delimiters
+    function formatRows(rows) {
+        return rows.get().join(tmpRowDelim)
+                .split(tmpRowDelim).join(rowDelim)
+                .split(tmpColDelim).join(colDelim);
+    }
+// Grab and format a row from the table
+    function grabRow(i, row) {
+        var $row = $(row);
+        //for some reason $cols = $row.find('td') || $row.find('th') won't work...
+        var $cols = $row.find('td');
+        if (!$cols.length)
+            $cols = $row.find('th');
+
+        return $cols.map(grabCol)
+                .get().join(tmpColDelim);
+    }
+// Grab and format a column from the table
+    function grabCol(j, col) {
+        var $col = $(col),
+                $text = $col.text().trim();
+
+        return $text.replace('"', '""'); // escape double quotes
+
+    }
+}
+*/
+
+$(document).ready(function () {
+    $(".sticky-header").floatThead({scrollingTop: 77});
+
+// This must be a hyperlink
+    $("#export").click(function (event) {
+        //$('#divTab table.repayment-plan').removeClass('sticky-header'); return false;
+        // var outputFile = 'export'
+        var con = confirm("Do you really want to export to CSV file?");
+        if (con == true) {
+            //var outputFile = 'irregular.csv'; //alert($('#divTab>.floatThead-wrapper').html());
+            // CSV
+            //exportTableToCSV.apply(this, [$('div.active table.irregular'), outputFile]);
+
+            // IF CSV, don't do event.preventDefault() or return false
+            // We actually need this to be a typical hyperlink
+            new TableExport(document.getElementById('listtable'), {
+                formats: ['csv'],
+                filename: 'irregular_repayment'
+            });
+            $('button.csv').hide().click();
+            $('.tableexport-caption').remove();
+
+        }
+
+    });
+
+    $("#xexport").click(function (event) {
+            var con = confirm("Do you really want to export to Excel file?");
+            if(con == true){
+                new TableExport(document.getElementById('listtable'), {
+                        formats: ['xlsx'],
+                        filename: 'irregular_repayment'
+                    }).formatConfig.xlsx.mimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+                    $('button.xlsx').hide().click();
+                    $('.tableexport-caption').remove();
+            }
+        });
+
+
+    $('.custom-pagi a').on('click', function () {
+        val = $(this).parent().find('input[name="set_offset"]').val();
+        $('input[name="offset"]').val(val);
+        $('#search_frm').submit();
+        return false;
+    });
+
+	dosorting();
+});
+
+function dosorting(){
+	//sorting *****************
+
+	$('#listtable').DataTable( {
+		"paging":   true,
+		"ordering": true,
+		"info":     true,
+		"iDisplayLength": 10000000
+	} );
+}
+
+function do_sorting(){
+	//sorting *****************
+
+	$('#editable').DataTable( {
+		"paging":   true,
+		"ordering": true,
+		"info":     true,
+		"iDisplayLength": 10000000
+	} );
+}
+</script>
+@endsection

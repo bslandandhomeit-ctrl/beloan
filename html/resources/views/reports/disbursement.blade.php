@@ -1,0 +1,240 @@
+@extends('layouts.app')
+
+@section('css')
+<link rel="stylesheet" type="text/css" href="{{ asset('/css/loan-style.css',isset($secure) ? false : false) }}"/>
+<link rel="stylesheet" type="text/css" href="{{ asset('/css/client.css',isset($secure) ? false : false) }}"/>
+<link rel="stylesheet" type="text/css" href="{{ asset('theme/js/bootstrap-datepicker/css/datepicker.css',isset($secure) ? false : false)}}" />
+@endsection
+@section('content')
+<section class="panel">
+    <header class="panel-heading">
+        {{ trans('sidebar.sb_disbursement_report') }}
+        @if(isset($start) && isset($end))
+        {{ trans('multiple.m_from') }} {{ date("d-M-Y", strtotime($start)) }} {{ trans('multiple.m_to') }} {{ date("d-M-Y", strtotime($end)) }}
+        @else
+        {{ isset($start)?'Loan disbursed on '.date("d-M-Y", strtotime($start)):'' }}
+        {{ isset($end)?'Loan disbursed on '.date("d-M-Y", strtotime($end)):'' }}
+        @endif
+        @foreach($branch as $b)
+        @if(isset($branch_id))
+        @if($branch_id==$b->id)
+        ({{ $b->branch_name }})
+        @endif
+        @endif
+        @endforeach
+    </header>
+
+    <div class="panel-body">
+        <div class="position-center" style="width:100%;">
+            <form role="form" method="get" action="{{ route('rpt_disbursement') }}" id="search_frm">
+                <div class="row">
+                    <label class="control-label col-md-1 padding-top">{{ trans('multiple.m_start_date') }}</label>
+                    <div class="col-md-2">
+                        <div data-date-viewmode="years" data-initialize="datepicker" data-date-format="yyyy/mm/dd" data-date="{{date('Y-m-d')}}" class="input-append date dpStart">
+                            <input type="text" name="dpStart" size="16" class="form-control" value="{{ isset($start)?$start:old('dpStart') }}">
+                            <span class="add-on birhtdateDatepicker ptl-3">
+                                <button class="btn btn-primary" type="button"><i class="fa fa-calendar"></i></button>
+                            </span>
+                        </div>
+                    </div>
+                    <label class="control-label col-md-1 padding-top">{{ trans('multiple.m_end_date') }}</label>
+                    <div class="col-md-2">
+                        <div data-date-viewmode="years" data-initialize="datepicker" data-date-format="yyyy/mm/dd" data-date="{{date('Y-m-d')}}" class="input-append date dpEnd">
+                            <input type="text" name="dpEnd" size="16" class="form-control" value="{{ isset($end)?$end:old('dpEnd') }}">
+                            <span class="add-on birhtdateDatepicker ptl-3">
+                                <button class="btn btn-primary" type="button"><i class="fa fa-calendar"></i></button>
+                            </span>
+                        </div>
+                    </div>
+                    <label class="control-label col-md-1 padding-top">{{ trans('report.rpt_branch_name') }}</label>
+                    <div class="col-md-2">
+                        <select class="form-control" id="selBrand" name="selBrand">
+                            <option value="">-</option>
+                            @foreach($branch as $b)
+                            <option value="{{ $b->id }}"
+                                    @if(isset($branch_id))
+                                    @if($branch_id==$b->id)
+                                    selected
+                                    @endif
+                                    @endif>{{ $b->branch_name}}</option>
+                            @endforeach
+                        </select>
+                    </div>
+                </div><br/>
+                <div class="row">
+                    <div class="col-lg-offset-7 col-lg-2">
+                        <input type="hidden" name="offset" />
+                        <button type="submit" class="btn btn-info"><i class="fa fa-search"></i> {{ trans('multiple.m_search') }}</button>
+                        <button class="btn btn-warning" id="printer"><i class="fa fa-print"></i> {{ trans('multiple.m_print') }}</button>
+                        <button class="btn btn-primary" id="export"><i class="fa fa-sign-out"></i> {{ trans('multiple.export') }}</button>
+                    </div>
+                </div>
+            </form>
+            <div class="page">
+                <div class="custom-pagi">
+                    <span class="pagi_label">Number of Rows:</span>
+                    <input type="text" class="form-control" name="set_offset" value="<?php echo $offset ?>" />
+                    <a href="#" class="btn btn-danger">Go</a>
+                </div>
+            </div>
+        </div>
+        <br/><br/>
+        <div id="printArea" style="clear: both">
+            @include('api.report_header',['co_phone'=>!empty($co_id->co_user) ? $co_id->co_user->phone: ''])
+            <h4 class="sch_title">{{ trans('sidebar.sb_disbursement_report') }} @if(isset($start) && isset($end))
+                From {{ date("d-M-Y", strtotime($start)) }} to {{ date("d-M-Y", strtotime($end)) }}
+                @else
+                {{ isset($start)?'Loan disbursed on '.date("d-M-Y", strtotime($start)):'' }}
+                {{ isset($end)?'Loan disbursed on '.date("d-M-Y", strtotime($end)):'' }}
+                @endif</h4>
+            <section id="unseen">
+                <table class="table table-bordered table-striped table-condensed disbursement" id="disbursement">
+                    <thead class="th-center">
+                        <tr>
+                            <th style="vertical-align:middle;">{{ trans('multiple.m_no') }}</th>
+                            <th style="vertical-align:middle;">{{ trans('customer.cus_customer_name') }}</th>
+                            <th style="vertical-align:middle;">{{ trans('report.rpt_contract_id') }}</th>
+                            <th style="vertical-align:middle;">{{ trans('product.p_productsTypes') }}</th>
+                            <th style="vertical-align:middle;">new {{ trans('product.p_productsTypes') }}</th>
+                            <th style="vertical-align:middle;">{{ trans('multiple.m_branch') }}</th>
+                            <th style="vertical-align:middle;">{{ trans('account.currency') }}</th>
+                            <th style="vertical-align:middle;">{{ trans('report.rpt_loan_amount') }}</th>
+                            <th style="vertical-align:middle;">{{ trans('loan.l_interest_rate') }}</th>
+                            <th style="vertical-align:middle;">{{ trans('multiple.main_fee') }}</th>
+                            <th style="vertical-align:middle;">{{ trans('multiple.admin_fee') }}</th>
+                            <th style="vertical-align:middle;">{{ trans('report.rpt_other_fee') }}</th>
+							<th style="vertical-align:middle;">{{ trans('loan.l_tenure') }}</th>
+							<th style="vertical-align:middle;">{{ trans('loan.l_submitted_on') }}</th>
+							<th style="vertical-align:middle;">{{ trans('loan.l_disbursed_on') }}</th>
+							{{-- <th style="vertical-align:middle;">{{ trans('report.rpt_co_name') }}</th>
+							<th style="vertical-align:middle;">{{ trans('multiple.co_branch') }}</th>
+                            <th style="vertical-align:middle;">{{ trans('dealer.dl_dealer_name') }}</th>
+                            <th style="vertical-align:middle;">{{ trans('dealer.dl_dealer_bank_name') }}</th>
+                            <th style="vertical-align:middle;">{{ trans('dealer.dl_dealer_account_name') }}</th>
+                            <th style="vertical-align:middle;">{{ trans('dealer.dl_dealer_account_number') }}</th> --}}
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <?php
+                        $i = 1;
+                        $to_amount = 0.0;
+                        $to_tr_amount = 0.0;
+                        $to_de_amount = 0.0;
+						$new_acc_type = [
+							"AML" => "ML",
+							"WCL" => "WCL",
+							"HML" => "HML",
+							"PEL" => "PL",
+							"ATL" => "CL",
+							"PHL" => "HL",
+							"Employees" => "SL",
+						];
+                        ?>
+                        @forelse($disbursement as $dis)
+                        <?php
+							if($dis->id == 580 || $dis->id == 589 || $dis->id == 168) continue;
+                            $dealer_bank_info = null;
+                            if($dis->dealer_id > 0){
+                                foreach($bank_dealer as $bd){
+                                    if($dis->dealer_id == $bd->dealer_id){
+                                        $dealer_bank_info = $bd;
+                                    }
+                                }
+                            }
+							$acc_type = explode("-", $dis->client_loan_account->acc_key)[0];
+						?>
+                        <tr>
+                            <td align="center">{{ $i }}</td>
+                            <td>{{ $dis->client->client_name }}</td>
+                            <td align="center"><a href="{{ route('loan_detail',[$dis->id]) }}">{{ $dis->contract_id }}</a></td>
+                            <!--<td>{{ $pro_type[$dis->product->product_type_id] }}</td> -->
+							<td align="center">{{ $acc_type }}</td>
+							<td align="center">{{ !is_null($new_acc_type[$acc_type])?$new_acc_type[$acc_type]:$acc_type }}</td>
+							<td align="center">{{$dis->client_loan_account->get_branch->short_name}}</td>
+                            <td align="center">{{$dis->client_loan_account->currencies->code}}</td>
+                            <td align="right">{{ number_format($dis->loan_amount,2,'.',',') }}</td>
+                            <td align="right">{{ number_format($dis->interest_rate,4,'.',',') }}</td>
+<!--
+                            <td align="right">{{ ($dis->maintain_fee_opt != 3)? number_format($dis->maintain_fee,2,'.',',')."% on OS" : number_format($dis->maintain_fee,2)."% on Loan Amount" }}</td>
+                            <td align="right">{{ ($dis->admin_fee_opt != 3)? number_format($dis->admin_fee,2,'.',',')."% on OS" : number_format($dis->admin_fee,2)."% on Loan Amount" }}</td>
+-->
+                            <td align="right">{{number_format($dis->maintain_fee,2,'.',',')}}</td>
+                            <td align="right">{{number_format($dis->admin_fee,2,'.',',')}}</td>
+                            <td align="right">{{ number_format($dis->other_fee,2,'.',',')}}</td>
+                            <td align="right">{{ $dis->loan_duration }}</td>
+                            <td align="right">{{ $dis->submitted_on }}</td>
+                            <td align="right">{{ $dis->disburse_date }}</td>
+                            {{-- <td align="center">{{ $dis->co_user->name }}</td>
+							<td align="center">{{ $dis->co_user->get_branch->short_name }}</td>
+                            <td><a href="{{ route('dealer_detail',[$dis->dealer_id]) }}">{{ $dis->dealer->dealer }}</a></td>
+                            <td align="center">{{ $dealer_bank_info->bank->bank_name }}</td>
+                            <td>{{ $dealer_bank_info->bank->account_name }}</td>
+                            <td align="center">{{ $dealer_bank_info->bank->account_number }}</td> --}}
+                        </tr>
+                        <?php
+                        $i+=1;
+                        $to_amount += $dis->loan_amount;
+                        //$to_tr_amount += $dis->loanDealer->transfer_amount;
+                        //$to_de_amount += $dis->loanDealer->disbursement_amount;
+                        ?>
+                        @empty
+                        <tr><td colspan="18">{{ trans('multiple.m_no_result') }}</td></tr>
+                        @endforelse
+				
+                    </tbody>
+                </table>
+                {{-- <div>
+                    @include('partials.pagination',['results'=>$disbursement])
+                </div> --}}
+            </section>
+        </div>
+        <div class="page">
+            <?PHP
+            echo $disbursement->appends([
+                'offset' => Input::get('offset')
+            ])->render();
+            ?>
+        </div>
+    </div>
+</section>
+@endsection
+
+@section('js')
+<script type="text/javascript" src="{{ asset('theme/js/bootstrap-datepicker/js/bootstrap-datepicker.js',isset($secure) ? false : false)}}"></script>
+<script type="text/javascript" src="{{ asset('js/print.js',isset($secure) ? false : false)}}"></script>
+<script type="text/javascript" src="{{ asset('js/FileSaver.js',isset($secure) ? false : false)}}"></script>
+<script type="text/javascript" src="{{ asset('js/tableexport.js',isset($secure) ? false : false)}}"></script>
+
+<script type="text/javascript">
+    $("#export").click(function (event) {
+        var con = confirm("Do you really want to export to CSV file?");
+        if(con == true){
+            new TableExport(document.getElementById('disbursement'), {
+                formats: ['csv'],
+                filename:"disbursement"
+            });
+            $('button.csv').hide().click();
+            $('.tableexport-caption').remove();
+        }
+        event.preventDefault();
+    });
+$(document).ready(function () {
+    $('.dpStart').datepicker({
+        format: 'yyyy-mm-dd',
+        autoclose: true,
+        setDate: new Date()
+    });
+    $('.dpEnd').datepicker({
+        format: 'yyyy-mm-dd',
+        autoclose: true,
+        setDate: new Date()
+    });
+    $('.custom-pagi a').on('click', function () {
+        val = $(this).parent().find('input[name="set_offset"]').val();
+        $('input[name="offset"]').val(val);
+        $('#search_frm').submit();
+        return false;
+    });
+});
+</script>
+@endsection

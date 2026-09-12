@@ -1,0 +1,324 @@
+<link rel="stylesheet" type="text/css" href="{{ asset('theme/js/bootstrap-datepicker/css/datepicker.css',false)}}"/>
+<div id="write_check" class="modal fade" role="dialog">
+    <form class="form-group " id="form_write_check" autocomplete="off" enctype="multipart/form-data">
+        <div class="modal-dialog" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span
+                                aria-hidden="true">&times;</span></button>
+                    <h4 class="modal-title"> Write check</h4>
+                </div>
+                <div class="modal-body">
+                    <div class="row">
+                        <div class="col-xs-5 form-group">
+                            <label class="col-sm-4 control-label"> Bank Account </label>
+                            <?PHP if($coa): ?>
+                            <select id="selAct" name="selAct" style="width: 300px; margin-top:0px;">
+                                <option value="" >-- Select an account --</option>
+                                @foreach($coa as $items)
+                                    <option value="{{$items->id}}">{{$items->name}} - {{$items->account_code}} ( {{$items->currency_i->code}} )</option>
+                                @endforeach
+                            </select>
+                            <?PHP endif;?>
+                        </div>
+                        <div class="col-xs-5 form-group">
+                            <label  class="col-sm-4 control-label">Pay to the order of</label>
+                            <?PHP if($vendor): ?>
+                            <select id="toVendor" name="toVendor" style="width: 300px;">
+                                <option value="" >--</option>
+                                @foreach($vendor as $items)
+                                    <option value="{{$items->id}}" data-address="{{$items->address}}">{{$items->company_name}}</option>
+                                @endforeach
+                            </select>
+                            <?PHP endif;?>
+                        </div>
+                        <div class="col-lg-3 form-group">
+                            <label> Ending Balance : </label>
+                            <input class="form-control" type="text" name="endBalance" readonly/>
+                        </div>
+
+                        <div class="col-lg-2 form-group">
+                            <label>Date:</label>
+                            <input class="form-control mdate" name="mdate" type="text"/>
+                        </div>
+
+                        <div class="col-lg-2 form-group">
+                            <label>Debit Amount:</label>
+                            <input class="form-control credit" name="credit" type="text"/>
+                        </div>
+
+                        <div class="col-xs-6 form-group">
+                            <label>Address:</label>
+                            <input class="form-control" name="address" id="address" type="text"/>
+                        </div>
+                        <div class="col-xs-6 form-group">
+                            <label>Memo:</label>
+                            <input class="form-control" name="description" type="text"/>
+                            <div class="clearfix"></div>
+                        </div>
+                        <div class="col-lg-2">
+                            <label>Invoice Number </label>
+                            <input type="text" class="form-control inNum" name="inNum" />
+                        </div>
+                        <div class="col-lg-2">
+                            <label>Invoice photo</label>
+                            <input type="file" name="file" class="file">
+                        </div>
+
+                        <div class="col-lg-2" id="img1"> </div>
+                        <div class="col-lg-12 col-md-12 col-sm-12 col-xs-12">
+                            <h4></h4>
+                            <table class="table table-responsive table-bordered tbl_writecheck">
+
+                                <thead>
+                                <tr>
+                                    <th width="400px">Account</th>
+                                    <th width="100px">Amount</th>
+                                    <th width="100p">Memo</th>
+                                    <th style="width: 30px;">Action</th>
+                                </tr>
+                                </thead>
+                                <tbody>
+                                <tr class="coa">
+                                    <td style="width:500px;">
+                                        <select style="margin-top:10px; height:27px; width:100%" name="coa_id[]" class="coa_id">
+                                            <option value="" >-- Select an account --</option>
+                                            @foreach($coa_exp as $items)
+                                                <option value="{{$items->id}}">{{$items->name}} - {{$items->account_code}} ( {{$items->currency_i->code}} )</option>
+                                            @endforeach
+                                        </select>
+                                    </td>
+                                    <td><input class="form-control amount" name="amount[]"  type="text"/></td>
+                                    <td><input class="form-control" name="memo[]" type="text"/></td>
+                                    <td><i class="btn btn-sm glyphicon glyphicon-plus"></i></td>
+                                </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <input type="hidden" style="display: none" value="{{$journal_req}}" id="jsondata"/>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Close</button>
+                    <input type="submit" value="Submit" id="submit" class="btn btn-info"/>
+                </div>
+            </div>
+        </div>
+    </form>
+
+    <script src="{{ asset('js\accounting.min.js', false) }}"></script>
+    <script>
+
+        $('.tbl_writecheck').on('click', 'td i.glyphicon-plus,td i.glyphicon-minus', function (e) {
+            e.preventDefault();
+
+            if ($(this).is('.glyphicon-plus')) {
+
+                var trcopy, clonetr;
+
+                trcopy = $(this).closest('.coa');
+                trcopy.find('select').select2("destroy")
+                clonetr = trcopy.clone();
+                trcopy.find('select').select2();
+                clonetr.find('select').select2();
+                var nexttr = clonetr.find('td i.glyphicon-plus');
+                if (nexttr.hasClass('glyphicon-plus')) {
+                    nexttr.removeClass('glyphicon-plus');
+                    nexttr.addClass('glyphicon-minus')
+                }
+                clonetr.find(':text').val('');
+                trcopy.after(clonetr);
+            }
+            if ($(this).is('.glyphicon-minus')) {
+                $(this).parent().parent().remove();
+            }
+        });
+        $(document).ready(function () {
+
+            var models = $('#write_check');
+            $('select').select2();
+            models.on('show.bs.modal', function () {
+
+                $(".mdate").datepicker({
+                    format: 'yyyy-mm-dd',
+                    autoclose: true,
+                    setDate: new Date()
+                });
+            });
+
+            models.on('click.dismiss.bs.modal', '[data-dismiss="modal"]', function () {
+                return delete_allModel('#write_check');
+            });
+            models.on({
+
+                change:  function () {
+
+                    if ($(this).is('#selAct')) {// do something when bank account was selected or changes
+
+                        var coa = <?PHP echo json_encode($coa); ?>;
+
+                        var coa_id = $('#selAct').val();
+                        $.each(coa, function (inx, coa_vals) {
+
+                            if (parseInt(coa_vals.id) === parseInt(coa_id)) {
+                                var total_debit = 0;
+                                var total_credit = 0;
+                                var endBlance = $('input[name=endBalance]').val(0);
+
+                                if (!$.isEmptyObject(coa_vals.detail)) {
+
+                                    $.each(coa_vals.detail, function (inx, detail) {
+
+                                        if (!$.isEmptyObject(detail.debit)) {
+
+                                            total_debit += parseFloat(detail.debit);
+
+                                        }if (!$.isEmptyObject(detail.credit)) {
+
+                                            total_credit += parseFloat(detail.credit);
+
+                                        }
+                                    })
+                                }
+                                var grand_total = parseFloat(total_debit)-parseFloat(total_credit);
+                                endBlance.val(accounting.formatMoney(grand_total));
+                            }
+                            return;
+                        });
+                    }if($(this).is('#toVendor')){
+                        var address  = $("#toVendor").select2("data").element[0].dataset['address'];
+                        $('#address').val(address)
+                        console.log(address);
+                    }
+                },
+                keyup: function (e) {
+//                    console.log(e.type);
+//                    console.log(e.which);
+//                    console.log(e.originalEvent);
+//                    console.log(e.delegateTarget);
+
+                    var thisAmount = $(this);
+                    if($(this).is('.credit')) {
+                        calculte(thisAmount.val());
+                    }
+
+                    if($(this).is('.amount')){
+                        calculte(thisAmount.val());
+                    }
+                }
+            }, '#selAct, .amount, .credit,#toVendor');
+
+            function calculte(thisAmount) {
+
+                var defaultBalance = $('input[name=endBalance]');
+                var defaultAmount = $('input[name=credit]');
+                var nAmount = $('.amount');
+                call_and_delete_Loading('#loading');
+                var totalAmount = 0;
+
+                if($.isNumeric(thisAmount) === false){
+                    call_and_delete_Loading('#loading', 'This value not except any characters','danger');
+                }else if (parseFloat(thisAmount) <=0){
+                    call_and_delete_Loading('#loading', 'This value could not be zero','danger');
+                }else if(!defaultBalance.val()){
+                    call_and_delete_Loading('#loading', 'Please select account <br/> ','danger');
+                }else if(parseFloat(defaultAmount.val()) > parseFloat(defaultBalance.val())){
+                    call_and_delete_Loading('#loading', 'Is it OK? <br/> Your amount is greater than your balance','danger');
+                }
+                nAmount.each(function(e) {
+                    totalAmount += (parseFloat($(this).val()))?parseFloat($(this).val()):0;
+                });
+
+                defaultAmount.closest('.form-group').removeClass('has-error has-feedback')
+                $('#submit').attr('disabled', false);
+                if(!isNaN(totalAmount) && parseFloat(totalAmount) != parseFloat(defaultAmount.val())) {
+
+                    defaultAmount.closest('.form-group').addClass('has-error has-feedback')
+                    $('#submit').attr('disabled',true)
+                    call_and_delete_Loading('#loading', 'Notes!!! <br/> Please check your debit and Credit amount.<br/>There are have to be equal ','danger');
+                }
+            }
+
+            $('#form_write_check').validate({
+                rules: {
+//                    toVendor: {
+//                        required: true
+//                    },
+                    mdate:{
+                        required:true
+                    },credit:{
+                        required:true
+                    },address:{
+                        required:true
+                    },selAct:{
+                        required:true
+                    }
+                },messages:{
+                    selAct:""
+                }, submitHandler: function () {
+
+                    var form_data = new FormData();
+                    form_data.append('photo',  $('input[type=file]')[0].files[0]);
+                    form_data.append('_token', $('meta[name=_token]').attr('content'));
+                    var other_data = $('#form_write_check').serializeArray();
+
+                    $.each(other_data, function(key, input){
+                        form_data.append(input.name, input.value);
+                    });
+
+                    call_and_delete_Loading('#loading', "Loading......");
+                    if(confirm('Are you sure?')) {
+
+                        $.ajax({
+                            url: "{{route('post_write_check')}}",
+                            data: form_data,
+                            type: 'POST',
+                            headers: {'X-CSRF-Token': $('meta[name=_token]').attr('content')},
+                            contentType: false,
+                            cache: false,
+                            processData: false,
+                            success: function (data, status) {
+
+                               if(status === 'success'){
+
+                                   if(data.jd === true){
+                                       call_and_delete_Loading('#loading', 'Successfully!!!', status);
+                                       $('.modal').each(function(){
+                                           $(this).remove();
+                                       });
+                                   }if(!$.isEmptyObject(data.error)){
+                                        call_and_delete_Loading('#loading', 'Sorry!!!<br/> We support only below extension <br/> '+data.error+' ', 'danger');
+                                   }
+                               }
+                            }
+                        });
+                    }
+                }
+            });
+        });
+
+    </script>
+
+    <style>
+
+        .modal.in .modal-dialog {
+            -webkit-transform: translate(0, 0);
+            -ms-transform: translate(0, 0);
+            -o-transform: translate(0, 0);
+            transform: translate(0, 0);
+            width: 1300px;
+        }
+    </style>
+    <style>
+        .select2-container .error.select2-choice {
+            color: red !important;
+            border: 1px solid red !important;
+        }
+        label.control-label {
+            padding-top: 3px;
+        }
+        .datepicker, .mdate {
+            z-index: 1600 !important; /* has to be larger than 1050 */
+        }
+    </style>
+</div>

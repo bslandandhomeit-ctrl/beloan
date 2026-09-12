@@ -1,0 +1,452 @@
+@extends('layouts.app')
+
+@section('css')
+<link rel="stylesheet" type="text/css" href="{{ asset('/css/loan-style.css',false) }}"
+      xmlns="http://www.w3.org/1999/html"/>
+<link rel="stylesheet" type="text/css" href="{{ asset('/css/client.css',false) }}"/>
+<link rel="stylesheet" type="text/css" href="{{ asset('theme/js/bootstrap-datepicker/css/datepicker.css',false)}}" />
+<style>
+    table tr td:not(:first-child){
+        text-align:right;
+    }
+</style>
+@endsection
+@section('content')
+<section class="panel">
+    <header class="panel-heading">
+        {{ trans('sidebar.sb_balance_sheet_account') }}
+        @if(isset($start) && isset($end))
+        {{ trans('multiple.m_from') }} {{ date("d-M-Y", strtotime($start)) }} {{ trans('multiple.m_to') }} {{ date("d-M-Y", strtotime($end)) }}
+        @else
+        {{ isset($start)?'Report on'.date("d-M-Y", strtotime($start)):'' }}
+        {{ isset($end)?'Report on '.date("d-M-Y", strtotime($end)):'' }}
+        @endif
+
+        @if(isset($till))
+        Year to date till {{ date('d-M-Y',strtotime($till)) }}
+        @endif
+    </header>
+    <div class="panel-body">
+        <div class="position-center" style="width:100%;">
+            <form role="form" class="cmxform form-horizontal" method="get" action="{{ route('balance_sheet_account') }}">
+                <table class="tb-search-box">
+                    <tr>
+                        @if(count($branch) > 1)
+                        <td>
+                            {{ trans('report.rpt_branch_name') }}<br/>
+                            <select class="form-control" id="br" name="br">
+                                <option value="">-</option>
+                                @foreach($branch as $br)
+                                <option value="{{ $br->branch_code }}"
+                                        @if(isset($branch_code))
+                                        @if($branch_code==$br->branch_code)
+                                        selected
+                                        @endif
+                                        @endif>{{ $br->branch_name}}</option>
+                                @endforeach
+                            </select>
+                        </td>
+                        @endif
+
+                        <td>
+                            {{ trans('report.rpt_from') }}<br/>
+                            <div data-date-viewmode="years" data-initialize="datepicker" data-date-format="yyyy/mm/dd" data-date="{{date('Y-m-d')}}" class="input-append date dpStart">
+                                <input type="text" name="dpStart" size="16" class="form-control" value="{{ isset($start)?$start:old('dpStart') }}">
+                                    <span class="add-on birhtdateDatepicker ptl-3">
+                                        <button class="btn btn-primary" type="button"><i class="fa fa-calendar"></i></button>
+                                    </span>
+                            </div>
+                        </td>
+
+                        <td>
+                            {{ trans('report.rpt_to') }}<br/>
+                            <div data-date-viewmode="years" data-initialize="datepicker" data-date-format="yyyy/mm/dd" data-date="{{date('Y-m-d')}}" class="input-append date dpEnd">
+                                <input type="text" name="dpEnd" size="16" class="form-control" value="{{ isset($end)?$end:old('dpEnd') }}">
+                                    <span class="add-on birhtdateDatepicker ptl-3">
+                                        <button class="btn btn-primary" type="button"><i class="fa fa-calendar"></i></button>
+                                    </span>
+                            </div>
+                        </td>
+
+                        <td>
+                            {{ trans('report.rpt_currency') }}<br/>
+                            <select class="form-control" id="cur" name="cur">
+                                <option value="100">-</option>
+                                @foreach($currency as $key => $value)
+                                <option value="{{ $key }}"
+                                        @if(isset($currency_id) && $currency_id == $key)
+                                        selected
+                                        @endif>{{ $value }}</option>
+                                @endforeach
+                            </select>
+                        </td>
+
+                        <td>
+                            <input type="checkbox" name="consolidate" value="1" {{ isset($consolidate)?$consolidate==1?'checked':'':'' }} />
+                                   {{ trans('report.con') }} {{$consolidate}}<br/>
+
+                                <input type="radio" name="exchange_rate" value="1" {{ isset($exchange_rate)?$exchange_rate==1?'checked':'':'checked' }} />
+                                       {{ trans('report.rpt_khmer_riel') }}
+                                       <input type="radio" name="exchange_rate" value="2" {{ isset($exchange_rate)?$exchange_rate==2?'checked':'':'checked' }} />
+                                       {{ trans('report.rpt_us_dollar') }}<br/>
+
+                                        <input type="text" name="rate" size="16" class="form-control" value="{{ isset($rate)?$rate:old('rate') }}" placeholder="{{ trans('report.rpt_rate_usd_khr') }}" style="width:150px;" />
+
+                                        </td>
+                                        </tr>
+                                        </table>
+
+                                        <div class="row">
+                                            <div class="col-lg-12">
+                                                <button type="submit" class="btn btn-info"><i class="fa fa-search"></i> {{ trans('multiple.m_search') }}</button>
+                                                <button class="btn btn-warning" id="printer"><i class="fa fa-print"></i> {{ trans('multiple.m_print') }}</button>
+                                                <a id="export" class="btn btn-primary"><i class="fa  fa-sign-out"></i> {{ trans('report.rpt_export') }}</a>
+                                                <a id="xexport" class="btn btn-primary"><i class="fa  fa-sign-out"></i> {{ trans('report.xrpt_export') }}</a>                                            </div>
+                                        </div>
+                                        </form>
+                                        </div>
+                                        <br/>
+
+                                        <div id="printArea">
+                                            @include('api.report_header',['co_phone'=>!empty($co_id->co_user) ? $co_id->co_user->phone: ''])
+                                            <h4 class="sch_title" id="p-header">
+                                                {{ trans('sidebar.sb_balance_sheet_account') }}
+                                                @foreach($branch as $br)
+                                                @if($branch_code==$br->branch_code)
+                                                <strong>{{ trans('report.rpt_for_branch') }}: {{ $br->branch_name }}</strong><br/>
+                                                @endif
+                                                @endforeach
+                                                @foreach($currency as $key => $value)
+                                                @if(isset($currency_id))
+                                                @if($currency_id == $key)
+                                                {{ trans('report.rpt_currency') }}: ({{ $value }})<br/>
+                                                @endif
+                                                @endif
+                                                @endforeach
+
+                                                @if(isset($consolidate))
+                                                / {{ trans('report.rpt_consolidate_to') }}
+                                                @if($exchange_rate==1)
+                                                {{ trans('report.rpt_million_riel') }}
+                                                @else
+                                                {{ trans('report.rpt_usd_dollar') }}
+                                                @endif
+
+                                                (Rate = @if(isset($rate)) {{$rate}} @else USDTOKHR @endif )
+                                                <br/>
+                                                @endif
+
+                                                @if($start)
+                                                {{ trans('report.from') }}: {{$start}}<br/>
+                                                @endif
+
+                                                @if($end)
+                                                {{ trans('report.to') }}: {{$end}}
+                                                @endif
+                                            </h4>
+
+                                            <section id="unseen">
+                                                <div id="divTab">
+                                                <table class="table table-bordered table-striped table-condensed income_statement_is" style="width:50%;">
+                                                    <thead>
+                                                        <tr>
+                                                            <td><strong>{{ trans('account.a_desc') }}</strong></td>
+                                                            <td><strong>{{ trans('account.a_usd') }}</strong></td>
+                                                        </tr>
+                                                    </thead>
+                                                    <tbody id="balance_sheet_account">
+                                                        <tr>
+                                                            <td><strong>ASSETS</strong></td>
+                                                            <td>-</td>
+                                                        </tr>
+
+                                                        <tr>
+                                                            <td>Cash and Cash Equivalence</td>
+                                                            <td>{{number_format($cce, 2, '.', ',')}}</td>
+                                                        </tr>
+
+                                                        <tr>
+                                                            <td>Balance with central bank dd</td>
+                                                            <td>{{number_format($bcb, 2, '.', ',')}}</td>
+                                                        </tr>
+
+                                                        <tr>
+                                                            <td>Statutary deposits with central bank</td>
+                                                            <td>{{number_format($sdcb, 2, '.', ',')}}</td>
+                                                        </tr>
+
+                                                        <tr>
+                                                            <td>Balance with banks and OFIs</td>
+                                                            <td>{{number_format($bbo, 2, '.', ',')}}</td>
+                                                        </tr>
+
+                                                        <tr>
+                                                            <td>Loans and Advances to customers</td>
+                                                            <td>{{number_format($lac, 2, '.', ',')}}</td>
+                                                        </tr>
+
+                                                        <tr>
+                                                            <td>Investment in equity securities</td>
+                                                            <td>{{number_format($ies, 2, '.', ',')}}</td>
+                                                        </tr>
+
+                                                        <tr>
+                                                            <td>Less: Provision for doubtful and bad debt</td>
+                                                            <td>{{number_format($lpdbd, 2, '.', ',')}}</td>
+                                                        </tr>
+
+                                                        <tr>
+                                                            <td>Property and equipment</td>
+                                                            <td>{{number_format($pe, 2, '.', ',')}}</td>
+                                                        </tr>
+
+                                                        <tr>
+                                                            <td>Less: Depreciations</td>
+                                                            <td>{{number_format($ld, 2, '.', ',')}}</td>
+                                                        </tr>
+
+                                                        <tr>
+                                                            <td>Loan Outstanding</td>
+                                                            <td>{{number_format($lostd, 2, '.', ',')}}</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Other Assets</td>
+                                                            <td>{{number_format($oa, 2, '.', ',')}}</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td><strong>Total ASSETS</strong></td>
+                                                            <td><strong>{{number_format($asset, 2, '.', ',')}}</strong></td>
+                                                        </tr>
+
+                                                        <tr><td colspan="2"></td></tr>
+
+                                                        <tr>
+                                                            <td><strong>LIABILITIES AND EQUITY</strong></td>
+                                                            <td>-</td>
+                                                        </tr>
+
+                                                        <tr>
+                                                            <td><strong>LIABILITIES</strong></td>
+                                                            <td>-</td>
+                                                        </tr>
+
+                                                        <tr>
+                                                            <td>Deposit from Customers</td>
+                                                            <td>{{number_format($dc, 2, '.', ',')}}</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Subordinated Debt</td>
+                                                            <td>{{number_format($sd, 2, '.', ',')}}</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Borrowing</td>
+                                                            <td>{{number_format($b, 2, '.', ',')}}</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Other liabilities</td>
+                                                            <td>{{number_format($ol, 2, '.', ',')}}</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>General provision</td>
+                                                            <td>{{number_format($gp, 2, '.', ',')}}</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Provision for income tax current year</td>
+                                                            <td>{{number_format($pitcy, 2, '.', ',')}}</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Accrued Interest in Suspense</td>
+                                                            <td>{{number_format($is, 2, '.', ',')}}</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td><strong>Total LIABILITIES</strong></td>
+                                                            <td><strong>{{number_format($liability, 2, '.', ',')}}</strong></td>
+                                                        </tr>
+
+                                                        <tr><td colspan="2"></td></tr>
+
+                                                        <tr>
+                                                            <td><strong>Shareholder Equities</strong></td>
+                                                            <td>-</td>
+                                                        </tr>
+
+                                                        <tr>
+                                                            <td>Share capital</td>
+                                                            <td>{{number_format($sc, 2, '.', ',')}}</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Reserves</td>
+                                                            <td>{{number_format($r, 2, '.', ',')}}</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Subordinated debt approved by NBC</td>
+                                                            <td>{{number_format($se_sd, 2, '.', ',')}}</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Retained Earning</td>
+                                                            <td>{{number_format($re, 2, '.', ',')}}</td>
+                                                        </tr>
+                                                        <tr>
+                                                            <td>Profit Current Year</td>
+                                                            <td>{{number_format($pcy, 2, '.', ',')}}</td>
+                                                        </tr>
+
+                                                        <tr>
+                                                            <td><strong>Total Shareholder Equities</strong></td>
+                                                            <td><strong>{{number_format($shareholder, 2, '.', ',')}}</strong></td>
+                                                        </tr>
+
+                                                        <tr><td colspan="2"></td></tr>
+
+                                                        <tr>
+                                                            <td><strong>TOTAL LIABILITIES AND SHAREHOLDERS' EQUITIES</strong></td>
+                                                            <td><strong>{{number_format($total_ls, 2, '.', ',')}}</strong></td>
+                                                        </tr>
+
+                                                    </tbody>
+                                                </table>
+                                                </div>
+                                                <br><br>
+                                                        <div class="prepare">
+                                                            <span style="text-align: left">Prepared by : </span>
+                                                            <span style="margin-left: 150px">Verified by : </span>
+                                                            <span style="margin-left: 150px">Approved by : </span>
+                                                        </div>
+                                                        </section>
+                                                        </div>
+                                                        </div>
+                                                        </section>
+                                                        @endsection
+
+                                                        @section('js')
+<script type="text/javascript" src="{{ asset('theme/js/bootstrap-datepicker/js/bootstrap-datepicker.js',false)}}"></script>
+<script type="text/javascript" src="{{ asset('js/print.js',false)}}"></script>
+<script type="text/javascript" src="{{ asset('js/xlsx.full.min.js',isset($secure) ? false : false)}}"></script>
+<script type="text/javascript" src="{{ asset('js/Blob.min.js',isset($secure) ? false : false)}}"></script>
+<script type="text/javascript" src="{{ asset('js/FileSaver.js',isset($secure) ? false : false)}}"></script>
+<script type="text/javascript" src="{{ asset('js/tableexport.js',isset($secure) ? false : false)}}"></script>
+<script type="text/javascript">
+$(document).ready(function () {
+
+    $('.dpStart').datepicker({
+        format: 'yyyy-mm-dd',
+        autoclose: true,
+        setDate: new Date()
+    });
+    $('.dpEnd').datepicker({
+        format: 'yyyy-mm-dd',
+        autoclose: true,
+        setDate: new Date()
+    });
+
+    // This must be a hyperlink
+    $("#export").click(function (event) {
+        // var outputFile = 'export'
+        var con = confirm("Do you really want to export to CSV file?");
+        if(con == true){
+            //var outputFile = 'balance_sheet_account.csv';
+            // CSV
+            //exportTableToCSV.apply(this, [$('#divTab>table'), outputFile]);
+            new TableExport($('#divTab>table'), {
+                    formats: ['csv'],
+                    filename: 'balance_sheet_account'
+                });
+                $('button.csv').hide().click();
+                $('.tableexport-caption').remove();
+        }
+    });
+
+    $("#xexport").click(function (event) {
+        var con = confirm("Do you really want to export to Excel file?");
+        if(con == true){
+            new TableExport($('#divTab>table'), {
+                    formats: ['xlsx'],
+                    filename: 'balance_sheet_account'
+                }).formatConfig.xlsx.mimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+                $('button.xlsx').hide().click();
+                $('.tableexport-caption').remove();
+        }
+    });
+
+});
+
+var opt = '<?php echo isset($opt) ? $opt : 0; ?>';
+if (opt != 0) {
+    if (opt == 1)
+        $('.ytd').hide();
+    else
+        $('.btw').hide();
+} else {
+    $('.ytd').hide();
+}
+$('input[type="radio"][name="opt"]').change(function () {
+    if ($(this).val() == 1) {
+        $('.ytd').hide();
+        $('.btw').show();
+    } else {
+        $('.ytd').show();
+        $('.btw').hide();
+    }
+});
+
+/*function exportTableToCSV($table, filename) {
+    var $headers = $table.find('tr:has(th)')
+    ,$rows = $table.find('tr:has(td)')
+
+    // Temporary delimiter characters unlikely to be typed by keyboard
+    // This is to avoid accidentally splitting the actual contents
+    ,tmpColDelim = String.fromCharCode(11) // vertical tab character
+    ,tmpRowDelim = String.fromCharCode(0) // null character
+
+    // actual delimiter characters for CSV format
+    ,colDelim = '","'
+    ,rowDelim = '"\r\n"';
+
+    // Grab text from table into CSV formatted string
+    var csv = '"';
+    csv += ($('#p-header').html()).trim();
+    csv += rowDelim;
+    csv += formatRows($headers.map(grabRow));
+    csv += rowDelim;
+    csv += formatRows($rows.map(grabRow)) + '"';
+    // Data URI
+    var csvData = 'data:application/csv;charset=utf-8,' + encodeURIComponent(csv);
+
+    $(this)
+        .attr({
+        'download': filename
+            ,'href': csvData
+            //,'target' : '_blank' //if you want it to open in a new window
+    });
+
+    //------------------------------------------------------------
+    // Helper Functions
+    //------------------------------------------------------------
+    // Format the output so it has the appropriate delimiters
+    function formatRows(rows){
+        return rows.get().join(tmpRowDelim)
+            .split(tmpRowDelim).join(rowDelim)
+            .split(tmpColDelim).join(colDelim);
+    }
+    // Grab and format a row from the table
+    function grabRow(i,row){
+
+        var $row = $(row);
+        //for some reason $cols = $row.find('td') || $row.find('th') won't work...
+        var $cols = $row.find('td');
+        if(!$cols.length) $cols = $row.find('th');
+
+        return $cols.map(grabCol)
+                    .get().join(tmpColDelim);
+    }
+    // Grab and format a column from the table
+    function grabCol(j,col){
+        var $col = $(col),
+            $text = $col.text();
+
+        return $text.replace('"', '""'); // escape double quotes
+
+    }
+}*/
+</script>
+@endsection

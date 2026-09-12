@@ -1,0 +1,1066 @@
+<?php
+ function html_form( $ilabel,$irequired_flg,$iname,$iid, $value=''){
+         $str ='<label class="control-label col-sm-3">'.$ilabel;
+         if($irequired_flg == true){
+            $str .=  '<span class="red">*</span>';
+         }
+
+         $str .= '</label>
+                    <div class="col-md-8">
+                        <input type="text" name="'.$iname.'" id="'.$iid.'" class="form-control" value="'.$value.'">
+                    </div>';
+         return $str;
+     }
+?>
+@extends('layouts.app')
+
+@section('css')
+    <link rel="stylesheet" type="text/css" href="{{ asset('theme/js/bootstrap-fileupload/bootstrap-fileupload.css',isset($secure) ? false : false)}}" />
+    <link rel="stylesheet" type="text/css" href="{{ asset('theme/js/bootstrap-datepicker/css/datepicker.css',isset($secure) ? false : false)}}" />
+    <link rel="stylesheet" type="text/css" href="{{ asset('theme/js/select2/select2.css',isset($secure) ? false : false) }}" />
+    <link href="{{ asset('css/client.css',isset($secure) ? false : false) }}" rel="stylesheet">
+    <link href="{{ asset('css/loan-style.css',isset($secure) ? false : false) }}" rel="stylesheet">
+    <link href="{{ asset('theme/js/iCheck/skins/flat/green.css',isset($secure) ? false : false) }}" rel="stylesheet">
+    <style type="text/css">
+            td.none-border{
+               border-top: none!important;
+               border-bottom: none !important;
+            }
+            td.no-border{
+            border-bottom: none!important;
+            }
+            .tbrepayment tr, .tbrepayment td{
+                vertical-align: middle!important;
+            }
+    </style>
+@endsection
+@section('content')
+    <section class="panel">
+        @if(Session::has('message'))
+            <p class="alert {{ Session::get('alert-class', 'alert-danger') }}">{{ Session::get('message') }}</p>
+        @endif
+        <?php $static = config('static_data');
+             $prod_array = array('' => '');
+        ?>
+        <header class="panel-heading">
+            {{ trans('loan.l_loan_reschedule_application') }}
+        </header>
+
+        <div class="panel-body">
+             @if (count($errors) > 0)
+                <div class="alert alert-danger">
+                    <strong>Whoops!</strong> There were some problems with your input.<br><br>
+                    <ul>
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @endif
+            <form action="{{route('loan_reschedule',[$loan->id])}}" method="POST" class="cmxform form-horizontal" id="rescheduleLoanForm" enctype="multipart/form-data">
+
+
+            <ul class="nav nav-tabs">
+                <li class="active"><a data-toggle="tab" href="#loan-frm">{{ trans('loan.detail') }}</a></li>
+                <li><a data-toggle="tab" href="#loan-schedule">{{ trans('loan.l_repayment_schedule') }}</a></li>
+            </ul>
+<div class="tab-content">
+    <div id="loan-frm" class="tab-pane active">
+            <br/>
+
+            <input type="hidden" name="_token" value="{{ csrf_token() }}">
+                <fieldset>
+                    <div class="row">
+                        <div class="col-sm-12">
+                            <span class="blue">{{ trans('multiple.m_general') }}</span>
+                            <hr/>
+                        </div>
+                        <!-- Grid to left -->
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <div class="col-sm-3"></div>
+                                <div class="col-sm-2">
+
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="control-label col-sm-5">{{ trans('loan.restructure') }}</label>
+                                <div class="col-lg-6">
+                                    <?PHP
+                                    $check;
+                                    $val ='N';
+                                    if(strtoupper($loan->restructured_loan) == 'Y') {
+                                        $check = 'checked';
+                                        $val = 'Y';
+                                    }?>
+                                    <input type="checkbox" id="restructured_loan" name="restructured_loan"  class="form-control" {{$check}} value="{{$val}}" style="height:32px; width: 32px;" />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="control-label col-sm-3">{{ trans('multiple.account_no') }}</label>
+                                <div class="col-md-8">
+                                  <div class="input-group" >
+                                    <select id="loan_account_id" name = "loan_account_id" style="width: 100%">
+                                            <option value = "{{$customer_acc->id}}">{{$customer_acc->account_no}}</option>
+                                    </select>
+                                  </div>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="control-label col-sm-3">{{ trans('customer.cus_customer_id') }}</label>
+                                <div class="col-md-8">
+                                   <input type="text" class="form-control" id="client-id" name="client_id" value="{{str_pad($loan->client_id, 6, '0', STR_PAD_LEFT)}}"  readonly  style="background-color:#fff;"/>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="control-label col-sm-3">{{ trans('report.rpt_contract_id') }}</label>
+                                <div class="col-md-8">
+                                   <input type="text" class="form-control" id="contract_id" name="contract_id"
+                                   value="{{$loan->contract_id }}" readonly style="background-color:#fff;"/>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="control-label col-sm-3">{{ trans('product.p_product_id') }}<span class="red"> *</span></label>
+                                <div class="col-sm-8">
+                                    <input type="text" value="{{str_pad($loan->product_id, 6, '0', STR_PAD_LEFT)}}" readonly class="form-control"/>
+                                    <input type="hidden" name="product_id"  value="{{ $loan->product_id }}" />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="control-label col-sm-3">{{ trans('report.rpt_loan_type') }}<span class="red"> *</span></label>
+                                <div class="col-md-8">
+                                    @foreach($productsTypes as $type)
+                                      @if($loan->loan_type == $type->id)
+                                        <input type="text" value="{{$type->products_type_name}}" readonly class="form-control"/>
+                                        <input type="hidden" name="loan_type"  value="{{ $type->id }}" />
+                                      @endif
+                                    @endforeach
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="control-label col-sm-3">{{ trans('loan.l_submitted_on') }}<span class="red"> *</span></label>
+                                <div data-date-viewmode="years" data-initialize="datepicker" data-date-format="dd/mm/yyyy" data-date="{{date('Y-m-d')}}" class="input-append date dpYears col-md-8">
+                                    <input type="text" name="submitted_on" value="{{ date('Y-m-d') }}" size="16" class="form-control" id="submitted_on">
+                                        <span class="add-on birhtdateDatepicker">
+                                            <button class="btn btn-primary" type="button"><i class="fa fa-calendar"></i></button>
+                                        </span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="control-label col-sm-3">{{ trans('report.rpt_contract_date') }}</label>
+                                <div data-date-viewmode="years" data-initialize="datepicker" data-date-format="dd/mm/yyyy" data-date="{{date('Y-m-d')}}" class="input-append date dpYears col-md-8">
+                                    <input type="text" name="contract_date" value="{{ date('Y-m-d')}}" size="16" class="form-control" id="contract_date">
+                                        <span class="add-on birhtdateDatepicker">
+                                            <button class="btn btn-primary" type="button"><i class="fa fa-calendar"></i></button>
+                                        </span>
+                                </div>
+                            </div>
+
+                        </div>
+                        <!-- Grid to right  -->
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <div class="col-sm-3"></div>
+                                <div class="col-sm-2">
+
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="control-label col-sm-3">{{ trans('customer.cus_customer_name') }}</label>
+                                <div class="col-md-8">
+                                   <input type="text" class="form-control" id="client-name" value="{{ $loan->client->client_name }}" readonly style="background-color: #fff;"  />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="control-label col-sm-3">{{ trans('product.p_product_name') }}</label>
+                                <div class="col-md-8">
+                                   <input type="text" class="form-control" id="product_name" readonly style="background-color: #fff;" value="{{ $loan->product->product_name }}" />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="control-label col-sm-3">{{ trans('report.rpt_branch_name') }}<span class="red"> *</span></label>
+                                <div class="col-sm-8">
+                                    @if(array_key_exists( $loan->company_branch_id,$branch_arr))
+                                        <input type="text" value="{{$branch_arr[$loan->company_branch_id] }}" readonly class="form-control"/>
+                                        <input type="hidden" name="company_branch_id"  value="{{ $loan->company_branch_id }}" />
+                                    @endif
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="control-label col-sm-3">{{ trans('report.rpt_co_name') }}</label>
+                                <div class="col-sm-8">
+                                    <select id="co_name" style="width: 100%" name="co">
+                                        <option value="0">-</option>
+                                        @foreach($co_name as $c)
+                                            <option value={{$c['id']}} {{ $loan->co==$c['id']?'selected':'' }}>{{$c['name']}}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="control-label col-sm-3">{{ trans('loan.l_doc_location')}}</label>
+                                <div class="col-md-8">
+                                    <input type="text" name="doc_location" id="doc_location" class="form-control" value="{{$loan->doc_location}}">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="control-label col-sm-3">{{ trans('loan.l_loan_purpose')}}</label>
+                                <div class="col-md-8">
+                                    <input type="text" name="loan_purpose" id="loan_purpose" class="form-control" value="{{$loan->loan_purpose}}">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-sm-12">
+                            <span>Terms</span>
+                            <hr/>
+                        </div>
+                          <!-- Grid to left -->
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <div class="col-sm-3"></div>
+                                <div class="col-sm-2">
+
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="control-label col-sm-3">{{ trans('loan.currency') }}($)</label>
+                                <div class="col-md-8">
+                                    <select class="form-control" id="currency_symbol">
+                                        <option value="{{$customer_acc->currencies['symbol']}}">{{$customer_acc->currencies['symbol']}}</option>
+                                        @foreach($currency_list as $key => $value)
+                                            <option value="{{ $value }}">{{ $value }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="control-label col-sm-3">{{ trans('loan.l_old_pri_balance') }}($)</label>
+                                <div class="col-md-8">
+                                   <input type="text" class="form-control" id="sell_price" style="background-color: #fff;" value="{{ $old_bal }}" />
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="control-label col-sm-3">{{ trans('loan.l_down_payment') }} <span class="red">*</span></label>
+                                <div class="col-md-8">
+                                    <input type="text" name="down_payment" id="down_payment" class="form-control">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="control-label col-sm-3">{{ trans('loan.l_principal_amount') }}($)<span class="red">*</span></label>
+                                <div class="col-md-8">
+                                    <input type="text" class="form-control" name="loan_amount" id="loan_amount" readonly style="background-color: #fff;" >
+                                </div>
+                            </div>
+                            @var $last_payment_month = $loan->payment->last()->payment_month;
+                            @var $new_tenure = $loan->loan_duration - $last_payment_month;
+                            <div class="form-group">
+                                <label class="control-label col-sm-3">{{ trans('loan.l_tenure') }}(M) <span class="red">*</span></label>
+                                <div class="col-md-8">
+                                    <input type="text" name="loan_duration" id="loan_duration" class="form-control" value="{{$new_tenure}}">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="control-label col-sm-3">{{ trans('loan.l_interest_rate') }}(P.M) <span class="red">*</span></label>
+                                <div class="col-md-8">
+                                    <input type="text" name="interest_rate" id="interest_rate" class="form-control" value="{{$loan->interest_rate}}">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="control-label col-sm-3">{{ trans('loan.l_penalty_rate_type') }}<span class="red"> *</span></label>
+                                <div class="col-md-8">
+                                    <select class="form-control" name="penalty_rate_type" id="penalty_rate_type">
+                                        <option value="0">-</option>
+                                        @foreach($static['penalty_rate_type'] as $key => $value)
+                                            <option value="{{ $key }}" {{ $loan->penalty_rate_type==$key?'selected':''}}>{{ $value }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="control-label col-md-3">{{ trans('loan.l_penalty_period',['num'=>1]) }}(D)<span class = "red"> *</span></label>
+                                <div class="col-md-2">
+                                    <input type="text" name="penalty_period1" id="penalty_period1" class="form-control" value="{{ $loan->penalty_period1?$loan->penalty_period1:7 }}">
+                                </div>
+                                <label class="control-label col-md-3">{{ trans('loan.l_penalty_rate',['num'=>1]) }}(%)<span class = "red"> *</span></label>
+                                <div class="col-md-2">
+                                    <input type="text" name="penalty_rate1" id="penalty_rate1" class="form-control" value="{{ $loan->penalty_rate1?$loan->penalty_rate1:0.70 }}">
+                                </div>
+                            </div>
+                            <div class="form-group hidden" id ="penal_rate2">
+                                <label class="control-label col-md-3">{{ trans('loan.l_penalty_period_2') }}</label>
+                                <div class="col-md-2">
+                                    <input type="text" name="penalty_period2" id="penalty_period2" class="form-control" value="{{ $loan->penalty_period2?$loan->penalty_period2:''}}">
+                                </div>
+                                <label class="control-label col-md-3">{{ trans('loan.l_penalty_rate_2') }}</label>
+                                <div class="col-md-2">
+                                    <input type="text" name="penalty_rate2" id="penalty_rate2" class="form-control" value="{{ $loan->penalty_rate2?$loan->penalty_rate2:'' }}">
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="control-label col-md-3">{{ trans('loan.l_pay_off_period',['num'=>1]) }}(M)<span class = "red"> *</span></label>
+                                <div class="col-md-2">
+                                    <input type="text" name="payoff_period1" id="payoff_period1" class="form-control" value="{{ ($loan->payoff_period1 > $last_payment_month)?$loan->payoff_period1 - $last_payment_month : 0 }}">
+                                </div>
+                                <label class="control-label col-md-3">{{ trans('loan.l_pay_off_rate',['num'=>1]) }}(%)<span class="red"> *</span></label>
+                                <div class="col-md-2">
+                                    <input type="text" name="pay_off_rate1" id="pay_off_rate1" class="form-control" value="{{ $loan->pay_off_rate1?$loan->pay_off_rate1:10.00 }}">
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="control-label col-md-3">{{ trans('loan.l_pay_off_period',['num'=>2]) }}(M)<span class = "red"> *</span></label>
+                                <div class="col-md-2">
+                                    <input type="text" name="payoff_period2" id="payoff_period2" class="form-control" value="{{ $loan->payoff_period2 - $last_payment_month}}">
+                                </div>
+                                <label class="control-label col-md-3">{{ trans('loan.l_pay_off_rate',['num'=>2]) }}(%)<span class="red"> *</span></label>
+                                <div class="col-md-2">
+                                    <input type="text" name="pay_off_rate2" id="pay_off_rate2" class="form-control" value="{{ $loan->pay_off_rate2?$loan->pay_off_rate2:5.00 }}">
+                                </div>
+                                <div class="col-md-2" hidden="hidden">
+                                    <input type="text" name="digit" id="digit" class="form-control" hidden="hidden">
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Grid to right  -->
+                        <div class="col-sm-6">
+                            <div class="form-group">
+                                <div class="col-sm-3"></div>
+                                <div class="col-sm-2">
+
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                {!! html_form("DSR(%) ", false, 'dsr', 'dsr') !!}
+                            </div>
+                            <div class="form-group">
+                                {!! html_form("MoF(%) ", false, 'mof', 'mof') !!}
+                            </div>
+                            <div id="annual_yield" name="annual_yield" value="0.00" class="hidden"></div>
+
+                            <div class="form-group">
+                                <label class="control-label col-sm-3">{{ trans('loan.l_days_in_a_month') }} <span class="red"> *</span></label>
+                                <div class="col-md-8">
+                                    <select class="form-control" name="days_of_month" id="days_of_month">
+                                        <option value="0">-</option>
+                                        @foreach($static['days_of_month'] as $key => $value)
+                                            <option value="{{ $value }}" @if($loan->days_of_month==$value) selected="selected" @endif>{{ $value }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="control-label col-sm-3">{{ trans('loan.frequency') }} <span class="red"> *</span></label>
+                                <div class="col-md-8">
+                                    <select class="form-control" name="frequency" id="frequency">
+                                        <option value="0">-</option>
+                                        @foreach($static['payment_frequency'] as $key => $value)
+                                            <option value="{{ $key }}" @if($loan->frequency==$key) selected="selected" @endif>{{ $value }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="control-label col-sm-3">{{ trans('loan.l_exclude_holidays') }} <span class="red">*</span></label>
+                                <div class="col-sm-8 icheck ">
+                                     <div class="flat-green single-row holiday">
+                                        <div class="radio ">
+                                            <input type="checkbox" id="holiday_flag" name="holiday_flag" value="0" @if($loan->holiday_flag==1) checked="checked" @endif />
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="control-label col-sm-3">{{ trans('multiple.m_expect_disburse_date') }}</label>
+                                <div data-date-viewmode="years" data-initialize="datepicker" data-date-format="dd/mm/yyyy"  class="input-append date dpYears col-md-8">
+                                    <input type="text" name="disburse_date" value="{{$loan->start_date?$loan->start_date:date('Y-m-d')}}" size="16" class="form-control" id="disburse_date">
+                                        <span class="add-on birhtdateDatepicker">
+                                            <button class="btn btn-primary" type="button"><i class="fa fa-calendar"></i></button>
+                                        </span>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="control-label col-sm-3">{{ trans('multiple.first_collection_date') }}</label>
+                                <div data-date-viewmode="years" data-initialize="datepicker" data-date-format="dd/mm/yyyy"  class="input-append date dpYears col-md-8">
+                                    <input type="text" name="start_date" value="{{$loan->start_date?$loan->start_date:date('Y-m-d')}}" size="16" class="form-control" id="start_date">
+                                        <span class="add-on birhtdateDatepicker">
+                                            <button class="btn btn-primary" type="button"><i class="fa fa-calendar"></i></button>
+                                        </span>
+                                </div>
+                            </div>
+
+                            <div class="form-group">
+                                <label class="control-label col-sm-3">{{ trans('multiple.m_admin_fee') }}</label>
+                                <div class="col-md-8">
+                                    <input type="text" name="admin_fee" id="admin_fee" value ="{{$loan->admin_fee}}" class="form-control" >
+                                </div>
+                                <span style="display: inline;padding-top: 15px;position: absolute;">%</span>
+                            </div>
+                            <div class="form-group">
+                                <label class="control-label col-sm-3">{{ trans('multiple.admin_fee_opt') }}</label>
+                                <div class="col-md-8">
+                                    <select class="form-control" name="admin_fee_opt" id="admin_fee_opt">
+                                        @foreach($static['feeOpt'] as $key => $value)
+                                            <option value="{{ $key }}" @if($loan->admin_fee_opt==$key) selected="selected" @endif>{{ $value }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="control-label col-sm-3">{{ trans('multiple.m_maintain_fee') }}</label>
+                                <div class="col-md-8">
+                                    <input type="text" name="maintain_fee" id="maintain_fee" value ="{{$loan->maintain_fee}}" class="form-control">
+                                </div>
+                                <span style="display: inline;padding-top: 15px;position: absolute;">%</span>
+                            </div>
+                            <div class="form-group">
+                                <label class="control-label col-sm-3">{{ trans('multiple.m_maintain_fee_opt') }}</label>
+                                <div class="col-md-8">
+                                    <select class="form-control" name="maintain_fee_opt" id="maintain_fee_opt">
+                                        @foreach($static['feeOpt'] as $key => $value)
+                                            <option value="{{ $key }}" @if($loan->maintain_fee_opt==$key) selected="selected" @endif>{{ $value }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="control-label col-sm-3">{{ trans('loan.l_repayment_type') }} <span class="red"> *</span></label>
+                                <div class="col-md-8">
+                                    <select class="form-control" name="repayment_type" id="repayment_type">
+                                        @foreach($static['repayment_type'] as $key => $value)
+                                            <option value="{{ $key }}" @if($loan->repayment_type==$key) selected="selected" @endif>{{ $value }}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            <div  id="balloon_input" class="hidden">
+                                <div class="form-group">
+                                    <label class="control-label col-sm-3">{{ trans('loan.l_number_balloon') }}<span class="red">*</span></label>
+                                    <div class="col-md-8">
+                                        <input type="text" name="balloon" id="balloon" class="form-control">
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="control-label col-sm-3">{{ trans('loan.l_custom_flag') }}</label>
+                                    <div class="col-sm-8 icheck ">
+                                         <div class="flat-green single-row customize">
+                                            <div class="radio ">
+                                                <input type="checkbox" id = "custom_flag" name="custom_flag" />
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="control-label col-sm-3">{{ trans('loan.l_balloon_month') }}<span class="red">*</span></label>
+                                    <div class="col-md-8">
+                                        <input type="text" name="balloon_month" id="balloon_month" class="form-control">
+                                    </div>
+                                    <i class="control-label col-md-9 red">( {{ trans('loan.rpt_ballon_msg') }} <b> ","</b>. Ex: 12,24,36 )</i>
+                                </div>
+                                <div class="form-group">
+                                    <label class="control-label col-sm-3">{{ trans('loan.l_constant_amount') }}($)</label>
+                                    <div class="col-md-8">
+                                        <input type="text" name="monthly_payment" id="monthly_payment" class="form-control" readonly value="0">
+                                    </div>
+                                </div>
+
+
+                                <div id="custom">
+
+                                </div>
+                                <div id="balloon_amount_array" name="balloon_amount_array">
+
+                                </div>
+                            </div>
+                            <div  id="monthly_amount_cl" class="hidden">
+                                <div class="form-group">
+                                    <label class="control-label col-sm-3">{{ trans('loan.monthly_amount') }}<span class="red">*</span></label>
+                                    <div class="col-md-8">
+                                        <input type="text" id="monthly_amount" name="monthly_amount" class="form-control">
+                                    </div>
+                                </div>
+                        </div>
+                    </div>
+                    <!--  Repayment Info Button -->
+                    <div class="row"></div>
+                    <div class="col-sm-6">
+                        <div class="form-group">
+                            <div class="col-sm-3"></div>
+                            <span>
+                                <a class="btn btn-info" href="#mSchedule" data-toggle="modal" id="view_pay_schedule">
+                                    <i class="fa fa-eye"></i>
+                                    {{ trans('loan.l_repayment_schedule') }}
+                                </a>
+                            </span>
+                        </div>
+                        <div class="form-group">
+                            <div class="col-sm-3"></div>
+                            <label id="saving" class="" style="display: none;color: #8175C7;padding-left: 10px;">Saving...</label>
+                        </div>
+                        <div class="form-group">
+                            <div class="col-sm-3"></div>
+                            <button type="submit" class="btn btn-info"><i class="fa fa-save"></i>&nbsp;{{ trans('multiple.m_update') }}</button>
+                            <button type="reset" class="btn btn-warning"><i class="fa fa-refresh"></i>&nbsp;{{ trans('multiple.m_reset') }}</button>
+                            <button type="button" class="btn btn-danger" onclick="javascript:history.back();"><i class="fa fa-times-circle"></i>&nbsp;{{ trans('multiple.m_cancel') }}</button>
+                        </div>
+                    </div>
+                </fieldset>
+
+              </div>
+              <div id="loan-schedule" class="tab-pane"><br/>
+                  <table cellpadding="0" cellspacing="0" border="0" class="table table-bordered table-condensed table-hover table-input">
+                      <tr class="t-end" bgcolor="gray">
+                          <td>
+                              <div data-date-viewmode="years" data-initialize="datepicker" data-date-format="dd/mm/yyyy"  class="input-append date dpYears col-md-8">
+                                  <input type="text" name="s_schedule_date[]" value="" size="16" class="form-control">
+                                  <span class="add-on birhtdateDatepicker">
+                                      <button class="btn btn-primary" type="button"><i class="fa fa-calendar"></i></button>
+                                  </span>
+                              </div>
+                          </td>
+                          <td>
+                              <select name="s_ppi[]" id="s_ppi" class="form-control">
+                                      <option value='p'>P</option>
+                                      <option value='pi'>PI</option>
+                                      <option value='pic'>PIC</option>
+                              </select>
+                          </td>
+                          <td>
+                              <input type="text" name="s_principal[]" class="form-control"  value="" placeholder="Installment" />
+                          </td>
+                          <td>
+                              <input type="text" name="s_fee[]" class="form-control"  value="" placeholder="Fee" />
+                          </td>
+                          <td>
+                              <input type="text" name="s_term[]" class="form-control" placeholder="Num of Months" />
+                          </td>
+                          <td>
+                              <div style="padding:10px">
+                                  <a href="#" class="btn btn-xs btn-success t-add">+</a>
+                              </div>
+                          </td>
+                      </tr>
+                  </table>
+
+                  <div class="text-center"><a href="#" class="btn btn-warning t-generate hide">* Generate</a><br/><br/></div>
+                  <div class="text-center"><a href="#" class="btn btn-warning t-refresh">Refresh</a><br/><br/></div>
+
+                  <div id="t-result"></div>
+                  <div id="t-result-hide" class="hide"></div>
+                  <div id="t-disburse-hide" class="hide"></div>
+                  <div id="t-balance-hide" class="hide"></div>
+              </div>
+            </div>
+          </form>
+                  <div aria-hidden="true" aria-labelledby="myModalLabel" role="dialog" tabindex="-1" id="mSchedule" class="modal fade">
+                      <div class="modal-dialog md-modify">
+                          <div class="modal-content">
+                              <div id="printArea" class="printArea">
+                                  @include('api.report_header',['co_phone'=>!empty($co_id->co_user) ? $co_id->co_user->phone: ''])
+                                  <div class="modal-header bo-border">
+                                      <ul id="language" class="pull-right">
+                                              <li><a class="btn btn-default" id="change_two_digit" name="change_two_digit" href="#"> {{trans('multiple.m_change') }} ( <span> {{ROUND_DIGIT}} </span> ) </a></li>
+                                          @if(ROUND_NUM=='UP')
+                                              <li><a class="btn btn-default" id="click_round" href="#"><i class="glyphicon glyphicon-arrow-up"></i> {{trans('multiple.round')}}</a></li>
+                                          @elseif(ROUND_NUM=='DOWN')
+                                              <li><a class="btn btn-default" id="click_round" href="#"><i class="glyphicon glyphicon-arrow-down"></i> {{trans('multiple.round')}}</a></li>
+                                          @else
+                                              <li><a class="btn btn-default" id="click_round" href="#"><i class="glyphicon glyphicon-resize-vertical"></i> {{trans('multiple.round')}}</a></li>
+                                          @endif
+                                          <li><button class="btn btn-warning" id="printer"><i class="fa fa-print"></i> {{ trans('multiple.m_print') }}</button></li>
+                                          <li><button class="btn btn-warning" id="customer_printer"><i class="fa fa-print"></i> {{trans('loan.l_customer_print')}}</button></li>
+                                          <li><button aria-hidden="true" data-dismiss="modal" class="btn btn-danger" id="close">×</button></li>
+
+                                      </ul>
+                                      <input type="hidden" id="round" value="{{ROUND_NUM}}" />
+                                      <h4 class="modal-title schedule_title">{{ trans('loan.l_repayment_schedule') }}</h4>
+                                  </div>
+
+                                  <div class="modal-body" id ="schedule-table"></div>
+                                  <div class="signature">
+                                      <div class="left_content">
+                                          <p style="text-align: center;">ជ.នាយកដ្ឋានឥណទាន</p>
+                                          <br><br><br><br><br>
+                                          <p>.............................................................</p>
+                                          <p>ឈ្មោះ/Name:</p>
+                                          <p>ចុះថ្ងៃទី............/............./.....................</p>
+                                      </div>
+                                      <div class="right_content">
+                                          <p style="text-align: center">ស្នាមមេដៃស្តំាកូនបំណុល</p>
+                                          <br><br><br><br><br>
+                                          <p>.............................................................</p>
+                                          <p>ឈ្មោះ/Name:</p>
+                                          <p>ចុះថ្ងៃទី............/............./.....................</p>
+                                      </div>
+                                  </div>
+                              </div>
+                          </div>
+                      </div>
+                  </div>
+
+    </section>
+ @endsection
+
+ @section('js')
+ <script type="text/javascript" src="{{ asset('theme/js/bootstrap-fileupload/bootstrap-fileupload.js',isset($secure) ? false : false)}}"></script>
+ <script type="text/javascript" src="{{ asset('theme/js/bootstrap-datepicker/js/bootstrap-datepicker.js',isset($secure) ? false : false)}}"></script>
+ <script type="text/javascript" src="{{ asset('theme/js/bootstrap-inputmask/bootstrap-inputmask.min.js',isset($secure) ? false : false) }}"></script>
+ <script src="{{ asset('theme/js/select2/select2.js',isset($secure) ? false : false) }}"></script>
+ <script type="text/javascript" src="{{ asset('theme/js/jquery.validate.min.js',isset($secure) ? false : false) }}"></script>
+ <script type="text/javascript" src="{{ asset('js/accounting.min.js',isset($secure) ? false : false) }}"></script>
+ <script type="text/javascript" src="{{ asset('js/form.rescheduleloan.js',isset($secure) ? false : false) }}"></script>
+ <script src="{{ asset('theme/js/iCheck/jquery.icheck.js',isset($secure) ? false : false)}}"></script>
+ <script type="text/javascript" src="{{ asset('js/add-loan.js',isset($secure) ? false : false) }}"></script>
+ <script type="text/javascript" src="{{ asset('js/print.js',isset($secure) ? false : false) }}"></script>
+ <script type="text/javascript">
+ $(document).ready(function(){
+   $('.dpYears').datepicker({
+         format: 'yyyy-mm-dd',
+         autoclose: true,
+         setDate: new Date()
+     });
+   $('#selCate').select2();
+     var k = 0;
+     var disburse_on;
+     var balance_on;
+
+     $(function(){
+          var data = <?php echo json_encode($product_id);?>;
+          new AddLoan(data);
+     });
+
+     //setInterval(save_draft, 10000);
+
+     $('#restructured_loan').change(function() 
+        {
+        if(this.checked == true)
+        {
+            $('#restructured_loan').val('Y');
+        }else{
+            $('#restructured_loan').val('N');
+        }
+      });   
+     $('.submit_frm').on('click', function(){
+       bootbox.confirm("{{ trans('loan.l_confirm_submit_from') }}", function(result) {
+           console.log(result);
+         if (result){
+           $('#addloanForm').submit();
+         }
+       });
+
+       return false;
+     });
+     $(document).on('change', '#s_ppi', function () {
+        $('input[name="s_fee[]"]').attr('disabled',false);
+        if($(this).is('#s_ppi')){
+          if($(this).val() == 'pic'){
+           // $('input[name="s_fee[]"]').attr('disabled',true)
+          }
+        }
+     });
+     $(document).on('change', '#currency_symbol', function () {
+        if($('#currency_symbol').val() == "៛"){
+            $('#change_two_digit').find('span').text(-2); 
+            $("#change_two_digit").val(-2);
+            $("#digit").val(-2);                
+        }
+     });
+
+     $(document).on('click ', '#click_round, #change_two_digit', function () {
+
+        if($(this).is('#change_two_digit')) {
+            if($(this).find('span').text() != 'undefiend' &&  parseInt($(this).find('span').text()) == 0) {
+                if($('#currency_symbol').val() == "៛"){
+                    $(this).find('span').text(-2);
+                    $("#change_two_digit").val(-2);
+                    $("#digit").val(-2);      
+                }else{
+                    $(this).find('span').text(2)
+                    $("#change_two_digit").val(2);
+                    $("#digit").val(2);
+                }
+            }else{
+                $(this).find('span').text(0);
+                $("#change_two_digit").val(0);
+                $("#digit").val(0);
+            }
+
+            $("#mSchedule #close").click();
+            setTimeout(function(){ $('#view_pay_schedule').trigger('click'); }, 1000);
+
+        } if($(this).is('#click_round')) {
+
+
+             this_ = $(this).find('i');
+             $('input[name="s_fee[]"]').attr('disabled',false);
+             if(this_.hasClass('glyphicon-arrow-up')){
+                 this_.removeClass('glyphicon-arrow-up');
+                 this_.addClass('glyphicon-resize-vertical');
+                 $('#round').val('NONE');
+             }else if(this_.hasClass('glyphicon-resize-vertical')){
+                 this_.removeClass('glyphicon-resize-vertical');
+                 this_.addClass('glyphicon-arrow-down');
+                 $('#round').val('DOWN');
+             }else if(this_.hasClass('glyphicon-arrow-down')){
+                 this_.removeClass('glyphicon-arrow-down');
+                 this_.addClass('glyphicon-arrow-up');
+                 $('#round').val('UP');
+             }
+             $("#mSchedule #close").click();
+             setTimeout(function(){ $('#view_pay_schedule').trigger('click'); }, 1000);
+             return false;
+
+         }
+     });
+
+
+
+     $(document).on('click', '.t-generate', function () {
+        f_this = $(this);
+        f_this.attr('disabled', 'disabled');
+        k = 0;
+        $('#t-result').html('');
+        $('#t-result-hide').html('');
+
+        disburse_on = [$('#start_date').val()];
+        $('#t-disburse-hide span').each(function(){
+            disburse_on.push($(this).text());
+        });
+        balance_on = [$("#loan_amount").val()];
+        $('#t-balance-hide span').each(function(){
+            balance_on.push($(this).text());
+        });
+
+        $('#t-disburse-hide').text('');
+        $('#t-balance-hide').text('');
+        $('.t-row input[name="s_schedule_date[]"]').each(function(indexx){
+            var this_ = $(this);
+            setTimeout(function(){
+                l_tenure = this_.parents('tr').find('input[name="s_term[]"]').val();
+                c_fee = this_.parents('tr').find('input[name="s_fee[]"]').val();
+                c_principal = this_.parents('tr').find('input[name="s_principal[]"]').val();
+                l_start_date = this_.parents('tr').find('input[name="s_schedule_date[]"]').val();
+                ppi = this_.parents('tr').find('select[name="s_ppi[]"]').val();
+ //                if($('#t-result table').html()!='' && $('#t-result table').html()!=null){
+ //                    l_amount = $('#t-result table tr.last_row:last td.col_5 .default-val').text();
+ //                    l_amount  = l_amount.replace(',', '');
+ //                }else{
+ //                    l_amount = $("#loan_amount").val();
+ //                }
+
+                var repay_type = $("#repayment_type").val();
+                var loan_id = $('#loan_id').val();
+                var chck = $("#custom_flag").prop('checked');
+                var holiday_chck = $("#holiday_flag").prop('checked');
+                var round = $('#round').val();
+
+                var balloon_input = $(".balloon_input").map(function(){
+                    return $(this).val();
+                }).get().join();
+                $("#balloon_amount_array").val(balloon_input);
+
+                var data = {
+                    l_client_name:$("#client-name").val(),
+                    l_days_of_month:$("#days_of_month").val(),
+                    l_start_date: l_start_date,
+                    l_amount: balance_on[k],
+                    l_tenure: l_tenure,
+                    l_rate: $("#interest_rate").val(),
+                    l_repayment_type: repay_type,
+                    l_balloon_num: $("#balloon").val(),
+                    l_balloon_month: $("#balloon_month").val(),
+                    l_monthly_pay: $("#monthly_payment").val(),
+                    l_bal_amount_array: balloon_input,
+                    custom_flag: chck ? 1: 0,
+                    holiday_flag: holiday_chck?1:0,
+                    round:round,
+                    c_fee: c_fee,
+                    c_principal: c_principal,
+                    disburse_on: disburse_on[k],
+                    ppi: ppi,
+                    frequency: $('#frequency').val(),
+                    loan_id: loan_id,
+                    admin_fee: $('#admin_fee').val(),
+                    admin_fee_opt: $('#admin_fee_opt option:selected').val(),
+                    maintain_fee: $('#maintain_fee').val(),
+                    maintain_fee_opt: $('#maintain_fee_opt option:selected').val(),
+                    count : k
+                };
+ console.log(data);
+                k++;
+
+                $.ajax({
+                    url: '/api/loan/repaymentinfo',
+                    type:'GET',
+                    data:data,
+                    success:function(data){
+                        if($('#t-result table').length==0){
+                            $('#t-result').html(data);
+                            $('.tbrepayment').remove();
+                        }else{
+                            var data_last = [0];
+                            $('#t-result table:last tr:last td').each(function(){
+                                val_ = $(this).text();
+                                val_ = val_.replace(',', '');
+                                data_last.push(val_);
+                            });
+
+                            $('#t-result table:last tr:last').remove();
+                            $('.last_row td.col_5').attr('bgcolor', '');
+                            $("#t-result-hide").html(data);
+                            $('.tbrepayment').remove();
+
+                            //prepare data table
+                            $("#t-result-hide table:last tbody tr:first").remove(); //remove 0
+                            tr_length = $('#t-result table tr').length - 2;
+                            i = 0;
+                            $("#t-result-hide table:last tbody tr").each(function(){
+                                i++;
+                                j = tr_length + i;
+                                if($(this).find('td').attr('colspan')!=2) $(this).find('td:first').text(j);
+                            });
+
+                            tbody = $("#t-result-hide table:last tbody").html();
+                            $('#t-result table tbody').append(tbody);
+
+                            index = 0;
+                            $('#t-result table:last tr:last td').each(function(){
+                                index++;
+                                val_ = $(this).text();
+                                val_ = val_.replace(',', '');
+                                if(index >= 2 && index < 7){
+                                    val_ = parseFloat(val_) + parseFloat(data_last[index]);
+                                }
+                                if(index==2){
+                                    $(this).text(val_);
+                                }else if(index > 2 && val_!=''){
+                                    $(this).text(accounting.formatMoney(val_, ''));
+                                }
+                            });
+                        }
+                        $('#t-disburse-hide').append('<span id="disburse_'+k+'">'+$('.last_row:last td.col_0 input[name="repayment_date[]"]').val()+'</span>');
+                        $('#t-balance-hide').append('<span id="balance_'+k+'">'+$('.last_row:last td.col_5 input[name="balance[]"]').val()+'</span>');
+                        //console.log($('.last_row:last td.col_5 input[name="balance[]"]').val());
+                        //remove first repayment_date, repayment_principal
+                        //$('.row_0 input[name="repayment_date[]"]').remove();
+                        //$('.row_0 input[name="repayment_principal[]"]').remove();
+                        f_this.removeAttr('disabled');
+                    }
+                });
+            }, (indexx + 1) * 2000);
+        });
+     });
+
+
+     $(document).on('click', '.t-add', function () {
+            this_ = $(this);
+            l_tenure = this_.parents('tr').find('input[name="s_term[]"]').val();
+            l_last_date = this_.closest().parents('tr').find('input[name="s_schedule_date[]"]').val();
+            l_start_date = this_.parents('tr').find('input[name="s_schedule_date[]"]').val();
+            console.log(l_last_date);
+
+            c_principal = this_.parents('tr').find('input[name="s_principal[]"]').val();
+            c_fee = this_.parents('tr').find('input[name="s_fee[]"]').val();
+            ppi = this_.parents('tr').find('select[name="s_ppi[]"]').val();
+
+            if(l_tenure > 0 && l_start_date!=''){
+                pre_content = '<tr class="t-row">'+$('.t-end').html()+'</tr>';
+                $('#loan-schedule table.table-input').append(pre_content);
+                $('.t-row:last input[name="s_schedule_date[]"]').val(l_start_date);
+                $('.t-row:last input[name="s_term[]"]').val(l_tenure);
+                $('.t-row:last input[name="s_principal[]"]').val(c_principal);
+                $('.t-row:last input[name="s_fee[]"]').val(c_fee);
+                $('.t-row:last select[name="s_ppi[]"]').val(ppi);
+
+                $('.t-row:last td:last div').html('<a class="btn btn-danger btn-xs t-remove" href="#">-</a>');
+
+                //$('.t-generate').trigger('click');
+            }
+
+            //t-end
+            t_end = '<tr class="t-end" bgcolor="gray">'+$('.t-end').html()+'</tr>';
+            $('.t-end').remove();
+            $('#loan-schedule table.table-input').append(t_end);
+            $('.dpYears').datepicker({
+                 format: 'yyyy-m-d',
+                 autoclose: true,
+                 setDate: new Date()
+            });
+     });
+
+     $(document).on('click', '.t-refresh', function () {
+        f_this = $(this);
+        f_this.attr('disabled', 'disabled');
+        k = 0;
+        $('#t-result').html('');
+        $('#t-result-hide').html('');
+
+        disburse_on = [$('#disburse_date').val()];
+        $('#t-disburse-hide span').each(function(){
+            disburse_on.push($(this).text());
+        });
+        //balance_on = null;
+                $('#t-balance-hide').text('');
+                        $('#t-disburse-hide').text('');
+        balance_on = [$("#loan_amount").val()];
+        //$('#t-balance-hide span').each(function(){
+        //    balance_on.push($(this).text());
+        //});
+ //console.log(balance_on);
+        $('#t-disburse-hide').text('');
+        $('#t-balance-hide').text('');
+        $('.t-row input[name="s_schedule_date[]"]').each(function(indexx){
+            var this_ = $(this);
+            setTimeout(function(){
+                l_tenure = this_.parents('tr').find('input[name="s_term[]"]').val();
+                c_fee = this_.parents('tr').find('input[name="s_fee[]"]').val();
+                c_principal = this_.parents('tr').find('input[name="s_principal[]"]').val();
+                l_start_date = this_.parents('tr').find('input[name="s_schedule_date[]"]').val();
+                ppi = this_.parents('tr').find('select[name="s_ppi[]"]').val();
+ //                if($('#t-result table').html()!='' && $('#t-result table').html()!=null){
+ //                    l_amount = $('#t-result table tr.last_row:last td.col_5 .default-val').text();
+ //                    l_amount  = l_amount.replace(',', '');
+ //                }else{
+ //                    l_amount = $("#loan_amount").val();
+ //                }
+
+                var repay_type = $("#repayment_type").val();
+                var loan_id = $('#loan_id').val();
+                var chck = $("#custom_flag").prop('checked');
+                var holiday_chck = $("#holiday_flag").prop('checked');
+                var round = $('#round').val();
+
+                var balloon_input = $(".balloon_input").map(function(){
+                    return $(this).val();
+                }).get().join();
+                $("#balloon_amount_array").val(balloon_input);
+
+                var data = {
+                    l_client_name:$("#client-name").val(),
+                    l_days_of_month:$("#days_of_month").val(),
+                    l_start_date: l_start_date,
+                    l_amount: balance_on[k],
+                    l_tenure: l_tenure,
+                    l_rate: $("#interest_rate").val(),
+                    l_repayment_type: repay_type,
+                    l_balloon_num: $("#balloon").val(),
+                    l_balloon_month: $("#balloon_month").val(),
+                    l_monthly_pay: $("#monthly_payment").val(),
+                    l_bal_amount_array: balloon_input,
+                    custom_flag: chck ? 1: 0,
+                    holiday_flag: holiday_chck?1:0,
+                    round:round,
+                    c_fee: c_fee,
+                    c_principal: c_principal,
+                    disburse_on: disburse_on[k],
+                    ppi: ppi,
+                    frequency: $('#frequency').val(),
+                    loan_id: loan_id,
+                    admin_fee: $('#admin_fee').val(),
+                    admin_fee_opt: $('#admin_fee_opt option:selected').val(),
+                    maintain_fee: $('#maintain_fee').val(),
+                    maintain_fee_opt: $('#maintain_fee_opt option:selected').val(),
+                    count : k
+                };
+ //console.log(data);
+                k++;
+
+                $.ajax({
+                    url: '/api/loan/repaymentinfo',
+                    type:'GET',
+                    data:data,
+                    success:function(data){
+                        if($('#t-result table').length==0){
+                            $('#t-result').html(data);
+                            $('.tbrepayment').remove();
+                        }else{
+                            var data_last = [0];
+                            $('#t-result table:last tr:last td').each(function(){
+                                val_ = $(this).text();
+                                val_ = val_.replace(',', '');
+                                data_last.push(val_);
+                            });
+
+                            $('#t-result table:last tr:last').remove();
+                            $('.last_row td.col_5').attr('bgcolor', '');
+                            $("#t-result-hide").html(data);
+                            $('.tbrepayment').remove();
+
+                            //prepare data table
+                            $("#t-result-hide table:last tbody tr:first").remove(); //remove 0
+                            tr_length = $('#t-result table tr').length - 2;
+                            i = 0;
+                            $("#t-result-hide table:last tbody tr").each(function(){
+                                i++;
+                                j = tr_length + i;
+                                if($(this).find('td').attr('colspan')!=2) $(this).find('td:first').text(j);
+                            });
+
+                            tbody = $("#t-result-hide table:last tbody").html();
+                            $('#t-result table tbody').append(tbody);
+
+                            index = 0;
+                            $('#t-result table:last tr:last td').each(function(){
+                                index++;
+                                val_ = $(this).text();
+                                val_ = val_.replace(',', '');
+                                if(index >= 2 && index < 7){
+                                    val_ = parseFloat(val_) + parseFloat(data_last[index]);
+                                }
+                                if(index==2){
+                                    $(this).text(val_);
+                                }else if(index > 2 && val_!=''){
+                                    $(this).text(accounting.formatMoney(val_, ''));
+                                }
+                            });
+                        }
+                        $('#t-disburse-hide').append('<span id="disburse_'+k+'">'+$('.last_row:last td.col_0 input[name="repayment_date[]"]').val()+'</span>');
+                        $('#t-balance-hide').append('<span id="balance_'+k+'">'+$('.last_row:last td.col_5 input[name="balance[]"]').val()+'</span>');
+                        balance_on[k] = $('.last_row:last td.col_5 input[name="balance[]"]').val();
+                        disburse_on[k] = $('.last_row:last td.col_0 input[name="repayment_date[]"]').val();
+                        console.log(balance_on);
+                        console.log(disburse_on);
+                        //remove first repayment_date, repayment_principal
+                        //$('.row_0 input[name="repayment_date[]"]').remove();
+                        //$('.row_0 input[name="repayment_principal[]"]').remove();
+                        f_this.removeAttr('disabled');
+                    }
+                });
+            }, (indexx + 1) * 2000);
+        });
+     });
+
+
+     $(document).on('click', '.t-remove', function () {
+            $(this).parents('tr').remove();
+            $('#t-result').html('');
+            //$('.t-generate').trigger('click');
+     });
+
+ });
+
+ function save_draft(){
+  //save draft loan
+   formdata = $('#addloanForm').serialize();
+
+     $.ajax({
+         url: '/loans/save_draft',
+         type: 'GET',
+         dataType: "json",
+         processData: false,
+         contentType: false,
+         data: formdata+'&client_name='+$('#client-name').val()+'&sell_price='+$('#sell_price').val()+'&url=<?php echo url(Request::fullUrl())?>',
+         success: function(data){
+              if(data.status=='false'){
+          return false;
+            }
+       }
+  });
+ }
+ </script>
+ @endsection

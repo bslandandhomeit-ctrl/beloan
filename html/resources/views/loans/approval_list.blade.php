@@ -1,0 +1,148 @@
+@extends('layouts.app')
+@section('css')
+<link rel="stylesheet" type="text/css" href="{{ asset('theme/js/data-tables/dataTablesStyle.css', isset($secure) ? false : false)}}" />
+<link href="{{ asset('css/loan-style.css',isset($secure) ? false : false) }}" rel="stylesheet" />
+<link rel="stylesheet" type="text/css" href="{{ asset('/css/client.css',isset($secure) ? false : false) }}"/>
+<style>
+	@media print {
+	   .hide-this{
+	     display: none !important;
+	   }
+	}
+</style>
+@endsection
+@section('content')
+<section class="panel">
+    <div class="panel-heading">
+        {{ trans('sidebar.sb_approved_list') }}
+        <div style="float:right;">
+          <button class="btn btn-warning" id="printer"><i class="fa fa-print"></i> {{ trans('multiple.m_print') }}</button>
+          <button class="btn btn-primary" id="export"><i class="fa fa-sign-out"></i> {{ trans('multiple.export') }}</button>
+        </div>
+    </div>
+    <form role="form" id="search_frm" method="get">
+        <input type="hidden" name="offset" />
+    </form>
+    {{--<div class="page">--}}
+        {{--<div class="custom-pagi">--}}
+            {{--<span class="pagi_label">{{ trans('sidebar.sb_number_of_rows') }}</span>--}}
+            {{--<input type="text" class="form-control" name="set_offset" value="{{$offset}}" />--}}
+            {{--<a href="#" class="btn btn-danger">Go</a>--}}
+        {{--</div>--}}
+    {{--</div>--}}
+    <div class="right_container">
+        <div class="row">
+            <div class="col-md-8 col-sm-12">
+            </div>
+            <div class="col-md-4 col-sm-12">
+                <div class="right_container" style="text-align: right;padding-right: 16px;padding-top: 11px;">
+                    <form class="form-inline" role="form">
+                        <div class="form-group">
+                            <label for="email">{{ trans('sidebar.sb_number_of_rows') }}:</label>
+                            <input type="text" class="form-control" value="{{$offset}}" id="email" placeholder="Rows amount">
+                        </div>
+                        <button type="submit" class="btn btn-danger">Go</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="panel-body ox-scroll">
+      <div id="printArea">
+        @include('api.report_header')
+        <table class="table table-bordered display" id="example" cellspacing="0" width="100%">
+            <thead>
+                <tr>
+                    <th style="text-align: center">{{ trans('multiple.m_no') }}</th>
+                    <th style="text-align: center">{{ trans('customer.cus_customer_name') }}</th>
+                    <th style="text-align: center">{{ trans('report.rpt_office') }}</th>
+                    <th style="text-align: center">{{ trans('report.rpt_contract_id') }}</th>
+                    <th style="text-align: center">{{ trans('report.rpt_contract_date') }}</th>
+                    <th style="text-align: center">{{ trans('loan.l_approval_id') }}</th>
+                    <th style="text-align: center">{{ trans('loan.l_approval_date') }}</th>
+                    <th style="text-align: center" class="hide-this">{{ trans('multiple.m_action') }}</th>
+                </tr>
+            </thead>
+            <tbody>
+                @if(!empty($loans) && count($loans) > 0)
+                @foreach($loans as $l)
+                <tr>
+                    <td align="center">{{ $l->id }}</td>
+                    <td>{{ !empty($l->client) ? $l->client->client_name : '-'}}</td>
+                    <td>{{ !empty($l->branch) ? $l->branch->branch_name : '-'}}</td>
+                    <td align="center">{{ $l->contract_id }}</td>
+                    <td align="center">{{ date("d-M-Y", strtotime($l->start_date)) }}</td>
+                    <td align="center">{{ !empty($l->approval) ? 'C'.str_pad($l->approval->id , 6, '0', STR_PAD_LEFT) : '-'}}</td>
+                    <td align="center">{{ !empty($l->approval) ? $l->approval->approval_date : '-'}}</td>
+                    <td align="center" class="hide-this"><a href="{{ route('loan_detail',[$l->id])}}"  class="btn btn-primary btn-xs"><i class="fa fa-search-minus"></i> {{ trans('multiple.m_detail') }}</a></td>
+                </tr>
+                @endforeach
+                @else
+                <tr><td colspan="8">{{ trans('multiple.m_no_result') }}</td></tr>
+                @endif
+            </tbody>
+        </table>
+      </div>
+        <div class="page" style="margin-left: 1300px;">
+            <?PHP
+            echo $loans->appends([
+                'offset' => Input::get('offset')
+            ])->render();
+            ?>
+        </div>
+    </div>
+</section>
+@endsection
+
+@section('js')
+<script type="text/javascript" src="{{ asset('theme/js/data-tables/jquery.dataTables.js', isset($secure) ? false : false)}}"></script>
+<script type="text/javascript" src="{{ asset('js/print.js',isset($secure) ? false : false)}}"></script>
+<script type="text/javascript" src="{{ asset('js/FileSaver.js',isset($secure) ? false : false)}}"></script>
+<script type="text/javascript" src="{{ asset('js/tableexport.js',isset($secure) ? false : false)}}"></script>
+
+<script>
+$(document).ready(function () {
+var table = $('#example').DataTable({
+    fixedHeader: {
+        header: false,
+        footer: true
+    }, fixedColumns: {
+        leftColumns: 1
+    }
+});
+
+$('#example tbody').on('click', 'tr', function () {
+    if ($(this).hasClass('selected')) {
+        $(this).removeClass('selected');
+    }
+    else {
+        table.$('tr.selected').removeClass('selected');
+        $(this).addClass('selected');
+        //console.log(table)
+    }
+});
+
+$('.custom-pagi a').on('click', function () {
+    val = $(this).parent().find('input[name="set_offset"]').val();
+    $('input[name="offset"]').val(val);
+    $('#search_frm').submit();
+    return false;
+});
+
+
+});
+
+$("#export").click(function (event) {
+    var con = confirm("Do you really want to export to CSV file?");
+    if(con == true){
+        new TableExport(document.getElementById('example'), {
+            formats: ['csv'],
+            filename:"approval_list"
+        });
+        $('button.csv').hide().click();
+        $('.tableexport-caption').remove();
+    }
+});
+</script>
+@endsection

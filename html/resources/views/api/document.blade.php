@@ -1,0 +1,201 @@
+@if(!empty($client_collateral) && count($client_collateral))
+<div>
+    <h4>Client Collateral</h4>
+</div>
+<section id="flip-scroll">
+    <table class="table table-bordered table-striped table-condensed cf">
+    <tr>
+        <th style="text-align: center;">{{ trans('multiple.m_type') }}</th>
+        <th style="text-align: center;">{{ trans('multiple.m_no') }}</th>
+        <th style="text-align: center;">{{ trans('report.rpt_value') }}</th>
+        <th style="text-align: center;">{{ trans('multiple.m_address') }}</th>
+        <th style="text-align: center;">{{ trans('multiple.m_note') }}</th>
+        <th style="text-align: center;">{{ trans('multiple.m_retrieve_date') }}</th>
+        <th style="text-align: center;">{{ trans('multiple.m_photo') }}</th>
+        <th style="text-align: center;">{{ trans('multiple.m_action') }}</th>
+    </tr>
+    @foreach($client_collateral as $c)
+        <tr>
+            <td align="center">{{ $c->collateral_type }}</td>
+            <td align="center">{{ $c->collateral_no }}</td>
+            <td align="right">{{ $c->collateral_value }}</td>
+            <td>{{ !empty($c->collateral_address) ? $c->collateral_address : '-' }}</td>
+            <td align="center">{{ !empty($c->note)? $c->note : '-' }}</td>
+            <td align="center">{{ !empty($c->retrieve_date)? $c->retrieve_date : '-' }}</td>
+            <td align="center">
+                 @if(!empty($c->collateral_photo))
+                        <?php
+                            $ext = explode('.',$c->collateral_photo);
+                            $ext_file = '';
+                            if(!empty($ext)){
+                                $ext_file = $ext[count($ext) -1];
+                            }
+
+                        ?>
+                        @if(strtolower($ext_file) == 'png' || strtolower($ext_file) == 'jpg' || strtolower($ext_file) == 'jpeg' )
+                            <a href="#" class="photo-popup" data-mfp-src="{{ asset('data/loans/collateral/'.$c->collateral_photo, isset($secure)?false:false) }}">
+                                <img src="{{ asset('data/loans/collateral/'.$c->collateral_photo, isset($secure)?false:false) }}" class="small-imag listPhoto"/>
+                            </a>
+                        @else
+                            <a href="{{ asset('data/loans/collateral/'.$c->collateral_photo, isset($secure)?false:false) }}">
+                               <span class="text-info">View</span>
+                           </a>
+                        @endif
+
+                    @else
+                        -
+                    @endif
+            </td>
+            <td align="center">
+            	<a href="{{ route('edit_collateral', [$c->id]) }}" class="btn btn-default btn-xs" title="Edit"><i class="fa fa-pencil"></i></a>
+            	<a href="1/{{ $c->id }}" class="btn btn-default btn-xs pop-retrieve-date" title="Collateral Retrieve date #{{ $c->id }}"><i class="fa fa-lock"></i></a>
+            </td>
+        </tr>
+    @endforeach
+    </table>
+</section>
+@endif
+
+@if(!empty($loan_doc) && count($loan_doc) > 0)
+    <div>
+        <h4>{{ trans('loan.l_loan_document') }}</h4>
+    </div>
+    <section id="flip-scroll">
+        <table class="table table-bordered table-striped table-condensed cf">
+        <tr>
+            <th style="text-align: center;">{{ trans('multiple.m_no') }}</th>
+            <th>{{ trans('multiple.m_type') }}</th>
+            <th style="text-align: center;">{{ trans('multiple.m_note') }}</th>
+            <th style="text-align: center;">{{ trans('multiple.m_photo') }}</th>
+            <th style="text-align: center;">{{ trans('multiple.m_action') }}</th>
+        </tr>
+        <?php $cn = 0;?>
+        <?php
+        		$darr = array();
+            	foreach($loan_doc as $d){
+	            	foreach($arr as $key=>$value){
+	            		$ex = explode('__', $key);
+	            		if($ex[1]==$d->doc_type){
+	            			$darr[$ex[0]] = array(
+	            					'doc_type'=>$arr[$ex[0].'__'.$d->doc_type],
+	            					'doc_photo'=>$d->doc_photo,
+	            					'note'=>$d->note,
+	            					'loan_id'=>$d->loan_id
+	            			);
+	            		}
+	            	}
+            	}
+            	ksort($darr);
+        ?>
+
+        @foreach($darr as $d)
+            <?php
+        		$cn++;
+        		$doc_type = $d['doc_type'];
+        		$doc_photo = $d['doc_photo'];
+        		$note = $d['note'];
+        		$loan_id = $d['loan_id'];
+        	?>
+            <tr>
+                <td align="center">{{ $cn }}</td>
+                <td>{{ $doc_type }}</td>
+                <td align="center">{{ !empty($note)? $note : '-' }}</td>
+                <td align="center">
+                    @if(!empty($doc_photo))
+                        <?php
+                            $ext = explode('.',$doc_photo);
+                            $ext_file = '';
+                            if(!empty($ext)){
+                                $ext_file = $ext[count($ext) -1];
+                            }
+
+                        ?>
+                        @if(strtolower($ext_file) == 'png' || strtolower($ext_file) == 'jpg' || strtolower($ext_file) == 'jpeg' )
+                            <a href="#" class="photo-popup" data-mfp-src="{{ asset('data/loans/documents/'.$doc_photo, isset($secure)?false:false) }}">
+                                <img src="{{ asset('data/loans/documents/'.$doc_photo, isset($secure)?false:false) }}" class="small-imag listPhoto"/>
+                            </a>
+                        @else
+                            <a href="{{ asset('data/loans/documents/'.$doc_photo, isset($secure)?false:false) }}">
+                               <span class="text-info">View</span>
+                           </a>
+                        @endif
+
+                    @else
+                        -
+                    @endif
+                </td>
+                <td align="center">
+                    <a href="{{ route('loan_add_document',[$loan_id]) }}" class="btn btn-default btn-xs" title="Edit"><i class="fa fa-pencil"></i></a>
+                </td>
+            </tr>
+        @endforeach
+        </table>
+    </section>
+@else
+    No document data
+@endif
+
+@if(!empty($loan_dealer))
+    @if(!empty($loan_dealer->loanDealer))
+    <h4>{{ trans('loan.l_loan_dealer_information') }}</h4>
+    <table class="table table-bordered table-striped table-condensed">
+        <thead>
+            <th style="text-align: center;">{{ trans('multiple.m_no') }}</th>
+            <th style="text-align: center;">{{ trans('product.p_product_id') }}</th>
+            <th style="text-align: center;">{{ trans('dealer.dl_dealer_name') }}</th>
+            <th style="text-align: center;">{{ trans('dealer.dl_dealer_transfer_amount') }}</th>
+            <th style="text-align: center;">{{ trans('dealer.dl_dealer_transfer_date') }}</th>
+            <th style="text-align: center;">{{ trans('loan.l_disburse_amount') }}</th>
+            <th style="text-align: center;">{{ trans('loan.l_disburse_date') }}</th>
+            <th style="text-align: center;">{{ trans('dealer.dl_dealer_bank_name') }}</th>
+            <th style="text-align: center;">{{ trans('dealer.dl_dealer_account_name') }}</th>
+            <th style="text-align: center;">{{ trans('dealer.dl_dealer_sender') }}</th>
+            <th style="text-align: center;">{{ trans('multiple.m_action') }}</th>
+        </thead>
+        <tbody>
+           <tr>
+                <td align="center">1</td>
+                <td align="center">{{ $loan_dealer->product_id }}</td>
+                <td>{{ $loan_dealer->dealer->dealer }}</td>
+                <td align="right">{{ number_format($loan_dealer->loanDealer->transfer_amount,2,',','.') }}</td>
+                <td align="center">{{ Date("d-M-Y", strtotime($loan_dealer->loanDealer->transfer_date)) }}</td>
+                <td align="right">{{ $loan_dealer->loanDealer->disbursement_amount }}</td>
+                <td align="center">{{ Date("d-M-Y", strtotime($loan_dealer->loanDealer->disbursement_date)) }}</td>
+                <td align="center">{{ $loan_dealer->loanDealer->bank->bank_name }}</td>
+                <td align="center">{{ $loan_dealer->loanDealer->bank->account_name }}</td>
+                <td align="center">{{ $loan_dealer->loanDealer->sender }}</td>
+                <td align="center">
+                    @if($loan_dealer->loanDealer->dealer_receipt!="")
+                        <a href="#receipt" class="btn btn-primary btn-xs" data-toggle="modal">{{ trans('loan.l_view_receipt') }}</a>
+                        <div class="modal fade" id="receipt" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+                            <div class="modal-dialog">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <button type="button" class="close" data-dismiss="modal" aria-hidden="true">&times;</button>
+                                        <h4 class="modal-title">{{ trans('loan.l_receipt_for_product') }} #{{$loan_dealer->product_id}}</h4>
+                                    </div>
+                                    <div class="modal-body">
+                                        <?php
+                                            $arr = explode('|', $loan_dealer->loanDealer->dealer_receipt);
+                                        ?>
+                                        @for($i=0;$i<count($arr)-1;$i++)
+                                            <p>+ {{ trans('multiple.m_receipt') }} #{{$i+1}}</p>
+                                            <img src="{{asset('data/receipts/'. $arr[$i], isset($secure)?false:false)}}" style="width:100%"/>
+                                            <br/><br/>
+                                        @endfor
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button data-dismiss="modal" class="btn btn-default" type="button">{{ trans('multiple.m_close') }}</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    @else
+                        <span class="btn btn-default btn-xs no-hover">No Receipt</span>
+                    @endif
+                </td>
+           </tr>
+        </tbody>
+    </table>
+    @endif
+@endif

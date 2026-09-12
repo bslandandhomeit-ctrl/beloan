@@ -1,0 +1,303 @@
+@extends('layouts.app')
+
+@section('css')
+    <link href="{{ asset('css/client.css',false) }}" rel="stylesheet">
+    <link rel="stylesheet" type="text/css" href="{{ asset('/css/loan-style.css',false) }}"/>
+@endsection
+@section('content')
+    <section class="panel">
+        <header class="panel-heading">
+            <span>{{ trans('sidebar.sb_chart_of_account') }}</span>
+            <span style="float: right;margin-left: 10px;"><a id="export" class="btn btn-primary"><i class="fa  fa-sign-out"></i> {{ trans('report.rpt_export') }}</a></span>
+            <span style="float: right"><a href="{{route ('acc_add_account') }}" class="btn btn-success"><i class="fa fa-plus"></i> {{ trans('sidebar.sb_add_account') }}</a></span>
+        </header>
+        <div class="panel-body">
+            <div id="printArea">
+                @include('api.report_header',['co_phone'=>!empty($co_id->co_user) ? $co_id->co_user->phone: ''])
+                <h4 class="sch_title" id="p-header">{{ trans('sidebar.sb_chart_of_account') }}</h4>
+                <section id="unseen" style="clear: both">
+                    <div id="divTab">
+                        <table class="table table-bordered table-striped table-condensed">
+                            <thead class="cf" style="background: #ffffff;">
+                            	<th style="text-align: center">{{ trans('account.a_gl_nbc_code') }}</th>
+                                <th style="text-align: center" >{{ trans('account.a_gl_code') }}</th>
+                                <th colspan="2" style="text-align: center">{{ trans('account.a_main_categories') }}</th>
+                                <th colspan="2" style="text-align: center">{{ trans('account.a_sub_categories') }}</th>
+                                <th colspan="2" style="text-align: center">{{ trans('account.a_main_account') }}</th>
+                                <th colspan="2" style="text-align: center">{{ trans('account.a_sub_account') }}</th>
+                                <th colspan="2" style="text-align: center">{{ trans('account.a_subsidiary_account') }}</th>
+                                <th class="na" style="text-align: center">{{ trans('account.a_remarks') }}</th>
+                                <!--<th colspan="2" class="na" style="text-align: center">{{ trans('multiple.m_action') }}</th> -->
+                            </thead>
+                            <tbody>
+                            	<?php foreach ($type1 as $account1){?>
+                            		<?php
+	                            		$ex = explode('-', $account1->account_code);
+	                            		$c_main = count($ex)>1?$ex[1][0]:'';
+	                            		$c_sub = count($ex)>1?$ex[1][1]:'';
+	                            		$c_macc = count($ex)>1?$ex[1][2].$ex[1][3]:'';
+	                            		$c_sacc = count($ex)>1?$ex[2][0].$ex[2][1]:'';
+	                            		$c_acc = count($ex)>1?$ex[2][2].$ex[2][3]:'';
+                            		?>
+                            		<tr>
+                            			<td align="left" class="acc1">{{ $account1->nbc_code }}</td>
+										<td align="left" class="acc1">{{ $account1->account_code }}</td>
+										<td align="center" class="acc1">{{ $c_main }}</td>
+										<td align="center" class="acc1">{{ $account1->name }}</td>
+										<td align="center" class="acc1">{{ $c_sub }}</td>
+										<td class="acc1"></td>
+										<td align="center" class="acc1">{{ $c_macc }}</td>
+										<td class="acc1"></td>
+										<td align="center" class="acc1">{{ $c_sacc }}</td>
+										<td class="acc1"></td>
+										<td align="center" class="acc1">{{ $c_acc }}</td>
+										<td align="center" class="acc1"></td>
+										<td align="center" class="acc1">{{ $account1->description }}</td>
+										<!--<td align="center" class="na acc1">
+											<a href="{{ route('acc_del_account',[$account1->account_code]) }}" class="btn btn-default btn-xs"><i class="fa fa-times-circle"></i> </a>
+										</td>-->
+									</tr>
+
+									<?php if(!empty($type2[$account1->id])){?>
+										<?php foreach ($type2[$account1->id] as $account2){?>
+		                            		<?php
+			                            		$ex = explode('-', $account2->account_code);
+			                            		$c_main = count($ex)>1?$ex[1][0]:'';
+			                            		$c_sub = count($ex)>1?$ex[1][1]:'';
+			                            		$c_macc = count($ex)>1?$ex[1][2].$ex[1][3]:'';
+			                            		$c_sacc = count($ex)>1?$ex[2][0].$ex[2][1]:'';
+			                            		$c_acc = count($ex)>1?$ex[2][2].$ex[2][3]:'';
+		                            		?>
+		                            		<tr>
+		                            			<td align="left" class="acc2">{{ $account2->nbc_code }}</td>
+												<td align="left" class="acc2">{{ $account2->account_code }}</td>
+												<td align="center" class="acc2">{{ $c_main }}</td>
+												<td align="center" class="acc2"></td>
+												<td align="center" class="acc2">{{ $c_sub }}</td>
+												<td class="acc2">{{ $account2->name }}</td>
+												<td align="center" class="acc2">{{ $c_macc }}</td>
+												<td class="acc2"></td>
+												<td align="center" class="acc2">{{ $c_sacc }}</td>
+												<td class="acc2"></td>
+												<td align="center" class="acc2">{{ $c_acc }}</td>
+												<td align="center" class="acc2"></td>
+												<td align="center" class="acc2">{{ $account2->description }}</td>
+												<!--<td align="center" class="na acc2">
+													<a href="{{ route('acc_del_account',[$account2->account_code]) }}" class="btn btn-default btn-xs"><i class="fa fa-times-circle"></i> </a>
+												</td>-->
+											</tr>
+
+											<?php if(!empty($type3[$account2->id])){?>
+												<?php foreach ($type3[$account2->id] as $account3){?>
+				                            		<?php
+					                            		$ex = explode('-', $account3->account_code);
+					                            		$c_main = count($ex)>1?$ex[1][0]:'';
+					                            		$c_sub = count($ex)>1?$ex[1][1]:'';
+					                            		$c_macc = count($ex)>1?$ex[1][2].$ex[1][3]:'';
+					                            		$c_sacc = count($ex)>1?$ex[2][0].$ex[2][1]:'';
+					                            		$c_acc = count($ex)>1?$ex[2][2].$ex[2][3]:'';
+				                            		?>
+				                            		<tr>
+				                            			<td align="left" class="acc3">{{ $account3->nbc_code }}</td>
+														<td align="left" class="acc3">{{ $account3->account_code }}</td>
+														<td align="center" class="acc3">{{ $c_main }}</td>
+														<td align="center" class="acc3"></td>
+														<td align="center" class="acc3">{{ $c_sub }}</td>
+														<td class="acc3"></td>
+														<td align="center" class="acc3">{{ $c_macc }}</td>
+														<td class="acc3">{{ $account3->name }}</td>
+														<td align="center" class="acc3">{{ $c_sacc }}</td>
+														<td class="acc3"></td>
+														<td align="center" class="acc3">{{ $c_acc }}</td>
+														<td align="center" class="acc3"></td>
+														<td align="center" class="acc3">{{ $account3->description }}</td>
+														<!--<td align="center" class="na acc3">
+															<a href="{{ route('acc_del_account',[$account3->account_code]) }}" class="btn btn-default btn-xs"><i class="fa fa-times-circle"></i> </a>
+														</td>-->
+													</tr>
+
+													<?php if(!empty($type4[$account3->id])){?>
+														<?php foreach ($type4[$account3->id] as $account4){ //foreach ($account_4 as $account4){?>
+						                            		<?php
+							                            		$ex = explode('-', $account4->account_code);
+							                            		$c_main = count($ex)>1?$ex[1][0]:'';
+							                            		$c_sub = count($ex)>1?$ex[1][1]:'';
+							                            		$c_macc = count($ex)>1?$ex[1][2].$ex[1][3]:'';
+							                            		$c_sacc = count($ex)>1?$ex[2][0].$ex[2][1]:'';
+							                            		$c_acc = count($ex)>1?$ex[2][2].$ex[2][3]:'';
+						                            		?>
+						                            		<tr>
+						                            			<td align="left" class="acc<?php echo $account4->type?>">{{ $account4->nbc_code }}</td>
+																<td align="left" class="acc<?php echo $account4->type?>">{{ $account4->account_code }}</td>
+																<td align="center" class="acc<?php echo $account4->type?>">{{ $c_main }}</td>
+																<td align="center" class="acc<?php echo $account4->type?>"></td>
+																<td align="center" class="acc<?php echo $account4->type?>">{{ $c_sub }}</td>
+																<td class="acc<?php echo $account4->type?>"></td>
+																<td align="center" class="acc<?php echo $account4->type?>">{{ $c_macc }}</td>
+																<td class="acc<?php echo $account4->type?>"></td>
+																<td align="center" class="acc<?php echo $account4->type?>">{{ $c_sacc }}</td>
+																<td class="acc<?php echo $account4->type?>">{{ $account4->name }}</td>
+																<td align="center" class="acc<?php echo $account4->type?>">{{ $c_acc }}</td>
+																<td align="center" class="acc<?php echo $account4->type?>"></td>
+																<td align="center" class="acc<?php echo $account4->type?>">{{ $account4->description }}</td>
+																<!--<td align="center" class="na acc<?php echo $account4->type?>">
+																	<a href="{{ route('acc_del_account',[$account4->account_code]) }}" class="btn btn-default btn-xs"><i class="fa fa-times-circle"></i> </a>
+																</td>-->
+															</tr>
+
+															<?php if(!empty($type5[$account4->id])){?>
+																<?php foreach ($type5[$account4->id] as $account5){?>
+								                            		<?php
+									                            		$ex = explode('-', $account5->account_code);
+									                            		$c_main = count($ex)>1?$ex[1][0]:'';
+									                            		$c_sub = count($ex)>1?$ex[1][1]:'';
+									                            		$c_macc = count($ex)>1?$ex[1][2].$ex[1][3]:'';
+									                            		$c_sacc = count($ex)>1?$ex[2][0].$ex[2][1]:'';
+									                            		$c_acc = count($ex)>1?$ex[2][2].$ex[2][3]:'';
+								                            		?>
+								                            		<tr>
+								                            			<td align="left" class="acc5">{{ $account5->nbc_code }}</td>
+																		<td align="left" class="acc5">{{ $account5->account_code }}</td>
+																		<td align="center" class="acc5">{{ $c_main }}</td>
+																		<td align="center" class="acc5"></td>
+																		<td align="center" class="acc5">{{ $c_sub }}</td>
+																		<td class="acc5"></td>
+																		<td align="center" class="acc5">{{ $c_macc }}</td>
+																		<td class="acc5"></td>
+																		<td align="center" class="acc5">{{ $c_sacc }}</td>
+																		<td class="acc5"></td>
+																		<td align="center" class="acc5">{{ $c_acc }}</td>
+																		<td class="acc5">{{ $account5->name }}</td>
+																		<td align="center" class="acc5">{{ $account5->description }}</td>
+																	</tr>
+
+																	<?php if(!empty($type6[$account5->id])){?>
+																		<?php foreach ($type6[$account5->id] as $account6){?>
+										                            		<?php
+											                            		$ex = explode('-', $account6->account_code);
+											                            		$c_main = count($ex)>1?$ex[1][0]:'';
+											                            		$c_sub = count($ex)>1?$ex[1][1]:'';
+											                            		$c_macc = count($ex)>1?$ex[1][2].$ex[1][3]:'';
+											                            		$c_sacc = count($ex)>1?$ex[2][0].$ex[2][1]:'';
+											                            		$c_acc = count($ex)>1?$ex[2][2].$ex[2][3]:'';
+										                            		?>
+										                            		<tr>
+										                            			<td align="left" class="acc6">{{ $account6->nbc_code }}</td>
+																				<td align="left" class="acc6">{{ $account6->account_code }}</td>
+																				<td align="center" class="acc6">{{ $c_main }}</td>
+																				<td align="center" class="acc6"></td>
+																				<td align="center" class="acc6">{{ $c_sub }}</td>
+																				<td class="acc6"></td>
+																				<td align="center" class="acc6">{{ $c_macc }}</td>
+																				<td class="acc6"></td>
+																				<td align="center" class="acc6">{{ $c_sacc }}</td>
+																				<td class="acc6"></td>
+																				<td align="center" class="acc6">{{ $c_acc }}</td>
+																				<td class="acc6">{{ $account6->name }}</td>
+																				<td align="center" class="acc6">{{ $account6->description }}</td>
+																			</tr>
+																		<?php } // end type6?>
+																	<?php } // endif type6?>
+
+																<?php } // end type5?>
+															<?php } // endif type5?>
+														<?php }//} // end type4?>
+													<?php } // endif type4?>
+
+												<?php } // end type3?>
+											<?php } // endif type3?>
+										<?php } // end type2?>
+									<?php } // endif type2?>
+                            	<?php } //end type 1 ?>
+                            </tbody>
+                        </table>
+                    </div>
+                </section>
+            </div>
+        </div>
+    </section>
+@endsection
+@section('js')
+    <script type="text/javascript" src="{{ asset('js/print.js',false)}}"></script>
+    <script type="text/javascript" src="{{ asset('js/jquery.floatThead.min.js',false)}}"></script>
+    <script type="text/javascript">
+        $(document).ready(function(){
+            function exportTableToCSV($table, filename) {
+                var $headers = $table.find('tr:has(th)')
+                    ,$rows = $table.find('tr:has(td)')
+
+                    // Temporary delimiter characters unlikely to be typed by keyboard
+                    // This is to avoid accidentally splitting the actual contents
+                    ,tmpColDelim = String.fromCharCode(11) // vertical tab character
+                    ,tmpRowDelim = String.fromCharCode(0) // null character
+
+                    // actual delimiter characters for CSV format
+                    ,colDelim = '","'
+                    ,rowDelim = '"\r\n"';
+
+                    // Grab text from table into CSV formatted string
+                    var csv = '"';
+                    csv += ($('#p-header').html()).trim();
+                    csv += rowDelim;
+                    csv += formatRows($headers.map(grabRow));
+                    csv += rowDelim;
+                    csv += formatRows($rows.map(grabRow)) + '"';
+                    // Data URI
+                    var csvData = 'data:application/csv;charset=utf-8,' + encodeURIComponent(csv);
+
+                $(this)
+                    .attr({
+                    'download': filename
+                        ,'href': csvData
+                        //,'target' : '_blank' //if you want it to open in a new window
+                });
+
+                    //------------------------------------------------------------
+                    // Helper Functions
+                    //------------------------------------------------------------
+                    // Format the output so it has the appropriate delimiters
+                    function formatRows(rows){
+                        return rows.get().join(tmpRowDelim)
+                            .split(tmpRowDelim).join(rowDelim)
+                            .split(tmpColDelim).join(colDelim);
+                    }
+                    // Grab and format a row from the table
+                    function grabRow(i,row){
+
+                        var $row = $(row);
+                        //for some reason $cols = $row.find('td') || $row.find('th') won't work...
+                        var $cols = $row.find('td');
+                        if(!$cols.length) $cols = $row.find('th');
+
+                        return $cols.map(grabCol)
+                                    .get().join(tmpColDelim);
+                    }
+                    // Grab and format a column from the table
+                    function grabCol(j,col){
+                        var $col = $(col),
+                            $text = $col.text();
+
+                        return $text.replace('"', '""'); // escape double quotes
+
+                    }
+                }
+
+                // This must be a hyperlink
+                $("#export").click(function (event) {
+                    // var outputFile = 'export'
+                    var con = confirm("Do you really want to export to CSV file?");
+                    if(con == true){
+                        var outputFile = 'chart_of_account.csv';
+                        // CSV
+                        exportTableToCSV.apply(this, [$('#divTab>table'), outputFile]);
+
+                        // IF CSV, don't do event.preventDefault() or return false
+                        // We actually need this to be a typical hyperlink
+                    }
+
+                });
+
+                $(".sticky-header").floatThead({scrollingTop:77});
+        });
+    </script>
+@endsection

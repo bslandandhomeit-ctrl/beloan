@@ -1,0 +1,2 @@
+id,product_name,product_type,product_price,mou_price,category_id,brand_id,dealer_id,serial_number,engine_number,product_year,user_id,is_loan,status,created_at,updated_at
+298,Product_test_R170001,MHR,40000.00,0,1,1,2,245344,3464131,2008,2,1,0,"2016-04-06 09:39:56","2016-04-06 16:22:25"

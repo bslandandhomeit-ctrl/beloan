@@ -1,0 +1,2 @@
+id,role_id,kh_name,name,gender,nationality,email,phone1,phone2,address,photo,performance,branch_id,start_on,date_of_birth,salary,inc_tax,status,created_at,updated_at
+1,12,ធារី,"hour sothearyq",2,khmer,hour.socheata@yahoo.com,099-999-999,088-888-888,pp,1603201656e8b797efe84.jpg,0,1,2016-03-15,2016-03-07,333,33,0,2016-03-16,2016-03-16

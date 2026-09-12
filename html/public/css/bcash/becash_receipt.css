@@ -1,0 +1,182 @@
+ /* Print css*/
+ @font-face {
+    src: url("{{ asset('publict/fonts/KhmerOSmuollight.ttf') }}") format("truetype");
+    src: url("{{ asset('publict/fonts/KhmerOScontent.ttf') }}") format("truetype");
+}
+#printArea{
+    font-family: 'Times New Roman','Khmer OS Battambang';
+}
+h1.title{
+    font-size: 25pt;
+    margin: 0 !important;
+    font-weight: bold;
+}
+h2.title{
+    font-weight: bold;
+    font-size: 15pt;
+    margin: 3px !important;
+}
+h2.khmer-title{
+    font-family: 'Khmer os muol Light';
+    font-size: 15pt !important;
+}
+.khmer-title{
+    font-family: 'Khmer os muol Light';
+    font-size: 11pt !important;
+}
+.color-red{
+    color: red;
+}
+h3.title{
+    font-size: 12pt;
+    margin: 3px !important;
+    font-weight: bold;
+}
+.project-logo{
+    width: 160px !important;
+    position: absolute !important;
+    top: 40px !important;
+}
+p{
+    font-family: 'Times New Roman','Khmer OS Battambang';
+    font-size: 11pt !important;
+}
+.panel{
+    width: 21cm;
+    height: 14.8cm; 
+}
+.horizontal_dotted_lines{
+    /*padding: 0px 9px;*/
+    color: #252be8 !important;
+    position: relative;
+    font-family: 'Khmer OS Battambang';
+    text-align: left;
+    display: inline-table;
+    /*font-weight: 600;*/
+    text-transform: capitalize !important;
+}
+.horizontal_dotted_lines::before {
+    content: '\0000a0';
+    position: absolute;
+    width: 100%;
+    bottom: 2px !important;
+    border-bottom: 0.1px dotted #bdbdbd;
+}
+.box-img{
+    margin: 50px 90px auto;
+    width: 535px;
+    height: 370px;
+    position: absolute;
+}
+.no{
+    
+}
+.p-english{
+    font-weight: bold;
+}
+.address{
+    position: absolute !important;
+    left: 57% !important;
+    top: 76% !important;
+}
+.posting_date{
+    margin-top: 10px;
+    margin-bottom: 5px !important;
+    color: #252be8;
+    font-weight: bold;
+}
+.receipt_time{
+    width: 300px;
+    position: absolute;
+    font-weight: bold;
+    color: #252be8;
+}
+.am_pm{
+    float: right;
+    margin-right: 9px;
+    margin-top: -5px !important;
+}
+.cust_no{
+    margin-left: 95px !important;
+    color: #252be8;
+}
+@page{
+    size: A5 landscape;
+}
+@media print {
+    .row{
+        float: left;
+        width: 100% !important; 
+    }
+    .col-sm-12{
+        float: left;
+        width: 100% !important;
+    }
+    .col-sm-6{
+        float: left;
+        width: 50% !important;
+    }
+    .brach_name{
+        padding-top: 10px !important;
+    }
+    .col-sm-4{
+        width: 33.33333333%;
+        float: left;
+    }
+    .color-red{
+        color: red !important;
+    }
+    .no{
+        left: -15px !important;
+    }
+    span.dotted_width{
+        width: 122px !important;
+    }
+    .project-logo{
+        width: 160px !important;
+        position: absolute !important;
+        top: 20px !important;
+    }
+    h1.title{
+        font-family: 'Times New Roman','Khmer OS Battambang' !important;
+        font-size: 25pt;
+        margin: 0 !important;
+        font-weight: bold;
+    }
+    h2.title{
+        font-family: 'Times New Roman','Khmer OS Battambang' !important;
+        font-weight: bold;
+        font-size: 15pt;
+        margin: 5px !important;
+    }
+    h3.title{
+        font-family: 'Times New Roman','Khmer OS Battambang' !important;
+    }
+
+    .address{
+        position: absolute !important;
+        right: 0px !important;
+        bottom: 85px !important;
+    }
+    .posting_date{
+        margin-top: 10px;
+        margin-bottom: 5px !important;
+        color: #252be8 !important;
+        font-weight: bold;
+    }
+    .receipt_time{
+        position: absolute;
+        font-weight: bold;
+        color: #252be8 !important;
+    }
+    .am_pm{
+        float: right;
+        margin-right: 20px !important;
+        margin-top: -5px !important;
+        color: #252be8 !important;
+    }
+    .cust_no{
+        margin-left: 95px !important;
+        color: #252be8 !important;
+    }
+}

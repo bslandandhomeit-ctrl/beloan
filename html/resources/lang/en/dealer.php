@@ -1,0 +1,33 @@
+<?php
+
+return array (
+  'dl_dealer_name' => 'Dealer Name',
+  'dl_dealer_id' => 'Dealer ID',
+  'dl_dealer_representative' => 'Representative',
+  'dl_dealer_bank_name' => 'Bank Name',
+  'dl_dealer_account_name' => 'Account Name',
+  'dl_dealer_account_number' => 'Account Number',
+  'dl_dealer_account_id' => 'Account ID',
+  'dl_dealer_bank' => 'Dealer Bank',
+  'del_add_new_bank' => 'Add New Bank Account',
+  'del_edit_bank' => 'Edit Bank Account',
+  'del_edit_dealer' => 'Edit Dealer',
+  'del_dealer_detail' => 'Dealer Detail',
+  'dl_dealer_bank_info' => 'Bank Information',
+  'dl_dealer_product_in' => 'Product In Stock Information',
+  'dl_dealer_product_out' => 'Product Out Stock Information',
+  'dl_dealer_transfer_amount' => 'Transfer Amount',
+  'dl_dealer_transfer_date' => 'Transfer Date',
+  'dl_dealer_sender' => 'Sender',
+  'address'=>'Address',
+  'name'=>'Name',
+  'bank_account'=>'Bank Account',
+  'sale_representative'=>'Sale Representative',
+  'short_code'=>'Short Code',
+  'dynamic_code'=>'Dynamic Code',
+  'add_project' => 'Add Project',
+  'edit_project' => 'Edit Project',
+  'list_project' => 'List Project',
+  'published' => 'Published',
+
+);

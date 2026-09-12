@@ -1,0 +1,1 @@
+id,loan_id,dealer_id,bank_id,transfer_amount,transfer_date,disbursement_amount,disbursement_date,dealer_receipt,sender,created_at,updated_at

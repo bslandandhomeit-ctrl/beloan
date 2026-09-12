@@ -1,0 +1,2 @@
+id,loan_id,invoice_number,trans_type,trans_date,amount,principal,interest,penalty,fee,overpaid_amount,balance,description,user_id,flag
+1,285,,Disbursement,2016-04-06,30000.0000,0.0000,0.0000,0.0000,0.0000,0,30000.0000,,2,1

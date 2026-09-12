@@ -1,0 +1,81 @@
+@extends('layouts.app')
+
+@section('css')
+    <link rel="stylesheet" type="text/css" href="{{ asset('theme/js/bootstrap-fileupload/bootstrap-fileupload.css',isset($secure) ? false : false)}}" />
+    <link rel="stylesheet" type="text/css" href="{{ asset('theme/js/bootstrap-datepicker/css/datepicker.css',isset($secure) ? false : false)}}" />
+    <link rel="stylesheet" type="text/css" href="{{ asset('theme/js/select2/select2.css',isset($secure) ? false : false) }}" />
+    <link href="{{ asset('css/client.css',isset($secure) ? false : false) }}" rel="stylesheet">
+@endsection
+@section('content')
+    <section class="panel">
+        @if(Session::has('message'))
+            <p class="alert {{ Session::get('alert-class', 'alert-success') }}">{{ Session::get('message') }}</p>
+        @endif
+
+        <header class="panel-heading">
+            {{ trans('sidebar.sb_add_asset') }}
+        </header>
+        <div class="panel-body">
+            @if(Session::has('error'))
+                <div class="alert alert-danger fad in">
+                    <button type="button" class="close close-sm" data-dismiss="alert">x</button>
+                    {{ Session::get('error') }}
+                </div>
+            @endif
+
+            <form action="{{route('write_off_asset', [$res->id])}}" method="POST" class="cmxform form-horizontal" id="assetWriteOffForm">
+                <input type="hidden" name="_token" value="{{ csrf_token() }}">
+
+                <fieldset>
+                    <div class="form-group">
+                        <label class="control-label col-lg-5">{{trans('asset.net_book')}}<span class="red"> *</span></label>
+                        <div class="col-lg-6">
+                            <input type="text" name="net_book" id="net_book" class="form-control" />
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="control-label col-lg-5">{{ trans('asset.approved_by') }}<span class="red"> *</span></label>
+                        <div class="col-lg-6">
+                            <select class="form-control" name="approved_by" id="approved_by">
+                                <option value="0">-</option>
+                                @foreach($users as $a)
+                                    <option value="{{ $a->id }}">{{ $a->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="control-label col-lg-5">{{ trans('asset.remark') }}</label>
+                        <div class="col-lg-6">
+                            <textarea name="remark" class="form-control" id="remark"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="control-label col-lg-5">{{ trans('asset.remark') }}</label>
+                        <div class="col-lg-6">
+                            <button type="submit" class="btn btn-primary"><i class="fa fa-save"></i> {{ trans('multiple.m_save') }}</button>
+                            <a href="javascript:history.go(-1)" class="btn btn-danger"><i class="fa fa-times-circle"></i>&nbsp;{{ trans('multiple.m_cancel') }}</a>
+                        </div>
+                    </div>
+                </fieldset>
+            </form>
+        </div>
+    </section>
+@endsection
+
+@section('js')
+<script type="text/javascript" src="{{ asset('theme/js/bootstrap-fileupload/bootstrap-fileupload.js',isset($secure) ? false : false)}}"></script>
+<script type="text/javascript" src="{{ asset('theme/js/bootstrap-datepicker/js/bootstrap-datepicker.js',isset($secure) ? false : false)}}"></script>
+<script type="text/javascript" src="{{ asset('theme/js/bootstrap-inputmask/bootstrap-inputmask.min.js',isset($secure) ? false : false) }}"></script>
+<script type="text/javascript" src="{{ asset('theme/js/jquery.validate.min.js',isset($secure) ? false : false) }}"></script>
+<script src="{{ asset('theme/js/select2/select2.js',isset($secure) ? false : false) }}"></script>
+<script type="text/javascript" src="{{ asset('js/form.v.js',isset($secure) ? false : false) }}"></script>
+<script type="text/javascript">
+    $(document).ready(function(){
+        
+    });
+</script>
+@endsection

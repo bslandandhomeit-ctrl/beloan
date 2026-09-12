@@ -1,0 +1,2 @@
+id,role_id,branch_id,kh_name,name,email,username,password,phone,address,photo,status,last_login,login_ip,locale,remember_token,created_at,updated_at
+1,1,1,,"Super Admin",admin@figix.com,supadmin,$2y$10$.LA0yZrHhtRLX1fWiqG7qu8xVHDxDKEx8JHlC.QGH8QfYXcK7v5KW,,,,1,"2016-03-16 09:25:50",127.0.0.1,en,JNW0j9ggthtjb2zICWJ5ziA5BcKZL08sy7RN66q80b6nRkVKpzBWRyFouaXZ,"2015-07-22 03:09:54","2016-03-16 09:25:50"

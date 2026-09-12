@@ -1,0 +1,143 @@
+@extends('layouts.app')
+
+@section('css')
+   <link href="{{ asset('css/client.css',isset($secure) ? false : false) }}" rel="stylesheet">
+   <link href="{{ asset('theme/css/table-responsive.css',isset($secure) ? false : false) }}" rel="stylesheet" />
+   <link href="{{ asset('css/loan-style.css',isset($secure) ? false : false) }}" rel="stylesheet" />
+@endsection
+<?php $loan_status = config('static_data.loan_status');?>
+@section('content')
+   <div class="row">
+       <div class="col-sm-12">
+           <section class="panel">
+                <header class="panel-heading">
+                    <span>{{ trans('sidebar.sb_customer_account_statement') }}</span>
+                </header>
+                <div class="panel-body">
+                  <div class="position-center" style="width:90%;">
+                        @if($errors->addCate->has('ipCate'))
+                            <div class="alert alert-danger fade in">
+                                <button class="close close-sm" type="button" data-dismiss="alert">x</button>
+                                {{$errors->addCate->first('ipCate')}}
+                            </div>
+                        @endif
+                        
+                      <form role="form" id="frm_customer" method="get" action="{{ route('detail_customer_statement') }}">
+                          <div class="row">   
+                              <div class="col-lg-12">
+                                <div class="col-lg-3">
+                                    <div class="form-group">
+                                        <label>Customer Name: </label>
+                                        <input type="text" class="form-control" id="custName" name="custName" value="{{$detail_customers[0]->account_name}}" readonly="readonly" />
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Contract Number: </label>
+                                        <input type="text" class="form-control" id="contractNum" name="contractNum" value="{{$detail_customers[0]->contract_id}}" readonly="readonly" />
+                                    </div>
+                                </div>
+                                <div class="col-lg-3">
+                                    <div class="form-group">
+                                        <label>Loan Limit: </label>
+                                        <input type="text" class="form-control" id="loanLimit" name="loanLimit" value="{{$detail_customers[0]->loan_amount}}" readonly="readonly" />
+                                    </div>
+                                    <div class="form-group">
+                                        <label>Interest Rate: </label>
+                                        <input type="text" class="form-control" id="interRate" name="interRate" value="{{$detail_customers[0]->interest_rate}}" readonly="readonly" />
+                                    </div>
+                                </div>
+                              </div>
+                          </div>
+                      </form>
+                    </div>
+                    <br/><br/>
+                       <table class="table table-bordered table-striped table-condensed cf">
+                          <thead class="cf">
+                              <tr>
+                                <th rowspan="2" style="text-align: center;">No</th>
+                                <th rowspan="2" style="text-align: center;">Repayment Date</th>
+                                <th colspan="2" style="text-align: center;">Plan</th>
+                                <th rowspan="2" style="text-align: center;">Paid Date</th>
+                                <th colspan="3" style="text-align: center;">Actual</th>
+                                <th rowspan="2" style="text-align: center;">Remark</th>
+                              </tr>
+                              <tr>
+                                <th style="text-align: center;">Principal</th>
+                                <th style="text-align: center;">Interest</th>
+                                <th style="text-align: center;">Principal</th>
+                                <th style="text-align: center;">Interest</th>
+                                <th style="text-align: center;">Penalty</th>
+                              </tr>
+                          </thead>
+                          <?php $n = 1; $i=0;?>
+                            <tbody>
+                              @forelse($detail_customers as $ac)
+                                <?php $count_n = count($repayment[$n]);?>
+                                <tr>
+                                <?php
+                                    $principal[] = $ac->principal;
+                                    $interest[] = $ac->interest;
+                                    
+                                ?>
+                                  <td rowspan="{{$count_n}}">{{$ac->id}}</td>
+                                  <td rowspan="{{$count_n}}">{{$ac->schedule_date}}</td>
+                                  <td rowspan="{{$count_n}}">{{$ac->principal}}</td>
+                                  <td rowspan="{{$count_n}}">{{$ac->interest}}</td>
+
+                                  <?php 
+                                    $r = $repayment[$n][0]; 
+                                    $paid_principal[] = $r->paid_principal;
+                                    $paid_interest[] = $r->paid_interest;
+                                    $penalty_amount[] = $r->penalty_amount;
+                                  ?>
+                                  <td>{{$r->repayment_date}}</td>
+                                  <td>{{$r->paid_principal}}</td>
+                                  <td>{{$r->paid_interest}}</td>
+                                  <td>{{$r->penalty_amount}}</td>
+                                  <td>{{$r->payment_type}}</td>
+                                </tr>
+                                
+                                <?php foreach($repayment[$n] as $r){?>
+                                    <?php 
+                                      $i++;  if($i==1) continue;
+                                      $paid_principal[] = $r->paid_principal;
+                                      $paid_interest[] = $r->paid_interest;
+                                      $penalty_amount[] = $r->penalty_amount;
+                                    ?>
+                                    <tr>
+                                      <td>{{$r->repayment_date}}</td>
+                                      <td>{{$r->paid_principal}}</td>
+                                      <td>{{$r->paid_interest}}</td>
+                                      <td>{{$r->penalty_amount}}</td>
+                                      <td>{{$r->payment_type}}</td>
+                                    </tr>
+                              <?php } ?>
+
+                              <?php $n++; ?>
+                              @empty
+                               <tr><td colspan=9>{{ trans('multiple.m_no_result')}}</td></tr>
+                              @endforelse
+                                <tr>
+                                  <td></td>
+                                  <td></td>
+                                  <td style="font-weight: bold;"><?php echo array_sum($principal); ?></td>
+                                  <td style="font-weight: bold;"><?php echo array_sum($interest); ?></td>
+                                  <td></td>
+                                  <td style="font-weight: bold;"><?php echo array_sum($paid_principal); ?></td>
+                                  <td style="font-weight: bold;"><?php echo array_sum($paid_interest); ?></td>
+                                  <td style="font-weight: bold;"><?php echo array_sum($penalty_amount); ?></td>
+                                  <td></td>
+                                </
+                            </tbody>
+                       </table>
+                    </div>
+                </div>
+           </section>
+       </div>
+   </div>
+@endsection
+
+@section('js')
+<script type="text/javascript" src="{{ asset('theme/js/jquery-1.11.1.min.js',isset($secure) ? false : false) }}"></script>
+<script type="text/javascript" src="{{ asset('theme/js/jquery.validate.min.js',isset($secure) ? false : false) }}"></script>
+<script type="text/javascript" src="{{ asset('theme/js/additional-methods.min',isset($secure) ? false : false) }}"></script>
+@endsection

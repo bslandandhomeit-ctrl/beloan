@@ -1,0 +1,205 @@
+@extends('layouts.app')
+@section('css')
+    <link rel="stylesheet" type="text/css" href="{{ asset('css/loan-style.css',false) }}"/>
+    <link rel="stylesheet" type="text/css" href="{{ asset('theme/js/select2/select2.css',false) }}" />
+@endsection
+@section('content')
+<section class="panel">
+    <div class="panel-heading">
+        @if(isset($type))
+            @if($type == 5)
+                {{ trans('account.new_subsi_acc') }}
+            @elseif($type == 4)
+                {{ trans('account.new_sub_acc') }}
+            @elseif($type == 3)
+                {{ trans('account.new_main_acc') }}
+            @elseif($type == 2)
+                {{ trans('account.new_sub_cate') }}
+            @else
+                {{ trans('account.new_cate') }}
+            @endif
+        @endif
+    </div>
+    <?php
+        $currency = Config::get('static_data.currency');
+        //$sectors = Config::get('static_data.sector');
+        $coa_symbol = Config::get('static_data.coa_symbol');
+        $coa_esc_code = Config::get('static_data.coa_esc_code');
+    ?>
+    <div class="panel-body">
+        <div class="col-sm-12">
+        <label class="col-md-2"></label>
+        <div class="col-md-10">
+            @if (count($errors) > 0)
+                <div class="alert alert-danger">
+                    <ul>
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            @elseif(session('msg_success'))
+                 <div class="alert alert-success">
+                    <ul>
+                        <li>{{ session('msg_success') }}</li>
+                    </ul>
+                 </div>
+            @endif
+        </div>
+        </div>
+        <form class="cmxform form-horizontal" method="post" action="{{route('add_coa_category',[$type])}}" id="frmCoaCategory">
+            <input type="hidden" name="_token" value="{{ csrf_token() }}" />
+
+        @if($type > 1)
+            <div class="form-group">
+                <label class="col-md-3 control-label">{{ trans('account.parent_acc') }}<span class="red-color">*</span></label>
+                <div class="col-md-8">
+                    <select class="select2_type" name="group" id='parent_acc' style="width: 100%;">
+                        @if(isset($parents))
+                            @foreach($parents as $p)
+                                @if($p->type == 1)
+                                    <option value="{{ $p->id }}">{{ $p->name }}({{ $p->nbc_code }})</option>
+                                @else
+                                    <option value="{{ $p->id }}">{{ $p->name }}( {{ $p->nbc_code }} / {{ $p->account_code }} )</option>
+                                @endif
+                            @endforeach
+                        @endif
+                    </select>
+                </div>
+            </div>
+        @endif
+
+            <div class="form-group">
+                <label class="col-md-3 control-label">{{ trans('account.nbc_code') }}<span class="red-color">*</span></label>
+                <div class="col-md-8">
+                    <input type="text" name="nbc_code" id="nbc_code" class="form-control" />
+                </div>
+            </div>
+
+        @if($type == 4)
+            <div class="form-group">
+                 <label class="col-md-3 control-label">{{ trans('account.symbol') }}</label>
+                 <div class="col-md-8">
+                     <select class="form-control" name="symbol">
+                         <option value="">-</option>
+                         @foreach($coa_symbol as $key=>$c)
+                             <option value="{{ $key }}">{{ $c }}</option>
+                         @endforeach
+                     </select>
+                 </div>
+            </div>
+        @endif
+            @if($type == 5)
+             <div class="form-group">
+                 <label class="col-md-3 control-label">{{ trans('account.currency') }}</label>
+                 <div class="col-md-8">
+                     <select class="form-control" name="currency" id="currency">
+                         <option value="">-</option>
+                         @foreach($currency as $key=>$c)
+                             <option value="{{ $key }}">{{ $c }}</option>
+                         @endforeach
+                     </select>
+                 </div>
+             </div>
+
+            <div class="form-group">
+                <label class="col-md-3 control-label">{{ trans('account.sector') }}</label>
+                <div class="col-md-8">
+                    <select class="form-control" name="sector_id" id="sector_id">
+                        @foreach($coa_esc_code as $key=>$s)
+                            <option value="{{ $key }}">{{ $key }} - {{ $s }}</option>
+                        @endforeach
+                    </select>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-md-3 control-label">{{ trans('account.subsidiary_code') }}</label>
+                <div class="col-md-8">
+                    <input type="text" name="subsidiary_code" id="subsidiary_code" class="form-control" />
+                </div>
+            </div>
+
+            @endif
+
+            @if($type > 1)
+                <div class="form-group">
+                    <label class="col-md-3 control-label">{{ trans('account.coa_code') }}<span class="red-color">*</span></label>
+                    <div class="col-md-8">
+                        <input type="text" name="coa_code" id="coa_code" class="form-control" />
+                    </div>
+                </div>
+            @endif
+            <div class="form-group">
+                <label class="col-md-3 control-label">{{ trans('account.gl_name') }}<span class="red-color">*</span></label>
+                <div class="col-md-8">
+                    <input type="text" name="name" class="form-control" />
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-md-3 control-label">{{ trans('account.desc') }}</label>
+                <div class="col-md-8">
+                    <textarea name="description" class="form-control"></textarea>
+                </div>
+            </div>
+            <div class="form-group">
+                <label class="col-md-3 control-label"></label>
+                <div class="col-md-8">
+                    <button class="btn btn-primary">{{ trans('account.save') }}</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</section>
+@endsection
+@section('js')
+    <script src="{{ asset('theme/js/select2/select2.js',false) }}"></script>
+    <script>
+        $(".select2_type").select2();
+    </script>
+    <script type="text/javascript">
+       var parents = <?php echo json_encode($parents);?>;
+       var type = <?php echo $type; ?>;
+
+       $("#parent_acc").on('change', function(){
+           var code = "";
+           $.each(parents, function(i,v){
+               if($("#parent_acc").val() == v.id){
+                   code = v.account_code;
+                   return;
+               }
+           });
+            $("#nbc_code").val(code);
+        });
+       $("#nbc_code").on('change', function(){
+            get_account_name();
+        });
+       $("#currency").on('change', function(){
+            if(type == 5) get_account_name();
+        });
+        $("#sector_id").on('change',function(){
+            if(type == 5) get_account_name();
+        });
+        $("#subsidiary_code").on('change',function(){
+            if(type == 5) get_account_name();
+        });
+        function get_account_name(){
+            var nbc_code = $("#nbc_code").val();
+            var currency_code = $("#currency").val();
+            var sector_id = $("#sector_id").val();
+            var subsidiary_code = $("#subsidiary_code").val();
+            var account_code = "";
+            $.each(parents, function(i,v){
+                if(nbc_code == v.id){
+                    account_code = v.account_code;
+                    return;
+                }
+            });
+            (type == 5)? account_code = nbc_code.slice(0,5) + currency_code + "-" + sector_id + "-" + ("0000"+subsidiary_code).slice(-4) : account_code = nbc_code;
+            $("#coa_code").val(account_code);
+
+        }
+
+
+    </script>
+
+@endsection

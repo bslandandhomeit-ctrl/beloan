@@ -1,0 +1,374 @@
+@extends('layouts.app')
+@section('css')
+    <link rel="stylesheet" type="text/css" href="{{ asset('/css/loan-style.css',isset($secure) ? false : false) }}"/>
+    <link rel="stylesheet" type="text/css" href="{{ asset('/css/client.css',isset($secure) ? false : false) }}"/>
+    <link rel="stylesheet" type="text/css"
+          href="{{ asset('theme/js/bootstrap-datepicker/css/datepicker.css',isset($secure) ? false : false)}}"/>
+    <style>
+        table tr td:not(:first-child) {
+            text-align: right;
+        }
+    </style>
+    <link rel="stylesheet" type="text/css" href="{{ asset('css/loan-style.css',isset($secure) ? false : false) }}"/>
+    <link rel="stylesheet" type="text/css"
+          href="{{ asset('theme/js/select2/select2.css',isset($secure) ? false : false) }}"/>
+@endsection
+@section('content')
+    <section class="panel">
+        <header class="panel-heading">
+            {{ trans('sidebar.sb_account_his') }}
+        </header>
+        <div class="panel-body">
+            <div class="position-left">
+                <div class="row">
+                    <div class="col-lg-12">
+
+                        <form role="form" class="cmxform form-inline" method="get" action="{{ route('account_his') }}" style="min-width: 500px;">
+
+                            <!-- <div class="form-group" style="min-width: 500px;">
+                                <label class="col-lg-4 control-label"> {{ trans('account.ref_id')}}<span class="red-color">*</span></label>
+                                <select id="results" class="col-lg-5 form-control reference">
+                                </select>
+                            </div> -->
+                        </form>
+
+                        </div>
+                        <div class="col-lg-6">
+                          <div class="form-group">
+                              <label for="Name" class="col-lg-3 control-label">{{ trans('multiple.m_start_date') }}</label>
+                              <div class="col-lg-7">
+                                  <div data-date-viewmode="years" data-initialize="datepicker" data-date-format="yyyy-mm-dd" data-date="{{$data['start']}}" class="input-append date dpStart">
+                                      <input type="text" id ="dpStart"  name="dpStart" size="16" class="form-control" value = "{{ $data['start'] }}">
+                                      <span class="add-on date">
+                                          <button class="btn btn-primary" type="button"><i class="fa fa-calendar"></i></button>
+                                      </span>
+                                  </div>
+                              </div>
+                          </div>
+                          <div class="form-group">
+                              <label for="inputCardnumber" class="col-lg-3 control-label">{{ trans('multiple.m_end_date') }}</label>
+                              <div class="col-lg-7">
+                                  <div data-date-viewmode="years" data-initialize="datepicker" data-date-format="yyyy-mm-dd" data-date="{{$data['end']}}" class="input-append date dpEnd">
+                                      <input type="text" id ="dpEnd" name="dpEnd" size="16" class="form-control" value="{{ $data['end'] }}">
+                                      <span class="add-on date">
+                                          <button class="btn btn-primary" type="button"><i class="fa fa-calendar"></i></button>
+                                      </span>
+                                  </div>
+                              </div>
+                          </div>
+                          <div class="form-group">
+                              <label class="col-lg-7">{{ trans('account.account_or_code')}}
+                                  <span class="red-color">*</span></label>
+                              <select name="selType[]" id="selCoaCat" name="parent_id" class="select2_type account_select1" style="width: 550px;" >
+
+                                  <option value="0">-</option>
+                                  @if(isset($search))
+                                      {{ $i=1 }}
+                                      @foreach($search as $s)
+                                          <option value="{{ $s->id}}">  {{   $s->name }}
+                                              ( {{$user_branch->branch_code.$s->account_code}})
+                                          </option>
+                                      @endforeach
+                                  @endif
+                              </select>
+                          </div>
+                        </div>
+                        <div>
+                            <input type="hidden" id="branch_id" value="{{$user_branch->id}}">
+                        </div>
+                        <div class="col-lg-12" id="printArea">
+                            <div class="col-lg-12 text-right">
+                                <div class="form-group">
+                                    <button class="btn btn-warning" id="printer"><i
+                                                class="fa fa-print"></i> {{ trans('account.print') }}</button>
+                                </div>
+                            </div>
+                            <table class="table table-bordered table-striped table-condensed income_statement_is acHis"
+                                   style="width:100%;">
+                                <thead>
+                                <tr>
+                                    <th>{{ trans('account.no') }}</th>
+                                    <th> {{ trans('account.a_journal_id') }}</th>
+                                    <th>{{ trans('account.a_entry_id') }}</th>
+                                    <th>{{ trans('account.a_tra_id') }}</th>
+                                    <th> {{ trans('product.p_loan_reference') }}</th>
+                                    <th>{{ trans('multiple.date') }}</th>
+                                    <th>{{ trans('account.a_debit') }}</th>
+                                    <th>{{ trans('account.a_credit') }}</th>
+                                    <th>{{ trans('account.a_bal') }}</th>
+                                    <th>{{ trans('account.a_desc') }}</th>
+                                    <th>{{ trans('account.a_print') }}</th>
+                                </tr>
+                                </thead>
+                                <tbody id="result"></tbody>
+                            </table>
+
+                            <div id="loading" style="display: none"></div>
+                            <div class="prepare">
+                                <span style="text-align: left">Prepared by : </span>
+                                <span style="margin-left: 150px">Verified by : </span>
+                                <span style="margin-left: 150px">Approved by : </span>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+    </section>
+@endsection
+
+
+@section('js')
+    <script type="text/javascript"
+            src="{{ asset('theme/js/bootstrap-datepicker/js/bootstrap-datepicker.js',isset($secure) ? false : false)}}"></script>
+    <script src="{{ asset('theme/js/select2/select2.js',isset($secure) ? false : false) }}"></script>
+    <script type="text/javascript" src="{{ asset('js/print.js',isset($secure) ? false : false)}}"></script>
+    <script type="text/javascript" src="{{ asset('js/accounting.min.js')}}"></script>
+    <script type="text/javascript">
+        $('.dpStart').datepicker({
+            format: 'yyyy-mm-dd',
+            autoclose: true
+        });
+        $('.dpEnd').datepicker({
+            format: 'yyyy-mm-dd',
+            autoclose: true
+        });
+        $(document).ready(function () {
+
+            // Function to shuffle the demo data
+          /*  var shuffle = function (str) {
+                return str.split('').sort(function () {
+                    return 0.5 - Math.random();
+                }).join('');
+            };
+
+            // For demonstration purposes we first make
+            // a huge array of demo data (20 000 items)
+            // HEADS UP; for the _.map function i use underscore (actually lo-dash) here
+            var mockData = function () {
+                var array = _.map(_.range(1, 20000), function (i) {
+                    return {
+                        id  : i,
+                        text: shuffle('te ststr ing to shuffle') + ' ' + i
+                    };
+                });
+                return array;
+            };
+
+            $(function () {
+                // create demo data
+                var dummyData = mockData();
+                // set initial value(s)
+                $('#e24').val([
+                    dummyData[75].text, dummyData[1897].text
+                ]);
+
+                // init select 2
+                $('#e24').select2({
+                    data             : dummyData,
+                    // init selected from elements value
+                    initSelection    : function (element, callback) {
+                        var initialData = [];
+                        $(element.val().split(",")).each(function () {
+                            initialData.push({
+                                id  : this,
+                                text: this
+                            });
+                        });
+                        callback(initialData);
+                    },
+                    // configure as multiple select
+                    multiple         : true,
+
+                    // NOT NEEDED: text for loading more results
+                    formatLoadMore   : 'Loading more...',
+
+                    // query with pagination
+                    query            : function (q) {
+                        var pageSize,
+                            results;
+                        pageSize = 20; // or whatever pagesize
+                        results  = [];
+                        if (q.term && q.term !== "") {
+                            // HEADS UP; for the _.filter function i use underscore (actually lo-dash) here
+                            results = _.filter(this.data, function (e) {
+                                return (e.text.toUpperCase().indexOf(q.term.toUpperCase()) >= 0);
+                            });
+                        } else if (q.term === "") {
+                            results = this.data;
+                        }
+                        q.callback({
+                            results: results.slice((q.page - 1) * pageSize, q.page * pageSize),
+                            more   : results.length >= q.page * pageSize
+                        });
+                    }
+                });
+            });*/
+
+            $(document.body).on("change", "#selCoaCat", function () {
+              //  $("#result").html("");
+              //  getAccount();
+              Result_list($(this).val());
+            });
+            /*$(document.body).on("change", "#results", function () {
+
+                var id = $("#results option:selected").val();
+                Result_list(id);
+            });*/
+
+            //$(".account_select1").select2();
+            $("#selCoaCat").select2();
+        });
+      /*  function getAccount() {
+            var data = <?PHP //echo $search ?>;
+            var coaId = $("#selCoaCat option:selected").val();
+            var branch_id = $("#branch_id").val();
+            $.each(data, function (i, data) {
+
+                if (data.id == coaId && data.id !== 'undefinded') {
+                    getReference(coaId, branch_id);
+                }
+            });
+        }
+        function getReference(referId, b_id) {
+            $("#reference").html("");
+            if (!referId) {
+                return false;
+            } else {
+                $.ajax({
+                    url: "/accounting/getreference/" + referId + '/' + b_id,
+                    method: 'get',
+                    data: {},
+                    beforeSend: function () {
+                        imgLoading(true)
+                    },
+                    success: function (data, status) {
+                        if (status == 'success') {
+                            dropDown(data, ".reference");
+                        } else {
+                            imgLoading(true);
+                        }
+                    }
+                }).done(function () {
+                    imgLoading(false);
+                });
+            }
+        }
+
+        function dropDown(data, selectorId) {
+            var referenceArray = [];
+            $('.reference').children().remove();
+            var selector ='';
+            if ($.isEmptyObject(data)) {
+                selector += '<option value="0">No reference</option>';
+            }else{
+
+                selector += '<option value="0">Choose a reference</option>';
+                $.each(data, function (i, val) {
+                    console.log(val.reference)
+
+                    if (referenceArray.indexOf(val.reference) == -1 && !$.isEmptyObject(val.reference) && typeof val.reference != 0) {
+                        selector += '<option value=' + val.coa_id + '>' + val.reference + '</option>';
+                        referenceArray.push(val.reference);
+                    }
+                });
+            }
+            $(selector).appendTo(selectorId);
+        }*/
+
+        function Result_list(fk_coa_id) {
+            var start_date = $('#dpStart').val();
+            var end_date = $('#dpEnd').val();
+            var table = '';
+            var no = 1;
+            $("#result").html("");
+            if (!fk_coa_id) {
+                return false;
+            } else {
+                $.ajax({
+                    url: "/accounting/getjd/" + fk_coa_id,
+                    method: 'get',
+                    data: {start_date : start_date, end_date : end_date},
+                    beforeSend: function () {
+                        imgLoading(true)
+                    },
+                    success: function (data, status) {
+                        if (status == 'success') {
+                          var sum_debit = 0;
+                          var sum_credit = 0;
+                          var factor = parseFloat(data['factor']);
+                          var bal = factor * parseFloat(data['p_bal']);
+                          //console.log(data['journal_re']);
+                            $.each(data['result'], function (i, val) {
+                                if (val.tran_re_id == null) {
+                                    var tranId = '<td></td>';
+                                } else {
+                                    tranId = '<td><a target="_blank" href=' + "../loans/journal/" + val.tran_re_id + '><span style="text-decoration: underline;">' + val.tran_re_id + '</span></a></td>';
+                                }
+                                bal += factor * (val.debit - val.credit);
+                                var desc = val.descr;
+                                if(desc == ''){
+                                  if (val.description != null){
+                                    desc = val.description;
+                                  }
+                                }
+                                if(desc == '0') desc = '';
+                                if(desc == ''){
+                                    $.each(data['journal_re'], function(j,v){
+                                        if(v.id == val.jd_jr_id && v.detail.id != val.jd_id){
+                                            console.log(v);
+                                        }
+                                    });
+                                }
+                                
+                                //console.log(val);
+                                table +=
+                                        '<tr>' +
+                                        '<td>' + no + '</td>' +
+                                        '<td>' + val.jd_id + '</td>' +
+                                        '<td>' + val.jd_jr_id + '</td>' + tranId +
+                                        '<td>' + val.reference +
+                                        '<td>' + val.entry_date + '</td>' +
+                                        '<td>' + accounting.formatNumber(val.debit,4) + '</td>' +
+                                        '<td>' + accounting.formatNumber(val.credit,4) + '</td>' +
+                                        '<td>' + accounting.formatNumber(bal,4) + '</td>' +
+                                        '<td>' + desc + '</td>' +
+                                        '<td><span class="glyphicon glyphicon-print"></span></td>' +
+                                        '</tr>';
+                                no++;
+                                sum_debit += parseFloat(val.debit);
+                                sum_credit += parseFloat(val.credit);
+                            });
+                            table +=
+                            '<tr>' +
+                            '<td colspan = 5>' + "Total" + '</td>' +
+                            '<td style="text-align: right; font-weight: bold;">' + accounting.formatNumber(sum_debit,4) + '</td>' +
+                            '<td style="text-align: right; font-weight: bold;">' + accounting.formatNumber(sum_credit,4) + '</td>' +
+                            '<td style="text-align: right; font-weight: bold;">' + accounting.formatNumber(bal,4) + '</td>' +
+                            '</tr>';
+                            $(table).appendTo("#result");
+                        } else {
+                            imgLoading(true);
+                        }
+                    }
+                }).done(function () {
+                    imgLoading(false);
+                });
+
+            }
+        }
+        function imgLoading(load) {
+            if (!load == true) {
+                $("#loading").slideUp(1900, function () {
+                    $("#loading").html("");
+                    $("#loading").css({"display": "none"});
+                });
+            } else {
+                $("#loading").slideUp(0, function () {
+                    $("#loading").css({"display": "inline"});
+                    $('<div><img src="/images/loading.gif" /> </div>').appendTo("#loading");
+                });
+            }
+        }
+    </script>
+@endsection

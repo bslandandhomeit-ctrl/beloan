@@ -1,0 +1,137 @@
+<header class="header fixed-top clearfix">
+    <!-- logo start -->
+    <div class="brand">
+        <a href="{{ url('/') }}" class="logo"><img src="{{ asset('images/T&Go.png',isset($secure)?false:false) }}"/> </a>
+        <div class="sidebar-toggle-box change_collapse">
+            <div class="fa fa-bars change_collapse" onclick="change_collapse()"></div>
+        </div>
+        <div class="company_name" style="margin-top: 15px;color: #000000;margin-left: 0;">
+            <p style="font-weight: bold;font-size: 16px;">{{COMPANY_NAME_KH}}</p>
+            <p style="font-weight: bold;font-size: 14px;">{{COMPANY_NAME}}</p>
+        </div>
+    </div>
+    <div class="nav notify-row" id="top_menu">
+        <!--  notification start -->
+        <ul class="nav top-menu">
+            @if(Auth::check() && ($user = Auth::user()))
+                @if($user->role_id == 1)
+                    <li><a href="{{ route('pwadmin') }}">AP</a></li>
+                    <li><a href="{{ route('ip_range') }}">IP</a></li>
+                    <li><a href="{{ route('user_activity') }}">Log</a></li>
+                    <li><a href="{{ route('db_backup') }}">DB</a></li>
+                @elseif($user->role_id == 2)
+                    <li><a href="{{ route('ip_range') }}">IP</a></li>
+                    <li><a href="{{ route('user_activity') }}">Log</a></li>
+                    <li><a href="{{ route('db_backup') }}">DB</a></li>
+                @endif
+            @endif
+        </ul>
+    </div>
+    <div class="top-nav clearfix">
+        <!--search & user info start-->
+        <ul class="nav pull-right top-menu">
+            <!--Notification dropwdown start-->
+            <li class="dropdown">
+                <a  id="notes" data-toggle="dropdown" class="dropdown-toggle" href="#" style="display: none !important;"><span class="notification-info">{{ trans('multiple.notification') }}</span>
+                    <b id="number"></b><b class="glyphicon glyphicon-bell"></b></a>
+                <ul class="dropdown-menu" id="removable" style="min-width: 800px;top:40px;">
+                    <li>
+                        <div id="notification"></div>
+                    </li>
+                </ul>
+            </li>
+            <!--Notification dropwdown end-->
+            <!-- user login dropdown start-->
+            @if(!empty($locales))
+                <li class="dropdown">
+                    <a data-toggle="dropdown" class="dropdown-toggle" href="#">
+                        <img alt="" src="{{ asset('images/world.gif', isset($secure)?false:false)}}">
+                        <span class="username">{{ trans('multiple.m_language') }}</span>
+                        <b class="caret"></b>
+                    </a>
+                    <ul class="dropdown-menu extended logout">
+                        @foreach($locales as $l)
+                            <li>
+                                <a href="{{ route('locale',$l->short_locale) }}">
+                                    <?php 
+                                        $url = '';
+                                        if($l->icon){
+                                            if(file_exists('data/users/'.$l->icon)){
+                                                $url = asset('data/users/'.$l->icon);
+                                            }else{
+                                                $url = asset('no_profile.jpg');
+                                            }
+                                        }else{
+                                            $url = asset('no_profile.jpg');
+                                        }
+
+                                    ?>
+                                    <img alt="" src="{{ $url }}" style="width: 30px;object-fit: cover;height: 30px;">&nbsp;<span
+                                            style="font-size: 14px;{{ (session('locale','en') == $l->short_locale) ? 'color:red;' : '' }}">{{ $l->locale }}</span>
+                                </a>
+                            </li>
+                        @endforeach
+                        @if(Auth::user()->role_id <= 2)
+                            <li>
+                                <a href="{{ route('all_locale') }}">
+                                    <span style="font-size: 14px;">Translate list</span>
+                                </a>
+                            </li>
+                        @endif
+                    </ul>
+                </li>
+            @endif
+            <li class="dropdown">
+                <a data-toggle="dropdown" class="dropdown-toggle" href="#">
+                    <?php 
+                        $url = '';
+                        if(Auth::user()->photo){
+                            if(file_exists('data/users/'.Auth::user()->photo)){
+                                $url = asset('data/users/'.Auth::user()->photo);
+                            }else{
+                                $url = asset('no_profile.jpg');
+                            }
+                        }else{
+                            $url = asset('no_profile.jpg');
+                        }
+
+                    ?>
+                    <img alt=""
+                         src="{{ $url }}">
+                    <span class="username">{{Auth::user()->name}}</span>
+                    <b class="caret"></b>
+                </a>
+                <ul class="dropdown-menu extended logout">
+                    <li><a href="{{ route('user_profile') }}"><i
+                                    class=" fa fa-suitcase"></i>{{ trans('sidebar.sb_profile') }}</a></li>
+                    <li><a href="{{ route('user_setting') }}"><i class="fa fa-cog"></i>{{ trans('sidebar.sb_setting')}}
+                        </a></li>
+                    <li><a href="{{ route('logout') }}"><i class="fa fa-key"></i> {{ trans('sidebar.sb_logout')}}</a>
+                    </li>
+                </ul>
+            </li>
+            @if(Auth::check() && ($user = Auth::user()))
+                @if($user->role_id == 1 || $user->role_id == 2)
+                    <li id="li-notify">
+                        <div class="toggle-right-box">
+                            <div class="fa fa-bars"></div>
+                        </div>
+                    </li>
+                @endif
+            @endif
+        </ul>
+        <!--search & user info end-->
+    </div>
+</header>
+
+<!--notification style-->
+<style>
+    b#number {
+        position: absolute;
+        right: 4px;
+        top: -16px;
+        color: red;
+        font-weight: 600;
+        font-size: 14px;
+    }
+</style>

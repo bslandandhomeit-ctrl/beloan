@@ -1,0 +1,2 @@
+id,parent_id,code,nbc_code,account_code,name,currency,branch_code,sector_id,debit,credit,description,type,status,symbol
+1,0,,100000,,"ASSETS (Cash Due from Banks and Customers)",0,0,0,0,0,0,1,0,

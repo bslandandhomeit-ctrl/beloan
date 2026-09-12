@@ -1,0 +1,293 @@
+/********CSSS*********/
+.birhtdateDatepicker .btn{
+    margin-right: -2px;
+}
+.offonDatepicker{
+    margin-right: -3px;
+}
+.red{
+    color: red;
+}
+.fileupload-preview img{
+    max-height: 150px !important;
+    max-width: 200px !important;
+}
+.detail-preview img{
+    max-height: 150px !important;
+    max-width: 200px !important;
+}
+.input-append.date .add-on i{
+    height: 14px;
+}
+.listPhoto{
+    width: 40px;
+    height: 40px;
+}
+.clientTable tbody tr td:nth-child(2){
+    /*padding: 0;*/
+    text-align: center;
+}
+.dealerTable tbody tr .toCenter{
+    padding: 0;
+    text-align: center;
+    vertical-align: middle;
+}
+.dealerTable tbody tr .isVerticalalign{
+    vertical-align: middle;
+}
+.pagination{
+    float: right;
+}
+.tb-row{
+    width:40%;
+    height:40px;
+    line-height:40px;
+    margin-bottom:1em;
+    padding-left: 15px;
+}
+.tb-row div{
+    border:1px solid #ddd;
+}
+.tb-row div:nth-child(2){
+    border-left: 0;
+    text-align: center;
+}
+.tb-row div:nth-child(3){
+    border: 0;
+}
+hr{
+    margin-top:1em;
+    margin-bottom: 1em;
+}
+.font-17{
+    font-size: 17px;
+}
+#close{
+    margin-left:10px !important;
+}
+a:hover{
+    text-decoration: underline;
+    color:blue;
+}
+.no-hover:hover{
+    cursor: default;
+}
+.signature{
+    padding-bottom: 200px;
+}
+.signature .left_content{
+    float: left;
+    margin-left: 100px;
+}
+.signature .right_content{
+    float: right;
+    margin-right: 100px;
+}
+.signature_detail{
+    display: none;
+    padding-bottom: 200px;
+}
+.signature_detail .left_content_detail{
+    float: left;
+    margin-left: 100px !important;
+}
+.signature_detail .right_content_detail{
+    float: right;
+    margin-right: 100px !important;
+}
+.sch_title{
+    margin-top: 50px !important;
+    font-size: 14px !important;
+    display: none;
+}
+.schedule_title{
+    clear: both;
+    font-size: 14px !important;
+}
+#language>li{
+    display: inline-block;
+}
+.report_header, .report_footer{
+    display: none;
+    clear: both;
+}
+.report_logo img{
+    float: left;
+    width: 60px;
+    height: 60px;
+}
+.company_name{
+    float: left;
+    margin-left: 10px;
+}
+.company_address{
+    float: right;
+    font-size: 12px !important;
+}
+.customize_label{
+    background-color: none !important;
+}
+.label-success{
+    background-color: none !important;
+}
+.tbrepayment_sch .td-schedule-hide{
+    display: none;
+}
+@media print{
+    .tbrepayment_sch .td-schedule-hide{
+        display: table-cell;
+    }
+    #printer{
+        display: none;
+    }
+    #customer_printer{
+        display: none;
+    }
+    #actionEN{
+        display: none;
+    }
+    #actionKH{
+        display: none;
+    }
+    #close{
+        display: none;
+    }
+    .invisible_edit{
+        display: none !important;
+    }
+    .tbrepayment,.tbrepayment_sch{
+        font-size: 8px !important;
+    }
+    .tbrepayment_sch thead th{
+        padding: 2px !important;
+    }
+    .tbrepayment tbody tr td.custom_display{
+        border-right: none !important;
+        border-left: none !important;
+    }
+    .tbrepayment tbody tr td.custom_display span{
+        display: none;
+    }
+    .table tbody > tr > td, .table tfoot > tr > td{
+        padding: 2px !important;
+    }
+    .signature{
+        font-size: 10px !important;
+    }
+    .signature_detail{
+        display: block;
+        font-size: 10px !important;
+    }
+    .sch_title{
+        display: block;
+        clear: both;
+    }
+    .schedule_title{
+        clear: both;
+        border-bottom: none;
+    }
+    .report_header, .report_footer{
+        display: block;
+        clear: both;
+    }
+    .actual_repayment thead th:nth-child(16){
+        display: none;
+    }
+    .actual_repayment tbody tr td:nth-child(16){
+        display: none;
+    }
+    .actual_repayment thead th{
+        padding: 2px !important;
+    }
+    .actual_repayment{
+        font-size: 10px !important;
+    }
+    .transaction{
+        font-size: 10px !important;
+    }
+    .transaction thead th{
+        padding: 2px !important;
+    }
+
+    /*.transaction thead th:nth-child(9){
+        display: none;
+    }
+    .transaction tbody tr td:nth-child(11){
+        display: none;
+    }
+    */
+    .charge{
+        font-size: 10px !important;
+    }
+    .charge tr th{
+        padding: 2px !important;
+    }
+    .detail_repayment{
+        font-size: 10px !important;
+    }
+    .detail_repayment thead th{
+        padding: 2px !important;
+    }
+    .remove_class{
+        display:none;
+    }
+
+    #click_round{
+        display: none;
+    }
+
+    .table-smaller{
+        font-size: 10px !important;
+    }
+
+
+}
+
+table.dataTable tr.odd{
+    background-color: #f9f9f9;
+}
+
+#loading{
+    width:200px;
+    height:67px;
+    background-color: rgba(31, 181, 173, 0.45);
+    position: absolute;
+    right: 7%;
+    text-align:center;
+    border-radius:9px;
+    padding: 9px;
+}
+table.acHis thead tr th{
+    text-align: center;
+}
+
+table.acHis tbody#result tr td:nth-child(1),
+tbody#result tr td:nth-child(2),
+tbody#result tr td:nth-child(3),
+tbody#result tr td:nth-child(4){
+    text-align: center;
+}
+tbody#result tr td:last-child{
+    text-align: left;
+}
+
+
+
+.table-4 td{
+    width: 24%;
+}
+
+table .i-label{
+    text-align: right;
+    width:15%;
+    line-height: 40px !important;
+}
+
+
+
+.borderless>tbody>tr>td, .borderless>tbody>tr>th, .borderless>tfoot>tr>td, .borderless>tfoot>tr>th, .borderless>thead>tr>td, .borderless>thead>tr>th{
+    border:none;
+}
+.padding-top{
+  padding-top:10px;
+}

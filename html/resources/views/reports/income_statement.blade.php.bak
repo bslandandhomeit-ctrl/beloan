@@ -1,0 +1,362 @@
+@extends('layouts.app')
+
+@section('css')
+    <link rel="stylesheet" type="text/css" href="{{ asset('/css/loan-style.css',isset($secure) ? $secure : true) }}"/>
+    <link rel="stylesheet" type="text/css" href="{{ asset('/css/client.css',isset($secure) ? $secure : true) }}"/>
+    <link rel="stylesheet" type="text/css" href="{{ asset('theme/js/bootstrap-datepicker/css/datepicker.css',isset($secure) ? $secure : true)}}" />
+@endsection
+@section('content')
+    <section class="panel">
+        <header class="panel-heading">
+            {{ trans('report.rpt_income_statement_for') }} {{$year?$year:'this year'}}
+            @foreach($branch as $b)
+                @if(isset($branch_id))
+                    @if($branch_id==$b->id)
+                        ({{ $b->branch_name }})
+                    @endif
+                @endif
+            @endforeach
+        </header>
+
+        <div class="panel-body">
+            <div class="position-center" style="width:100%;">
+                <form role="form" class="cmxform form-horizontal" method="post" action="{{ route('rpt_income_statement') }}">
+                    <input type="hidden" name="_token" value="{{ csrf_token() }}">
+                    <div class="row">
+                        <label class="control-label col-md-offset-1  col-md-1">{{ trans('report.rpt_for_year') }} </label>
+                        <div class="col-md-2">
+                            <select name="selYear" class="form-control">
+                                @for($i=date('Y');$i>1999;$i--)
+                                    <option value="{{$i}}" {{ isset($year)?($year==$i?'selected':''):old('selYear') }}>{{$i}}</option>;
+                                @endfor
+                            </select>
+                        </div>
+                        <label class="control-label col-md-1">{{ trans('report.rpt_branch_name') }}</label>
+                        <div class="col-md-2">
+                            <select class="form-control" id="selBrand" name="selBrand">
+                                <option value="">-</option>
+                                @foreach($branch as $b)
+                                    <option value="{{ $b->id }}" 
+                                        @if(isset($branch_id)) 
+                                            @if($branch_id==$b->id)
+                                                selected
+                                            @endif
+                                        @endif
+                                        >{{ $b->branch_name}}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                    </div><br/>
+                    <div class="row">
+                        <div class="col-md-offset-5 col-md-5">
+                            <button type="submit" class="btn btn-info"><i class="fa fa-search"></i> {{ trans('multiple.m_search') }}</button>
+                            <a class="btn btn-danger" href="{{ route('rpt_income_statement_ytd') }}"><i class="fa fa-indent"></i> {{ trans('report.rpt_income_ytd') }}</a>
+                            <a id="export" class="btn btn-primary"><i class="fa  fa-sign-out"></i> {{ trans('report.rpt_export') }}</a>
+                            <button class="btn btn-warning" id="printer"><i class="fa fa-print"></i> {{ trans('multiple.m_print') }}</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <br/><br/><br/>
+            <?php
+                $loan_type_label = config('static_data.loan_type');
+                $fee_charge_label = config('static_data.fee_charge');
+                $cost_fee_label = config('static_data.fee_cost_type');
+
+                $interest_income = array_fill(1,count($loan_type_label),array_fill(1,12,0.0));
+                $fee_commission_income = array_fill(0,count($fee_charge_label) + 2,array_fill(1,12,0.0));
+                $interest_expense = array_fill(0,count($cost_fee_label)+1,array_fill(1,12,0.0));
+                $month_arr = [1=>'Jan',2=>'Feb',3=>'Mar',4=>'Apr',5=>'May',6=>'Jun',7=>'Jul',8=>'Aug',9=>'Sep',10=>'Oct',11=>'Nov',12=>'Dec'];
+
+                if(!empty($loan_payment) && count($loan_payment)>0){
+                    foreach($loan_payment as $loan){
+                        if(!empty($loan->payment) && count($loan->payment)>0){
+                            $loan_type = $loan->loan_type;
+                            foreach($loan->payment as $p){
+                                $repayment_month = date('n', strtotime($p->repayment_date));
+                                $interest_income[$loan_type][$repayment_month] += $p->paid_interest;
+                                $fee_commission_income[0][$repayment_month] += $p->penalty_amount;
+                            }
+                        }
+                    }
+                }
+                if(!empty($loan_payoff) && count($loan_payoff)>0){
+                    foreach($loan_payoff as $loan){
+                        if(!empty($loan->payoff)){
+                            $payoff_month = date('n', strtotime($loan->payoff->payoff_date));
+                            if(array_key_exists($payoff_month,$month_arr)){
+                                  $fee_commission_income[1][$payoff_month] += $loan->payoff->payoff_fee;
+                            }
+                        }
+                    }
+                }
+                if(!empty($loan_writeoff) && count($loan_writeoff)>0){
+                    foreach($loan_writeoff as $loan){
+                        if(!empty($loan->writeoff)){
+                            $writeoff_month = date('n', strtotime($loan->writeoff->write_off_date));
+                            if(array_key_exists($writeoff_month,$month_arr)){
+                                $interest_expense[0][$writeoff_month] += $loan->writeoff->amount;
+                            }
+                        }
+                    }
+                }
+                if(!empty($loan_feecharge) && count($loan_feecharge)>0){
+                    foreach($loan_feecharge as $loan){
+                        if(!empty($loan->feecharge) && count($loan->feecharge)>0){
+                            foreach($loan->feecharge as $c){
+                                $charge_month = date('n', strtotime($c->charge_date));
+                                if(array_key_exists($charge_month,$month_arr)){
+                                    $charge_type = $c->charge_type;
+                                    $fee_commission_income[$charge_type+1][$charge_month] += $c->charge_amount;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                if(!empty($loan_costfee) && count($loan_costfee)>0){
+                    foreach($loan_costfee as $loan){
+                        if(!empty($loan->costfee) && count($loan->costfee)>0){
+                            foreach($loan->costfee as $fee){
+                                 $cost_month = date('n', strtotime($fee->cost_date));
+                                 if(array_key_exists($cost_month,$month_arr)){
+                                    $cost_type = $fee->cost_type;
+                                    $interest_expense[$cost_type][$cost_month] += $fee->cost_amount;
+                                 }
+                            }
+                        }
+                    }
+                }
+                $fee_charge_label = array_merge(['Penalty Charge','Early Payment'],$fee_charge_label);
+                $cost_fee_label = array_merge(['Write-Off'],$cost_fee_label);
+            ?>
+        <div id="printArea">
+            @include('api.report_header')
+            <h4 class="sch_title" id="p-header">
+                {{ trans('report.rpt_income_statement_for') }} {{$year?$year:'this year'}}
+                    @foreach($branch as $b)
+                        @if(isset($branch_id))
+                            @if($branch_id==$b->id)
+                                ({{ $b->branch_name }})
+                            @endif
+                        @endif
+                    @endforeach
+            </h4>
+            <section id="unseen" style="clear: both">
+                <div id="divTab">
+                <table class="table income_statement table-bordered table-striped table-condensed">
+                    <thead class="th-center">
+                        <tr>
+                            <th></th>
+                            @foreach($month_arr as $m)
+                                <th>{{ $m }}</th>
+                            @endforeach
+                            <th>Yearly Total</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td class="t-bold">Interest Income</td>
+                        </tr>
+                        <?php
+                            $total_interest_income = array_fill(1,12,0.00);
+                        ?>
+                        @foreach($interest_income as $key => $mv)
+                            <tr align="center">
+                                <td align="left">{{ $loan_type_label[$key] }}</td>
+                                @if(is_array($mv))
+                                    @foreach($mv as $k=> $m)
+                                       <?php
+                                          $total_interest_income[$k] += $m;
+                                          echo '<td align="right">'.number_format($m,2).'</td>';
+                                       ?>
+                                    @endforeach
+                                    <td align="right">{{ number_format(array_sum($mv),2) }}</td>
+                                @endif
+                            </tr>
+                        @endforeach
+                        <tr style="background-color:#eee" align="center">
+                            <td class="t-bold" align="left">Total Interest Income</td>
+                            @foreach($total_interest_income as $t)
+                                <td align="right">{{ number_format($t,2) }}</td>
+                            @endforeach
+                            <td align="right">{{ number_format(array_sum($total_interest_income),2) }}</td>
+                        </tr>
+                        <tr>
+                            <td class="t-bold">Fee and Comission Income</td>
+                        </tr>
+                        <?php
+                            $total_fee_commission_income = array_fill(1,12,0.00);
+                        ?>
+                        @foreach($fee_commission_income as $key => $mv)
+                           <tr align="center">
+                               <td align="left">{{ $fee_charge_label[$key] }}</td>
+                               @if(is_array($mv))
+                                   @foreach($mv as $k => $m)
+                                       <?php
+                                            $total_fee_commission_income[$k] += $m;
+                                            echo '<td align="right">'.number_format($m,2).'</td>';
+                                       ?>
+                                   @endforeach
+                                   <td align="right">{{ number_format(array_sum($mv),2) }}</td>
+                               @endif
+                           </tr>
+                        @endforeach
+                        <tr style="background-color:#eee" align="center">
+                            <td class="t-bold" align="left">Total Fee & Commission Income</td>
+                            @foreach($total_fee_commission_income as $t)
+                                <td align="right">{{ number_format($t,2) }}</td>
+                            @endforeach
+                            <td align="right">{{ number_format(array_sum($total_fee_commission_income),2) }}</td>
+                        </tr>
+                        <tr style="background-color:#ddd" align="center">
+                            <td class="t-bold" align="left">Total Income</td>
+                            <?php
+                               $total_income = array_fill(1,12,0.00);
+                               $total = 0.00;
+                                for($i = 1; $i<=12 ; $i ++){
+                                    $t = $total_fee_commission_income[$i] + $total_interest_income[$i];
+                                    $total += $t;
+                                    $total_income[$i] = $t;
+                                    echo '<td align="right">'.number_format($t,2).'</td>';
+                                }
+                                echo '<td align="right">'.number_format($total,2).'</td>';
+                            ?>
+                        </tr>
+
+                        <tr>
+                            <td class="t-bold">Expenses</td>
+                        </tr>
+                        <?php
+                            $total_interest_expense = array_fill(1,12,0.00);
+                        ?>
+                        @foreach($interest_expense as $key => $mv)
+                            <tr align="center">
+                                <td align="left">{{ $cost_fee_label[$key] }}</td>
+                                @if(is_array($mv))
+                                    @foreach($mv as $k => $m)
+                                       <?php
+                                           $total_interest_expense[$k] += $m;
+                                           echo '<td align="right">'.number_format($m,2).'</td>';
+                                      ?>
+                                    @endforeach
+                                    <td align="right">{{ number_format(array_sum($mv),2) }}</td>
+                                @endif
+                            </tr>
+                        @endforeach
+                         <tr style="background-color:#eee" align="center">
+                            <td align="left">Total Expenses</td>
+                            @foreach($total_interest_expense as $t)
+                                <td align="right">{{ number_format($t,2) }}</td>
+                            @endforeach
+                            <td align="right">{{ number_format(array_sum($total_interest_expense),2) }}</td>
+                        </tr>
+                        <tr style="background-color:#D9EDF7" align="center">
+                            <td class="t-bold" align="left">Net Profit</td>
+                            <?php
+                               $total_net = 0.00;
+                               for($i = 1; $i<= 12 ; $i ++){
+                                  $to = $total_income[$i] - $total_interest_expense[$i];
+                                  $total_net += $to;
+                                  echo '<td align="right">'.number_format($to,2).'</td>';
+                               }
+                               echo '<td style="background-color:#1FB5AD;color:white"  align="right">'.number_format($total_net,2).'</td>';
+                            ?>
+                        </tr>
+                    </tbody>
+                </table>
+                </div>
+            </section>
+        </div>
+        </div>
+    </section>
+@endsection
+
+@section('js')
+    <script type="text/javascript" src="{{ asset('theme/js/bootstrap-datepicker/js/bootstrap-datepicker.js',isset($secure) ? $secure : true)}}"></script>
+    <script type="text/javascript" src="{{ asset('js/print.js',isset($secure) ? $secure : true)}}"></script>
+    <script type="text/javascript">
+    $('.dpStart').datepicker({
+        format: 'yyyy',
+        autoclose: true,
+        setDate: new Date()
+    });
+    $(document).ready(function(){
+        function exportTableToCSV($table, filename) {
+                var $headers = $table.find('tr:has(th)')
+                    ,$rows = $table.find('tr:has(td)')
+
+                    // Temporary delimiter characters unlikely to be typed by keyboard
+                    // This is to avoid accidentally splitting the actual contents
+                    ,tmpColDelim = String.fromCharCode(11) // vertical tab character
+                    ,tmpRowDelim = String.fromCharCode(0) // null character
+
+                    // actual delimiter characters for CSV format
+                    ,colDelim = '","'
+                    ,rowDelim = '"\r\n"';
+
+                    // Grab text from table into CSV formatted string
+                    var csv = '"';
+                    csv += ($('#p-header').html()).trim();
+                    csv += rowDelim;
+                    csv += formatRows($headers.map(grabRow));
+                    csv += rowDelim;
+                    csv += formatRows($rows.map(grabRow)) + '"';
+                    // Data URI
+                    var csvData = 'data:application/csv;charset=utf-8,' + encodeURIComponent(csv);
+
+                $(this)
+                    .attr({
+                    'download': filename
+                        ,'href': csvData
+                        //,'target' : '_blank' //if you want it to open in a new window
+                });
+
+                //------------------------------------------------------------
+                // Helper Functions 
+                //------------------------------------------------------------
+                // Format the output so it has the appropriate delimiters
+                function formatRows(rows){
+                    return rows.get().join(tmpRowDelim)
+                        .split(tmpRowDelim).join(rowDelim)
+                        .split(tmpColDelim).join(colDelim);
+                }
+                // Grab and format a row from the table
+                function grabRow(i,row){
+                     
+                    var $row = $(row);
+                    //for some reason $cols = $row.find('td') || $row.find('th') won't work...
+                    var $cols = $row.find('td'); 
+                    if(!$cols.length) $cols = $row.find('th');  
+
+                    return $cols.map(grabCol)
+                                .get().join(tmpColDelim);
+                }
+                // Grab and format a column from the table 
+                function grabCol(j,col){
+                    var $col = $(col),
+                        $text = $col.text();
+
+                    return $text.replace('"', '""'); // escape double quotes
+
+                }
+            }
+
+
+            // This must be a hyperlink
+            $("#export").click(function (event) {
+                // var outputFile = 'export'
+                var con = confirm("Do you really want to export to CSV file?");
+                if(con == true){
+                    var outputFile = 'income_statement.csv';
+                    // CSV
+                    exportTableToCSV.apply(this, [$('#divTab>table'), outputFile]);
+                    
+                    // IF CSV, don't do event.preventDefault() or return false
+                    // We actually need this to be a typical hyperlink
+                }
+                
+            });
+    });
+    </script>
+@endsection

@@ -1,0 +1,214 @@
+@extends('layouts.app')
+
+@section('css')
+    <link rel="stylesheet" type="text/css" href="{{ asset('/css/loan-style.css',isset($secure) ? $secure : true) }}"/>
+    <link rel="stylesheet" type="text/css" href="{{ asset('/css/client.css',isset($secure) ? $secure : true) }}"/>
+    <link rel="stylesheet" type="text/css" href="{{ asset('theme/js/bootstrap-datepicker/css/datepicker.css',isset($secure) ? $secure : true)}}" />
+@endsection
+@section('content')
+    <section class="panel">
+        <header class="panel-heading">
+            {{ trans('sidebar.sb_rejected_loans') }}
+            @if(isset($start) && isset($end))
+                {{ trans('multiple.m_from') }} {{ date("d-M-Y", strtotime($start)) }} {{ trans('multiple.m_to') }} {{ date("d-M-Y", strtotime($end)) }}
+            @else
+                {{ isset($start)?'Loan rejected on '.date("d-M-Y", strtotime($start)):'' }}
+                {{ isset($end)?'Loan rejected on '.date("d-M-Y", strtotime($end)):'' }}
+            @endif
+            @foreach($branch as $b)
+                @if(isset($branch_id))
+                    @if($branch_id==$b->id)
+                        ({{ $b->branch_name }})
+                    @endif
+                @endif
+            @endforeach
+        </header>
+        <div class="panel-body">
+            <div class="position-center">
+                <form role="form" class="cmxform form-horizontal" method="get" action="{{ route('rpt_rejected') }}">
+                    <div class="row">
+                        <div class="col-lg-6">
+                            <div class="form-group">
+                                <label class="col-lg-3 control-label">{{ trans('multiple.m_start_date') }}</label>
+                                <div class="col-lg-7">
+                                    <div data-date-viewmode="years" data-initialize="datepicker" data-date-format="yyyy/mm/dd" data-date="{{date('Y-m-d')}}" class="input-append date dpStart">
+                                        <input type="text" name="dpStart" size="16" class="form-control" value="{{ isset($start)?$start:old('dpStart') }}">
+                                            <span class="add-on birhtdateDatepicker ptl-3">
+                                                <button class="btn btn-primary" type="button"><i class="fa fa-calendar"></i></button>
+                                          </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-lg-3 control-label">{{ trans('multiple.m_end_date') }}</label>
+                                <div class="col-lg-7">
+                                    <div data-date-viewmode="years" data-initialize="datepicker" data-date-format="yyyy/mm/dd" data-date="{{date('Y-m-d')}}" class="input-append date dpEnd">
+                                        <input type="text" name="dpEnd" size="16" class="form-control" value="{{ isset($end)?$end:old('dpEnd') }}">
+                                            <span class="add-on birhtdateDatepicker ptl-3">
+                                                <button class="btn btn-primary" type="button"><i class="fa fa-calendar"></i></button>
+                                          </span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-6">
+                            <div class="form-group">
+                                <label class="col-lg-3 control-label">{{ trans('report.rpt_rejected_by') }}</label>
+                                <div class="col-lg-7">
+                                    <select class="form-control" id="user" name="user">
+                                        <option value="">-</option>
+                                        @foreach($user as $u)
+                                            <option value="{{ $u->id }}" {{ isset($u_id)?$u_id==$u->id?'selected':'':''  }}>{{ $u->name}}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                            <div class="form-group">
+                                <label class="col-lg-3 control-label">{{ trans('report.rpt_branch_name') }}</label>
+                                <div class="col-lg-7">
+                                    <select class="form-control" id="branch" name="branch">
+                                        <option value="">-</option>
+                                        @foreach($branch as $b)
+                                            <option value="{{ $b->id }}" {{ isset($branch_id)?$branch_id==$b->id?'selected':'':''  }}>{{ $b->branch_name}}</option>
+                                        @endforeach
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-offset-4 col-lg-8">
+                            <button type="submit" class="btn btn-info"><i class="fa fa-search"></i> {{ trans('multiple.m_search') }}</button>
+                            <button class="btn btn-warning" id="printer"><i class="fa fa-print"></i> {{ trans('multiple.m_print') }}</button>
+                            <a id="export" class="btn btn-primary"><i class="fa  fa-sign-out"></i> {{ trans('report.rpt_export') }}</a>
+                            <a id="xexport" class="btn btn-primary"><i class="fa  fa-sign-out"></i> {{ trans('report.xrpt_export') }}</a>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <br/><br/>
+            <div id="printArea" style="clear: both">
+            @include('api.report_header',['co_phone'=>!empty($co_id->co_user) ? $co_id->co_user->phone: ''])
+            <h4 class="sch_title">
+                {{ trans('sidebar.sb_rejected_loans') }}
+                @if(isset($start) && isset($end))
+                    {{ trans('multiple.m_from') }} {{ date("d-M-Y", strtotime($start)) }} {{ trans('multiple.m_to') }} {{ date("d-M-Y", strtotime($end)) }}
+                @else
+                    {{ isset($start)?'Loan rejected on '.date("d-M-Y", strtotime($start)):'' }}
+                    {{ isset($end)?'Loan rejected on '.date("d-M-Y", strtotime($end)):'' }}
+                @endif
+                @foreach($branch as $b)
+                    @if(isset($branch_id))
+                        @if($branch_id==$b->id)
+                            ({{ $b->branch_name }})
+                        @endif
+                    @endif
+                @endforeach
+            </h4>
+                <section id="unseen">
+                    <table class="table table-bordered table-striped table-condensed rejected" id="rejected">
+                        <thead class="th-center">
+                            <tr>
+                                <th rowspan=2 style="vertical-align:middle;">{{ trans('multiple.m_no') }}</th>
+                                <th rowspan=2 style="vertical-align:middle;">{{ trans('customer.cus_customer_name') }}</th>
+                                <th rowspan=2 style="vertical-align:middle;">{{ trans('report.rpt_contract_id') }}</th>
+                                <th rowspan=2 style="vertical-align:middle;">{{ trans('report.rpt_contract_date') }}</th>
+                                <th rowspan=2 style="vertical-align:middle;">{{ trans('report.rpt_loan_amount') }}</th>
+                                <th rowspan=2 style="vertical-align:middle;">{{ trans('report.rpt_int_rate') }}</th>
+                                <th colspan=2 style="vertical-align:middle;">{{ trans('report.rpt_rejected_actual') }}</th>
+                                <th rowspan=2 style="vertical-align:middle;">{{ trans('multiple.m_note') }}</th>
+                            </tr>
+                            <tr>
+                                <th>{{ trans('report.rpt_rejected_date') }}</th>
+                                <th>{{ trans('report.rpt_rejected_by') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <?php
+                                $i=1;
+                                $totalA = 0.0;
+                            ?>
+                            @forelse($loan_rejected as $loan)
+                                <?php
+                                    $totalA += $loan->loan_amount;
+                                ?>
+                                <tr>
+                                    <td align="center">{{ $i }}</td>
+                                    <td>{{ $loan->client->client_name }}</td>
+                                    <td align="center"><a href="{{ route('loan_detail',[$loan->id]) }}">{{ $loan->contract_id }}</a></td>
+                                    <td align="center">{{ date("d-M-Y", strtotime($loan->start_date)) }}</td>
+                                    <td align="right">{{ number_format($loan->loan_amount,2,'.',',') }}</td>
+                                    <td align="center">{{ number_format($loan->interest_rate,2) }}%</td>
+                                    <td align="center">{{ date("d-M-Y", strtotime($loan->rejected_date)) }}</td>
+                                    <td>{{ $loan->user->name }}</td>
+                                    <td>{{ $loan->rejected_note }}</td>
+                                </tr>
+                                <?php $i+=1; ?>
+                            @empty
+                                <tr><td colspan="9">{{ trans('multiple.m_no_result') }}</td></tr>
+                            @endforelse
+                            <tr class="totalBorder"  style="font-weight: bold; text-align: right;">
+                                <td class="bbl br"></td>
+                                <td class="bbl br"></td>
+                                <td class="bbl"></td>
+                                <td class="sh">{{ trans('report.rpt_total') }}</td>
+                                <td align="right">{{ number_format($totalA,2,'.',',') }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                    <div>
+                       @include('partials.pagination',['results'=>$loan_rejected])
+                    </div>
+                </section>
+            </div>
+        </div>
+    </section>
+@endsection
+
+@section('js')
+    <script type="text/javascript" src="{{ asset('theme/js/bootstrap-datepicker/js/bootstrap-datepicker.js',isset($secure) ? $secure : true)}}"></script>
+    <script type="text/javascript" src="{{ asset('js/print.js',isset($secure) ? $secure : true)}}"></script>
+    <script type="text/javascript" src="{{ asset('js/xlsx.full.min.js',isset($secure) ? $secure : true)}}"></script>
+    <script type="text/javascript" src="{{ asset('js/Blob.min.js',isset($secure) ? $secure : true)}}"></script>
+    <script type="text/javascript" src="{{ asset('js/FileSaver.js',isset($secure) ? $secure : true)}}"></script>
+    <script type="text/javascript" src="{{ asset('js/tableexport.js',isset($secure) ? $secure : true)}}"></script>
+    <script type="text/javascript">
+        $(document).ready(function(){
+            $('.dpStart').datepicker({
+                format: 'yyyy-mm-dd',
+                autoclose: true,
+                setDate: new Date()
+            });
+            $('.dpEnd').datepicker({
+                format: 'yyyy-mm-dd',
+                autoclose: true,
+                setDate: new Date()
+            });
+        });
+        $("#export").click(function (event) {
+          var con = confirm("Do you really want to export to CSV file?");
+          if(con == true){
+              new TableExport(document.getElementById('rejected'), {
+                  formats: ['csv'],
+                  filename:"rejected"
+              });
+              $('button.csv').hide().click();
+              $('.tableexport-caption').remove();
+          }
+          event.preventDefault();
+      });
+
+      $("#xexport").click(function (event) {
+            var con = confirm("Do you really want to export to Excel file?");
+            if(con == true){
+                new TableExport(document.getElementById('rejected'), {
+                        formats: ['xlsx'],
+                        filename: 'rejected'
+                    }).formatConfig.xlsx.mimeType = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
+                    $('button.xlsx').hide().click();
+                    $('.tableexport-caption').remove();
+            }
+        });
+
+    </script>
+@endsection

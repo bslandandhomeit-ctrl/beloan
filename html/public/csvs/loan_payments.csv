@@ -1,0 +1,2 @@
+id,loan_id,condition_id,user_id,invoice_number,payment_month,repayment_date,paid_interest,paid_principal,penalty_amount,waived_penalty,repayment_owed,note,late_day,parc_level,status,payment_type,repayment_receipt,reason,action_taken,todo_payment,created_at,updated_at
+412,33,0,45,,1,2014-04-22,220.0600,406.9400,0.0000,0.0000,0.0000,,5,0,1,Cash,,,,0000-00-00,"2015-09-15 21:23:07","2015-09-15 21:23:07"

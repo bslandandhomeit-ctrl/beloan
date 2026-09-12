@@ -1,0 +1,442 @@
+<?php
+if(isset($show) && $show == true){
+    $data = [];
+    $total_amount = 0.00;
+    $data_fee_charge = [];
+    $total_amount_fee = 0.00;
+    $date_expense = [];
+    $total_amount_expense = 0.00;
+
+    $monthly_income = array_fill(1,12,0.00);
+    $monthly_expense = array_fill(1,12,0.00);
+    if(!empty($incomes) && count($incomes) > 0){
+        $label = config('static_data.loan_type');
+        $interest_income = array_fill(1,count($label),0.00);
+        foreach($incomes as $income){
+            if(count($income->payment) > 0){
+                $loan_type = $income->loan_type;
+                if(!isset($interest_income[$loan_type])) $interest_income[$loan_type] = 0.00;
+                foreach($income->payment as $p){
+                    $mon_in[$loan_type][date('n',strtotime($p->repayment_date))] = $p->paid_interest;
+                     $interest_income[$loan_type] += $p->paid_interest + $p->penalty_amount;
+                     $m = date('n',strtotime($p->repayment_date));
+                     $monthly_income[$m] += $p->paid_interest + $p->penalty_amount;
+                }
+            }
+        }
+
+        $total_amount = array_sum($interest_income);
+        foreach($interest_income as $key => $inc){
+            if($inc > 0){
+               $data[] = [
+                    'label'=> $label[$key],
+                    'data'=> $inc
+                ];
+            }
+        }
+    }
+    /* inter */
+    $fee_income = [];
+    $fee_income[0] = 0.0; /* Early Payment */
+    if(!empty($payoff) && count($payoff) > 0){
+        foreach($payoff as $p){
+            $fee_income[0] += $p->payoff_fee;
+            $m = date('n',strtotime($p->payoff_date));
+            $monthly_income[$m] += $p->payoff_fee;
+        }
+    }
+    if(!empty($feecharges) && count($feecharges) > 0){
+        foreach($feecharges as $fc){
+            $key = $fc->charge_type;
+            if(!isset($fee_income[$key])) $fee_income[$key] = 0.00;
+            $fee_income[$key] += $fc->charge_amount;
+            $m = date('n',strtotime($fc->charge_date));
+            $monthly_income[$m] += $fc->charge_amount;
+        }
+
+    }
+
+    $total_amount_fee = array_sum($fee_income);
+    $fee_charge = config('static_data.fee_charge');
+    $fee_label = [0=>' Early Payment'];
+    $fee_label = array_merge($fee_label,$fee_charge);
+    foreach($fee_income as $key => $fin){
+        if($fin > 0){
+           $data_fee_charge[] = [
+                'label' => $fee_label[$key],
+                'data' => $fin
+            ];
+        }
+    }
+
+    /* expense */
+    $expense_fee = [];
+    $expense_fee[0] = 0.00; /* Write Off */
+    if(!empty($writeoff) && count($writeoff) > 0){
+        foreach($writeoff as $wf){
+            $expense_fee[0] += $wf->amount;
+            $m = date('n',strtotime($wf->write_off_date));
+            $monthly_expense[$m] += $wf->amount;
+        }
+    }
+
+    if(!empty($cost) && count($cost)){
+        foreach($cost as $c){
+            if(!isset($expense_fee[$c->cost_type])) $expense_fee[$c->cost_type] = 0.00;
+            $expense_fee[$c->cost_type] += $c->cost_amount;
+            $m = date('n',strtotime($c->cost_date));
+            $monthly_expense[$m] += $c->cost_amount;
+        }
+    }
+
+    $total_amount_expense = array_sum($expense_fee);
+    $cost_type = config('static_data.fee_cost_type');
+    $cost_label = [0=>' Write Off'];
+    $cost_label = array_merge($cost_label,$cost_type);
+    foreach($expense_fee as $key => $ex){
+        if($ex > 0){
+             $date_expense[] = [
+                    'label' => $cost_label[$key],
+                    'data' => $ex
+              ];
+        }
+    }
+}
+
+?>
+@extends('layouts.app')
+
+@section('css')
+    <style type="text/css">
+        .mini-stat-info{
+            min-height: 125px;
+        }
+        .mini-stat-info ul{
+            margin-left: 60px;
+        }
+         .mini-stat-info ul li{
+            margin-top: 5px;
+         }
+    </style>
+@endsection
+
+@section('content')
+<!--mini statistics start-->
+<div class="row">
+    <div class="col-md-4">
+        <div class="mini-stat clearfix">
+            <span class="mini-stat-icon orange"><i class="fa fa-user"></i></span>
+            <div class="mini-stat-info">
+               <span>{{ trans('sidebar.sb_overview') }}</span>
+               <ul>
+                   <li><a href="{{route('company_branch')}}">{{ trans('sidebar.sb_branch_summary') }}</a></li>
+                   <li><a href="{{route('list_client')}}">{{ trans('sidebar.sb_client_summary') }}</a></li>
+                   <li><a href="{{route('list_dealer')}}">{{ trans('sidebar.sb_dealer_summary') }}</a></li>
+                   <li><a href="{{route('list_product')}}">{{ trans('sidebar.sb_product_summary') }}</a></li>
+               </ul>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="mini-stat clearfix">
+           <span class="mini-stat-icon tar"><i class="fa fa-usd"></i></span>
+           <div class="mini-stat-info">
+                <span>{{ trans('sidebar.sb_loans') }}</span>
+                <ul>
+                    <li><a href="{{ route('loan_list') }}">{{ trans('sidebar.sb_loan_payment_summary') }}</a></li>
+                    <li><a href="{{ route('loan_status') }}">{{ trans('sidebar.sb_loan_status_summary') }}</a></li>
+                    <li><a href="{{route('unauthorized_list')}}">{{ trans('sidebar.sb_unauthorized_list') }}</a></li>
+                    <li><a href="{{route('approval_list')}}">{{ trans('sidebar.sb_approved_list') }}</a></li>
+                </ul>
+           </div>
+       </div>
+    </div>
+    <div class="col-md-4">
+        <div class="mini-stat clearfix">
+            <span class="mini-stat-icon pink"><i class="fa  fa-files-o"></i></span>
+            <div class="mini-stat-info">
+                <span>{{ trans('sidebar.sb_report') }}</span>
+                <ul>
+                    {{--<li><a href="{{ route('rpt_profitloss') }}">{{ trans('sidebar.sb_profit_loss_statement') }}</a> </li>--}}
+                    <li><a href="{{ route('rpt_income_statement') }}">{{ trans('sidebar.sb_income_statement') }}</a> </li>
+                    <li><a href="{{ route('rpt_balance_sheet') }}">{{ trans('sidebar.sb_balance_sheet') }}</a> </li>
+                    <li><a href="{{ route('loan_repayment_report') }}">{{ trans('sidebar.sb_loan_repayment') }}</a> </li>
+                    <li><a href="{{ route('irregular_repayment_report', null) }}">{{ trans('sidebar.sb_irregular_repayment') }}</a> </li>
+                </ul>
+            </div>
+        </div>
+    </div>
+    <?php $show = false;?>
+@if(isset($show) && $show == true)
+    <div class="col-md-4">
+        <div class="panel">
+            <header class="panel-heading">
+                {{ trans('sidebar.sb_int_inc_ratio') }} ({{ date('Y') }})
+            </header>
+            <div class="mini-stat clearfix">
+                <div id="pie-chart" class="pie-chart">
+                    <div id="pie-chart" class="pie-chart">
+                    <span style="float: right;">{{ trans('sidebar.sb_total_int_inc_fee') }} (${{ number_format($total_amount,2,'.',',') }})</span>
+                        <div id="pie-chartContainer" style="width: 100%;height:400px; text-align: center;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="panel">
+            <header class="panel-heading">
+                {{ trans('sidebar.sb_com_inc_ratio') }} ({{ date('Y') }})
+            </header>
+            <div class="mini-stat clearfix">
+                <div id="pie-chart" class="pie-chart">
+                <span style="float: right;">{{ trans('sidebar.sb_total_fee_com') }} (${{ number_format($total_amount_fee,2,'.',',') }})</span>
+                    <div id="pie-chart-fee-income" class="pie-chart">
+                        <div id="pie-fee-income" style="width: 100%;height:400px; text-align: center;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-4">
+        <div class="panel">
+            <header class="panel-heading">
+                {{ trans('sidebar.sb_expense') }} ({{ date('Y') }})
+            </header>
+            <div class="mini-stat clearfix">
+                <div id="pie-chart" class="pie-chart">
+                <span style="float: right;">{{ trans('sidebar.sb_total_expense') }} (${{  number_format($total_amount_expense,2,'.',',') }})</span>
+                    <div id="pie-chart-expense" class="pie-chart">
+                        <div id="pie-expense" style="width: 100%;height:400px; text-align: center;"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-12">
+        <div class="panel">
+            <header class="panel-heading">
+                {{ trans('sidebar.sb_int_inc_exp') }} ({{ date('Y') }})
+            </header>
+            <div class="panel-body" style="position: relative;">
+                <table style="position:absolute;top:0;right:35px;;font-size:smaller;color:#545454">
+                    <tbody>
+                        <tr>
+                            <td class="legendColorBox">
+                                <div style="border:1px solid #ccc;padding:1px">
+                                    <div style="width:4px;height:0;border:5px solid rgb(121,209,207);overflow:hidden">
+                                    </div>
+                                </div>
+                            </td>
+                            <td class="legendLabel">&nbsp;{{ trans('sidebar.sb_int_inc') }}</td>
+                        </tr>
+                        <tr>
+                            <td class="legendColorBox">
+                                <div style="border:1px solid #ccc;padding:1px">
+                                    <div style="width:4px;height:0;border:5px solid rgb(230,122,119);overflow:hidden"></div>
+                                </div>
+                            </td>
+                            <td class="legendLabel">&nbsp;{{ trans('sidebar.sb_int_exp') }}</td>
+                        </tr>
+                    </tbody>
+                </table>
+                <br/><br/>
+                <div class="chartJS">
+                    <canvas id="bar-chart-js" height="250" width="800" ></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-12">
+        <div class="panel">
+            <header class="panel-heading">
+                 {{ trans('sidebar.sb_repayment_plan') }}
+            </header>
+            <div class="panel-body" style="position: relative;">
+                <a href="{{ route('rpt_repayment_plan') }}" class="btn btn-primary"><i class="fa fa-money"></i>&nbsp; {{ trans('report.rpt_view_repayment_plan') }}</a>
+            </div>
+        </div>
+    </div>
+
+@endif
+
+
+<div class="col-md-12">
+    <div class="panel">
+        <header class="panel-heading">
+             {{ trans('sidebar.sb_unauthorized_records') }}
+        </header>
+        <div class="panel-body">
+            <table class="table">
+                <tr>
+                    <td width="300"><a href="{{ route('list_client') }}?status=0">{{ trans('multiple.client') }}</a></td>
+                    <td><span class="badge">{{$client_count}}</span></td>
+                </tr>
+
+                <tr>
+                    <td><a href="{{ route('client_loan_account') }}?status=0">{{ trans('multiple.client_loan_account') }}</a></td>
+                    <td><span class="badge">{{$client_loan_account_count}}</span></td>
+                </tr>
+
+                <tr>
+                    <td><a href="{{ route('loan_status') }}?status=1">{{ trans('multiple.loan') }}</a></td>
+                    <td><span class="badge">{{$loan_count}}</span></td>
+                </tr>
+
+                <tr>
+                    <td><a href="{{ route('drawdown_account') }}?status=0">{{ trans('multiple.drawdown_account') }}</a></td>
+                    <td><span class="badge">{{$drawdown_account_count}}</span></td>
+                </tr>
+
+                <tr>
+                    <td><a href="{{ route('getRepaymentDraft') }}">{{ trans('multiple.repayment_draft') }}</a></td>
+                    <td><span class="badge">{{$repayment_count}}</span></td>
+                </tr>
+
+                <tr>
+                    <td><a href="{{ route('view_journal') }}?status=0">{{ trans('multiple.add_journal') }}</a></td>
+                    <td><span class="badge">{{$add_journal_count}}</span></td>
+                </tr>
+
+                <tr>
+                    <td><a href="{{ route('loan_trans') }}?action=charge">{{ trans('multiple.l_charge') }}</a></td>
+                    <td><span class="badge">{{$charge_count}}</span></td>
+                </tr>
+
+                <tr>
+                    <td><a href="{{ route('loan_trans') }}?action=cost">{{ trans('multiple.l_cost') }}</a></td>
+                    <td><span class="badge">{{$cost_count}}</span></td>
+                </tr>
+
+                <tr>
+                    <td><a href="{{ route('loan_trans') }}?action=writeoff">{{ trans('multiple.l_writeoff') }}</a></td>
+                    <td><span class="badge">{{$writeoff_count}}</span></td>
+                </tr>
+
+            </table>
+        </div>
+    </div>
+</div>
+
+<!--mini statistics end-->
+
+@endsection
+@section('js')
+   @if(isset($show) && $show == true)
+   <script type="text/javascript" src="{{asset('theme/js/chart-js/Chart.js' ,isset($secure) ? $secure : true)}}"></script>
+   <script language="javascript" type="text/javascript" src="/js/jquery_002.js"></script>
+   	<script language="javascript" type="text/javascript" src="/js/jquery_003.js"></script>
+    <script type="text/javascript">
+        $(function() {
+            function labelFormatter(label, series) {
+                 var labelNumber = Math.round(series.data[0][1] * 100) / 100;
+                 var labelPercent = Math.round(series.percent * 100) / 100;
+            	return "<div style='font-size:8pt; text-align:center; padding:2px; color:white;'>" + label + "<br/>"+ labelNumber +" (" + labelPercent + "%)</div>";
+            }
+            var pie_income = $("#pie-chart #pie-chartContainer");
+            var pie_fee_income = $("#pie-chart-fee-income #pie-fee-income");
+            var pie_expense = $("#pie-chart-expense #pie-expense");
+            var data = [];
+            @if(count($data) > 0)
+                data = <?php echo json_encode($data);?>;
+            @endif
+            var fee_data = [];
+            @if(count( $data_fee_charge) > 0)
+                fee_data = <?php echo json_encode($data_fee_charge);?>;
+            @endif
+            var expense_data = [];
+            @if(count( $date_expense) > 0)
+               expense_data = <?php echo json_encode($date_expense);?>;
+            @endif
+            var options = {
+                series: {
+                    pie: {
+                        show: true,
+                        label: {
+                            show:true,
+                            radius: 1/2,
+                            formatter: labelFormatter,
+                            background: {
+                                opacity: 0.5
+                            }
+                        }
+                    }
+                },
+                legend: {
+                    show: false
+                },
+                grid: {
+                    hoverable: false,
+                    clickable: true
+                },
+                colors: ["#94BEE0", "#D9DD81", "#E67A77","#747ddd","#669aaa","#aa7765"]
+
+            };
+            $.plot(pie_income, data, options);
+            $.plot(pie_fee_income, fee_data, options);
+            $.plot(pie_expense, expense_data, options);
+            $(window).on('resize', function(){
+                pie_income.unbind();
+                pie_fee_income.unbind();
+                pie_expense.unbind();
+                $.plot(pie_income, data, options);
+                $.plot(pie_fee_income, fee_data, options);
+                $.plot(pie_expense, expense_data, options);
+            });
+        });
+        $(function(){
+            var t;
+            function size(animate){
+                if (animate == undefined){
+                    animate = false;
+                }
+                clearTimeout(t);
+                t = setTimeout(function(){
+                    $("#bar-chart-js").each(function(i,el){
+                        $(el).attr({
+                            "width":$(el).parent().width(),
+                            "height":$(el).parent().outerHeight()
+                        });
+                    });
+                    redraw(animate);
+                    var m = 0;
+                    $(".chartJS").height("");
+                    $(".chartJS").each(function(i,el){ m = Math.max(m,$(el).height()); });
+                    $(".chartJS").height(m);
+                }, 30);
+            }
+            $(window).on('resize', function(){ size(false); });
+
+            function redraw(animation){
+                var options = {};
+                if (!animation){
+                    options.animation = true;
+                } else {
+                    options.animation = false;
+                }
+                var dataJson1 = <?php echo json_encode($monthly_income);?>;
+                var dataJson2 = <?php echo json_encode($monthly_expense);?>;
+                var data1 =  $.map(dataJson1, function(el) { return el; });
+                var data2 =  $.map(dataJson2, function(el) { return el; });
+                var barChartData = {
+                    labels : ["January","February","March","April","May","June","July","August","September","October","November","December"],
+                    datasets : [
+                        {
+                            fillColor : "#79D1CF",
+                            strokeColor : "#79D1CF",
+                            data : data1
+                        },
+                        {
+                            fillColor : "#E67A77",
+                            strokeColor : "#E67A77",
+                            data : data2
+                        }
+                    ]
+                };
+                var myLine = new Chart(document.getElementById("bar-chart-js").getContext("2d")).Bar(barChartData);
+            }
+            size(true);
+        });
+    </script>
+   @endif
+@endsection

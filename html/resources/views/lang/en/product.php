@@ -1,0 +1,28 @@
+<?php
+
+return array (
+  'p_product_id' => 'Product ID',
+  'p_product_name' => 'Product Name',
+  'p_product_category' => 'Category',
+  'p_product_brand' => 'Brand',
+  'p_product_model' => 'Model',
+  'p_product_serial' => 'Serial Number',
+  'p_product_engine' => 'Engine Number',
+  'p_product_price' => 'Price',
+  'p_product_year' => 'Year',
+  'p_product_add_category' => 'Add Category',
+  'p_product_add_brand' => 'Add Brand',
+  'p_product_edit' => 'Edit Product',
+  'p_product_return' => 'Return Product',
+  'p_product_detail' => 'Detail Product',
+  'p_product_info' => 'Product Information',
+  'p_product_records' => 'Product Records',
+  'p_loan_reference' => 'Loan Reference',
+  'p_date' => 'Date',
+  'p_action_type' => 'Action Type',
+  'p_location' => 'Location',
+  'p_price' => 'Price',
+  'p_remark' => 'Remark',
+  'p_type' => 'Action Type',
+  'p_product_update' => 'Product Update',
+);

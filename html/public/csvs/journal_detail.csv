@@ -1,0 +1,2 @@
+id,journal_id,coa_id,reference,branch_code,p_debit,p_credit,debit,credit,b_debit,b_credit,description
+9,5,2273,R160001,100,0.00,0.00,30000.00,0.00,30000.00,0.00,aaa

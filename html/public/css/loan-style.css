@@ -1,0 +1,550 @@
+@media print{
+    .payoff tbody tr:last-child td:nth-child(1),
+    .payoff tbody tr:last-child td:nth-child(2),
+    .payoff tbody tr:last-child td:nth-child(3),
+    .payoff tbody tr:last-child td:nth-child(4){
+        border-left: hidden !important;
+        border-bottom: hidden !important;
+    }
+    .closed tbody tr:last-child td:nth-child(1),
+    .closed tbody tr:last-child td:nth-child(2),
+    .closed tbody tr:last-child td:nth-child(3){
+        border-left: hidden !important;
+        border-bottom: hidden !important;
+    }
+    .completed tbody tr:last-child td:nth-child(1),
+    .completed tbody tr:last-child td:nth-child(2),
+    .completed tbody tr:last-child td:nth-child(3){
+        border-left: hidden !important;
+        border-bottom: hidden !important;
+    }
+    .rejected tbody tr:last-child td:nth-child(1),
+    .rejected tbody tr:last-child td:nth-child(2),
+    .rejected tbody tr:last-child td:nth-child(3){
+        border-left: hidden !important;
+        border-bottom: hidden !important;
+    }
+    .rejected{
+        font-size: 8px !important;
+    }
+    .rejected thead th{
+        padding: 2px !important;
+    }
+    .payoff{
+        font-size: 8px !important;
+    }
+    .payoff thead th{
+        padding: 2px !important;
+    }
+    .cash_deposit{
+        font-size: 8px !important;
+    }
+    .cash_deposit thead tr th{
+        padding: 2px !important;
+    }
+    .writeoff{
+        font-size: 8px !important;
+    }
+    .writeoff thead th{
+        padding: 2px !important;
+    }
+    .closed{
+        font-size: 8px !important;
+    }
+    .closed thead th{
+        padding: 2px !important;
+    }
+    .closed tbody tr td a[href]:after{
+        content: none !important;
+    }
+    .completed{
+        font-size: 8px !important;
+    }
+    .completed thead th{
+        padding: 2px !important;
+    }
+    .completed tbody tr td a[href]:after{
+        content: none !important;
+    }
+    .disbursement{
+        font-size: 8px !important;
+    }
+    .disbursement thead th{
+        padding: 2px !important;
+    }
+    .disbursement tbody tr td a[href]:after{
+        content: none !important;
+    }
+    .profitLoss thead th{
+        padding: 2px !important;
+    }
+    .profitLoss{
+        font-size: 10px !important;
+    }
+    .income_statement{
+        font-size: 10px !important;
+    }
+    .balance_sheet thead th{
+        padding: 2px !important;
+    }
+    .balance_sheet thead th{
+        font-size: 10px !important;
+    }
+    .balance_sheet_accounting thead th{
+        padding: 2px !important;
+    }
+    .balance_sheet_accounting{
+        width: 100% !important;
+        font-size: 10px !important;
+    }
+    .income_statement_is{
+        width: 100% !important;
+        font-size: 10px !important;
+    }
+    .income_statement_is thead tr td{
+        padding: 2px !important;
+    }
+    .prepare{
+        visibility: visible !important;
+    }
+    .detail-irregular tbody tr td a[href]:after{
+        content: none !important;
+    }
+    .irregular tbody tr td a[href]:after{
+        content: none !important;
+    }
+    .irregular{
+        font-size: 8px !important;
+    }
+    .irregular thead th{
+        padding: 2px !important;
+    }
+    .irregular thead .nb, .irregular tbody .nb{
+        display: none !important;
+    }
+    .reschedule{
+        font-size: 8px !important;
+    }
+    .reschedule thead th{
+        padding: 2px !important;
+    }
+    .reschedule .bNone{
+        border-left: hidden !important;
+        border-right: hidden !important;
+        border-top: hidden !important;
+    }
+    .reschedule .bShow{
+        border-left: 1px solid #ddd !important;
+        border-right: 1px solid #ddd !important;
+    }
+    .nav-tabs li{
+        display: none !important;
+    }
+    .loan-repayment tbody tr td a[href]:after{
+        content: none !important;
+    }
+    .loan-repayment{
+        font-size: 8px !important;
+    }
+    .loan-repayment thead th{
+        padding: 2px !important;
+    }
+    .summary{
+        font-size: 10px !important;
+    }
+    .summary thead th{
+        padding: 2px !important;
+    }
+    .summary tbody tr td a[href]:after{
+        content: none !important;
+    }
+    .transaction tbody tr td a[href]:after{
+        content: none !important;
+    }
+
+    tr .remove-column{
+        display: none !important;
+    }
+    #hideSummary li{
+        display: none !important;
+    }
+    .income_title{
+        font-size: 14px !important;
+        clear: both;
+    }
+    .journal{
+        font-size: 10px !important;
+    }
+    .journal thead th{
+        padding: 2px !important;
+    }
+    .repayment-plan{
+        font-size: 7px !important;
+    }
+    .repayment-plan thead th{
+        padding: 2px !important;
+    }
+    /*
+    .repayment-plan thead tr.header th:last-child{
+        display: none;
+    }
+    .repayment-plan thead tr th.hide-content{
+        display: none;
+    }
+    .repayment-plan tbody tr td:nth-child(11),.repayment-plan tbody tr td:nth-child(12),
+    .repayment-plan tbody tr td:nth-child(13),.repayment-plan tbody tr td:nth-child(14),
+    .repayment-plan tbody tr td:nth-child(15){
+        display: none !important;
+    }
+    */
+    .repayment-plan tr.head-1 th:first-child{
+        width: 70px !important;
+    }
+    .hide-fthfoot{
+        display: none !important;
+    }
+    .floatThead-floatContainer table{
+        display: none !important;
+    }
+    .collection{
+        font-size: 8px !important;
+    }
+    .collection thead tr th{
+        padding: 2px !important;
+    }
+    .toto-cash{
+        font-size: 10px !important;
+    }
+    .chart_account .na{
+        display: none !important;
+    }
+    .trial_balance thead th{
+        padding: 2px !important;
+    }
+    .trial_detail thead tr th{
+        padding: 2px !important;
+    }
+    #preview .btnHide a{
+        display: none !important;
+    }
+    .payoff_repayment thead tr th, .payoff_repayment tbody tr th{
+        padding: 2px;
+    }
+    .dealerTable{
+        font-size: 10px;
+    }
+    .dealerTable thead th, .dealerTable tbody tr td{
+        padding: 2px !important;
+    }
+    .dealerTable thead th:nth-child(2),.dealerTable thead th:nth-child(10),
+    .dealerTable thead th:nth-child(11),.dealerTable tbody tr td:nth-child(2),
+    .dealerTable tbody tr td:nth-child(10),.dealerTable tbody tr td:nth-child(11){
+        display: none;
+    }
+    .bank_list{
+        font-size: 10px;
+    }
+    .bank_list thead th, .bank_list tbody tr td{
+        padding: 2px;
+    }
+    .bank_list thead th:nth-child(5),.bank_list thead th:nth-child(6), .bank_list tbody tr td:nth-child(5),.bank_list tbody tr td:nth-child(6){
+        display: none !important;
+    }
+    .table-bordered>tbody>tr>td, .table-bordered>tbody>tr>th, .table-bordered>tfoot>tr>td, .table-bordered>tfoot>tr>th, .table-bordered>thead>tr>td, .table-bordered>thead>tr>th {
+        border: 1px solid #000000 !important;
+        color: #000000 !important;
+    }
+    .loan_collection_summary{
+        font-size: 10px !important;
+    }
+    .loan_collection_summary thead tr th{
+        padding: 2px !important;
+    }
+    div.page{
+        visibility: hidden;
+    }
+
+    .area_report_breaker{
+        font-size:12px;
+    }
+}
+.prepare{
+    visibility: hidden;
+}
+.red-color
+{
+    color: #ff0000;
+}
+.primary-color
+{
+    color: #1FB5AD;
+}
+.danger-color
+{
+    color:#FA8564;
+}
+.info-color{
+    color:#57C8F1;
+}
+.fa-action{
+    font-size: 15px;
+}
+.text-center{
+    text-align: center;
+}
+.pad-rl-5{
+    padding-left: 5px;
+    padding-right: 5px;
+}
+.profile{
+    position: relative;
+    width: 185px;
+    height: 185px;
+    margin: -95px auto 0px;
+    list-style: outside none none;
+}
+.profile img{
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    border: 10px solid #FFF;
+    background: #FFF none repeat scroll 0% 0%;
+}
+td.details table tr td {
+    border: 1px solid #ddd;
+}
+td.details table tbody tr:last-child{
+    background-color: #AEAFB0;
+    font-weight: bold;
+    color: #000000;
+}
+td.details{
+    background-color: #eee !important;
+}
+.bbl{
+    border-left: hidden !important;
+    border-bottom: hidden !important;
+}
+.br{
+    border-right: hidden !important;
+}
+.loan-list tr td:nth-child(2) a{
+    color: #337ab7;
+    text-decoration: underline !important;
+}
+.bNone{
+    border-left: hidden !important;
+    border-right: hidden !important;
+    border-top: hidden !important;
+}
+.t-bold{
+    font-weight: 700;
+}
+.bShow{
+    border-left: 1px solid #ddd !important;
+    border-right: 1px solid #ddd !important;
+}
+.bText{
+    text-align: center !important;
+}
+.loan-list thead > tr > th {
+    padding: 8px;
+}
+.th-center tr th{
+    text-align: center;
+}
+
+.textWrapper{
+    width: 40px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    word-wrap: break-word;
+}
+.ptl-3{
+    padding-right: 0px;
+    padding-bottom: 0px;
+    padding-top: 3px;
+    padding-left: 3px;
+}
+.mt-1{
+    margin-top: 1em;
+}
+.pl-1{
+    padding-left: 2em !important;
+}
+.mb-0{
+    margin-bottom: 0px;
+}
+.w-50{
+    width: 50%;
+}
+.w-40{
+    width: 40%;
+}
+.ver-top>div{
+    vertical-align: top !important;
+}
+.ver-top>div>label.error{
+    display: block !important;
+}
+.tb-row{
+    width:40%;
+    height:40px;
+    line-height:40px;
+    margin-bottom:1em;
+    padding-left: 15px;
+}
+.tb-row div{
+    border:1px solid #ddd;
+}
+.tb-row div:nth-child(2){
+    border-left: 0;
+    text-align: center;
+}
+.tb-row div:nth-child(3){
+    border: 0;
+}
+.input-append.date .add-on .btn{
+    height: 30px;
+}
+.date .btn{
+    margin-right: 0px;
+}
+.center-table td,
+.center-table th
+{
+    text-align:center;
+    vertical-align:middle;
+}
+.md-modify {
+    width: 60%;
+    min-width: 600px;
+    margin: 30px auto;
+}
+.small-imag{
+    width: 30px;
+    height: 22px;
+}
+.width100{
+    width: 100%;
+    max-width: 100%;
+}
+.client-view,.client-view:hover{
+    color: #005580;
+    text-decoration: underline;
+}
+td.none-border{
+    border-top: none!important;
+    border-bottom: none !important;
+}
+td.no-border{
+    border-bottom: none!important;
+}
+td.border{
+    border-top: none !important;
+}
+.ox-scroll
+{
+    overflow-x: auto;
+}
+
+.cmxform .form-group select.error{
+    border-color:#B94A48 !important;
+}
+.btn-file {
+    position: relative;
+    overflow: hidden;
+}
+.btn-file input[type=file] {
+    position: absolute;
+    top: 0;
+    right: 0;
+    min-width: 100%;
+    min-height: 100%;
+    font-size: 100px;
+    text-align: right;
+    filter: alpha(opacity=0);
+    opacity: 0;
+    outline: none;
+    background: white;
+    cursor: inherit;
+    display: block;
+}
+a:hover{
+    text-decoration: underline;
+}
+.no-hover{
+    cursor: default;
+}
+.listPhoto{
+    width: 40px;
+    height: 40px;
+}
+.cf tbody tr td:nth-child(6){
+    padding: 0;
+    text-align: center;
+    vertical-align: middle;
+}
+.cf tbody tr td:nth-child(7){
+    padding: 0;
+    text-align: center;
+    vertical-align: middle;
+}
+.cf tbody tr td:nth-child(4){
+    padding: 10px;
+    text-align: center;
+    vertical-align: middle;
+}
+.fc-toolbar{
+    margin-bottom: 5em;
+}
+.label{
+    padding: 3px 10px;
+}
+.label-mark{
+    color: #FFF;
+    background-color:#1FB5AD;
+    cursor: default;
+}
+.fc td{
+    vertical-align: middle;
+}
+.fc-sun{
+    background-color: #EBCCD1;
+}
+#col th{
+    vertical-align: middle;
+}
+@-moz-document url-prefix() {
+    .fi_title {
+        margin-bottom: 25px;
+    }
+}
+#frmAccount label.error {
+    display: inline;
+    margin: 5px 0;
+    color: #B94A48;
+    font-weight: 400;
+}
+#frmAccount input.error{
+    border-color: #B94A48 !important;
+}
+
+th[rowspan] {
+    vertical-align: middle !important;
+    text-align: left;
+}
+.pagi_label{
+    float: left;
+    padding-right: 10px;
+    padding-top: 10px;
+}
+
+.acc5 {
+    background: #efefef !important;
+}
+
+.bg-danger {
+    background-color: #f2dede !important;
+}

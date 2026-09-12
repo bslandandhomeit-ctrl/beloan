@@ -1,0 +1,2 @@
+id,client_type,client_name,client_khmer_name,gender,nationality,birth_date,birth_place,phone1,phone2,address,city,photo,signature,location_latitude,location_longitude,job,work_place,card_number,card_date,card_issued_by,card_expired_date,letter_type,letter_no,expired_date,status,user_id,created_at,updated_at
+278,Individual,"Customer Test",,Male,Khmer,1990-03-01,,354-345-435,,"Kampong Speu, Kaka","Kampong Speu",,,,,,,,,,,,,,1,2,"2016-04-06 09:45:14","2016-04-06 09:45:14"

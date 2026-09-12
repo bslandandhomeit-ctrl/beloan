@@ -1,0 +1,288 @@
+@extends('layouts.app')
+
+@section('css')
+    <link rel="stylesheet" type="text/css" href="{{ asset('/css/loan-style.css',isset($secure) ? false : false) }}"/>
+    <link rel="stylesheet" type="text/css" href="{{ asset('/css/client.css',isset($secure) ? false : false) }}"/>
+    <link rel="stylesheet" type="text/css" href="{{ asset('theme/js/bootstrap-datepicker/css/datepicker.css',isset($secure) ? false : false)}}" />
+@endsection
+@section('content')
+    <section class="panel">
+        <header class="panel-heading">
+            {{ trans('report.rpt_balance_sheet_report_as_at') }} {{ date('d-F-Y') }}
+        </header>
+
+        <div class="panel-body">
+            <div class="position-center" style="width:100%;">
+                <form role="form" class="cmxform form-horizontal" method="get" action="{{ route('rpt_balance_sheet') }}">
+                    <div class="row">
+                        <label class="control-label col-md-1">{{ trans('multiple.m_start_date') }}</label>
+                        <div class="col-md-2">
+                            <div data-date-viewmode="years" data-initialize="datepicker" data-date-format="yyyy/mm/dd" class="input-append date start">
+                                <input type="text" name="start" size="16" class="form-control" value="{{ $start?$start:old('start') }}">
+                                    <span class="add-on birhtdateDatepicker ptl-3">
+                                        <button class="btn btn-primary" type="button"><i class="fa fa-calendar"></i></button>
+                                  </span>
+                            </div>
+                        </div>
+                        <label class="control-label col-md-1">{{ trans('multiple.m_end_date') }}</label>
+                        <div class="col-md-2">
+                            <div data-date-viewmode="years" data-initialize="datepicker" data-date-format="yyyy/mm/dd" class="input-append date end">
+                                <input type="text" name="end" size="16" class="form-control" value="{{ $end?$end:old('end') }}">
+                                    <span class="add-on birhtdateDatepicker ptl-3">
+                                        <button class="btn btn-primary" type="button"><i class="fa fa-calendar"></i></button>
+                                  </span>
+                            </div>
+                        </div>
+                    </div>
+                    <br/>
+                    <div class="row">
+                        <div class="col-md-offset-4 col-md-7">
+                            <button type="submit" class="btn btn-info"><i class="fa fa-search"></i> {{ trans('multiple.m_search') }}</button>
+                            <button class="btn btn-warning" id="printer"><i class="fa fa-print"></i> {{ trans('multiple.m_print') }}</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="row">
+                <div class="col-md-offset-9 col-md-1">
+                    <div class="radio">
+                        <label><input type="radio" name="cur" value="1" checked>Riel</label>
+                    </div>
+                    <div class="radio">
+                        <label><input type="radio" name="cur" value="2">Dollar</label>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <label class="control-label">{{ trans('report.rpt_exchange_rate') }}</label>
+                    <input type="text" class="form-control" name="exchange_rate" id="ex" value="4000" onkeyup="exchange(this,0)">
+                    <label>in million riels</label>
+                </div>
+            </div><br/>
+            <div id="printArea">
+                @include('api.report_header',['co_phone'=>!empty($co_id->co_user) ? $co_id->co_user->phone: ''])
+                <h4 class="sch_title">{{ trans('report.rpt_balance_sheet_report_as_at') }}&nbsp;{{ date('d-F-Y') }}</h4>
+                <section id="unseen" style="clear: both">
+                    <table class="table table-bordered table-striped table-condensed balance_sheet">
+                        <thead>
+                            <tr>
+                                <th style="font-weight: bold; text-transform: uppercase;">{{ trans('report.rpt_assets') }}</th>
+                                <th>{{ trans('report.rpt_riel') }}</th>
+                                <th>{{ trans('report.rpt_other_currencies_translated_into_riel') }}</th>
+                                <th>{{ trans('report.rpt_total_in_riel') }}</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td colspan="4">1 Loan and Advances to customers</td>
+                            </tr>
+                            <tr>
+                                <?php
+                                    $principal = 0.0;
+                                    $total_principal = 0.0;
+                                    $total_paid_principal  = 0.0;
+                                    $total_paid_interest = 0.0;
+                                    $total_asset = 0.0;
+                                    $total_liability = 0.0;
+                                    $total_penalty = 0.0;
+                                    $total_lib_and_equity = 0.0;
+                                    $exchange_rate = 4000;
+                                    $divide_million = 1000000;
+                                ?>
+                                @if(!empty($loans) && count($loans) > 0)
+                                    @foreach($loans as $l)
+                                        <?php
+                                            $payment = $l->payment;
+                                            if(!empty($payment) && count($payment) > 0){
+                                                foreach($payment as $p){
+                                                    $total_paid_principal += $p->paid_principal;
+                                                    $total_paid_interest += $p->paid_interest;
+                                                    $total_penalty += $p->penalty_amount;
+                                                }
+                                            }
+                                            $principal += $l->loan_amount;
+                                            $total_principal = $principal - $total_paid_principal;
+                                        ?>
+                                    @endforeach
+                                @endif
+                                <td class="pl-1">1.1- Total loans outstanding</td>
+                                <td>{{ number_format(0,2,'.',',') }}</td>
+                                <td class="principal_riel">{{ number_format($total_principal * $exchange_rate / $divide_million,2,'.',',') }}</td>
+                                <td class="principal_riel">{{ number_format($total_principal * $exchange_rate / $divide_million,2,'.',',') }}</td>
+                            </tr>
+                            <tr>
+                                <?php
+                                    $total_write_off = 0.0;
+                                ?>
+                                @if(!empty($writeoff) && count($writeoff) > 0)
+                                    @foreach($writeoff as $w)
+                                        <?php
+                                         $total_write_off += $w->amount;
+                                         ?>
+                                    @endforeach
+                                @endif
+                                <td class="pl-1">1.2- Less: Loan loss reserve</td>
+                                <td>{{ number_format(0,2,'.',',') }}</td>
+                                <td class="write_off_riel">{{ number_format($total_write_off * $exchange_rate / $divide_million,2,'.',',') }}</td>
+                                <td class="write_off_riel">{{ number_format($total_write_off * $exchange_rate / $divide_million,2,'.',',') }}</td>
+                            </tr>
+                            <tr>
+                                <td class="pl-1">1.3- Interest receivable (Net)</td>
+                                <td>{{ number_format(0,2,'.',',') }}</td>
+                                <td class="interest_riel">{{ number_format($total_paid_interest * $exchange_rate / $divide_million,2,'.',',') }}</td>
+                                <td class="interest_riel">{{ number_format($total_paid_interest * $exchange_rate / $divide_million,2,'.',',') }}</td>
+                            </tr>
+                            <tr>
+                                <?php
+                                    $total_fee_charge = 0.0;
+                                    $total_payoff_fee = 0.0;
+                                    $non_interest_receive = 0.0;
+                                ?>
+                                <?php
+                                if(!empty($fee_charge)){
+                                    foreach($fee_charge as $charge){
+                                        $total_fee_charge += $charge->charge_amount;
+                                    }
+                                }
+
+                                if(!empty($payoff)){
+                                    foreach($payoff as $pf){
+                                        $total_payoff_fee += $pf->payoff_fee;
+                                    }
+                                }
+                                $non_interest_receive = $total_fee_charge + $total_payoff_fee + $total_penalty;
+                                ?>
+
+                                <td class="pl-1">1.4- Non-Interest receivable (Net)</td>
+                                <td>{{ number_format(0,2,'.',',') }}</td>
+                                <td class="fee_charge_riel">{{ number_format($non_interest_receive * $exchange_rate / $divide_million,2,'.',',') }}</td>
+                                <td class="fee_charge_riel">{{ number_format($non_interest_receive * $exchange_rate / $divide_million,2,'.',',') }}</td>
+                            </tr>
+                            <tr>
+                                <?php
+                                    $total_asset = $total_principal + $total_paid_interest + $total_write_off + $total_fee_charge;
+                                ?>
+                                <td style="font-weight: bold;">TOTAL ASSETS</td>
+                                <td>{{ number_format(0,2,'.',',') }}</td>
+                                <td class="asset_riel">{{ number_format($total_asset * $exchange_rate / $divide_million,2,'.',',') }}</td>
+                                <td class="asset_riel">{{ number_format($total_asset * $exchange_rate / $divide_million,2,'.',',') }}</td>
+                            </tr>
+                            <tr>
+                                <td colspan="4"></td>
+                            </tr>
+                            <tr>
+                                <td style="font-weight: bold;" colspan="4">LIABILITIES AND EQUITY ACCOUNTS</td>
+                            </tr>
+                            <tr>
+                                <?php
+                                    $total_cost_fee = 0.0;
+                                ?>
+                                <?php
+                                    if(!empty($cost_fee)){
+                                        foreach($cost_fee as $cost){
+                                            $total_cost_fee += $cost->cost_amount;
+                                        }
+                                    }
+                                ?>
+                                <td>2 Liabilities</td>
+                                <td>{{ number_format(0,2,'.',',') }}</td>
+                                <td class="cost_fee_riel">{{ number_format($total_cost_fee * $exchange_rate / $divide_million,2,'.',',') }}</td>
+                                <td class="cost_fee_riel">{{ number_format($total_cost_fee * $exchange_rate / $divide_million,2,'.',',') }}</td>
+                            </tr>
+                            <tr>
+                                <?php $total_liability = $total_cost_fee; ?>
+                                <td style="font-weight: bold;">TOTAL LIABILITIES</td>
+                                <td>{{ number_format(0,2,'.',',') }}</td>
+                                <td class="liability_riel">{{ number_format($total_liability * $exchange_rate / $divide_million,2,'.',',') }}</td>
+                                <td class="liability_riel">{{ number_format($total_liability * $exchange_rate / $divide_million,2,'.',',') }}</td>
+                            </tr>
+                            <tr>
+                                <td colspan="4"></td>
+                            </tr>
+                            <tr>
+                                <td>3 Equity Accounts</td>
+                                <td>{{ number_format(0,2,'.',',') }}</td>
+                                <td>{{ number_format(0,2,'.',',') }}</td>
+                                <td>{{ number_format(0,2,'.',',') }}</td>
+                            </tr>
+                            <tr>
+                                <td style="font-weight: bold;">TOTAL EQUITY</td>
+                                <td>{{ number_format(0,2,'.',',') }}</td>
+                                <td>{{ number_format(0,2,'.',',') }}</td>
+                                <td>{{ number_format(0,2,'.',',') }}</td>
+                            </tr>
+                            <tr>
+                                <?php $total_lib_and_equity = $total_liability; ?>
+                                <td style="font-weight: bold;">TOTAL LIABILITIES AND EQUITY ACCOUNTS</td>
+                                <td>{{ number_format(0,2,'.',',') }}</td>
+                                <td class="lib_and_equity_riel">{{ number_format($total_lib_and_equity * $exchange_rate / $divide_million,2,'.',',') }}</td>
+                                <td class="lib_and_equity_riel">{{ number_format($total_lib_and_equity * $exchange_rate / $divide_million,2,'.',',') }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </section>
+            </div>
+        </div>
+@endsection
+
+@section('js')
+    <script type="text/javascript" src="{{ asset('theme/js/bootstrap-datepicker/js/bootstrap-datepicker.js',isset($secure) ? false : false)}}"></script>
+        <script type="text/javascript" src="{{ asset('js/print.js',isset($secure) ? false : false)}}"></script>
+        <script type="text/javascript">
+        $('.start').datepicker({
+            format: 'yyyy-mm-dd',
+            autoclose: true,
+            setDate: new Date()
+        });
+        $('.end').datepicker({
+            format: 'yyyy-mm-dd',
+            autoclose: true,
+            setDate: new Date()
+        });
+        var total_principal = <?php echo $total_principal; ?>;
+        var total_write_off = <?php echo $total_write_off; ?>;
+        var total_interest = <?php echo $total_paid_interest; ?>;
+        var total_fee_charge = <?php echo $non_interest_receive; ?>;
+        var total_asset = <?php echo $total_asset; ?>;
+        var total_cost_fee = <?php echo $total_cost_fee; ?>;
+        var total_liability = <?php echo $total_liability; ?>;
+        var total_lib_and_equity = <?php echo $total_lib_and_equity; ?>;
+        var divide_million = 1000000;
+        $('input[type="radio"][name="cur"]').change(function(){
+            var $obj = $('input[type="text"][name="exchange_rate"]').get(0);
+            var ind = parseInt($(this).val());
+            $.each($('table th'),function(){
+                var lbl = $(this).html();
+                if(ind == 1){
+                    $(this).html(lbl.replace('Dollar','Riel'));
+                }else{
+                    $(this).html(lbl.replace('Riel','Dollar'));
+                }
+            });
+            exchange($obj, ind);
+        });
+        function exchange(input,cur){
+            if(cur == 0){
+                cur = parseInt($('input[type="radio"][name="cur"]:checked').val());
+            }
+            var rate = isNaN(parseFloat(input.value))?0:parseFloat(input.value);
+            var temp = cur==1?(rate / 1000000):1;
+
+            var cal_total_principal = total_principal * temp;
+            var cal_total_write_off = total_write_off * temp;
+            var cal_total_interest = total_interest * temp;
+            var cal_total_fee_charge = total_fee_charge * temp;
+            var cal_total_asset = total_asset * temp;
+            var cal_total_cost_fee = total_cost_fee * temp;
+            var cal_total_liability = total_liability * temp;
+            var cal_total_lib_and_equity = total_lib_and_equity * temp;
+            $(".principal_riel").text(cal_total_principal.toFixed(2));
+            $(".write_off_riel").text(cal_total_write_off.toFixed(2));
+            $(".interest_riel").text(cal_total_interest.toFixed(2));
+            $(".fee_charge_riel").text(cal_total_fee_charge.toFixed(2));
+            $(".asset_riel").text(cal_total_asset.toFixed(2));
+            $(".cost_fee_riel").text(cal_total_cost_fee.toFixed(2));
+            $(".liability_riel").text(cal_total_liability.toFixed(2));
+            $(".lib_and_equity_riel").text(cal_total_lib_and_equity.toFixed(2));
+        }
+        </script>
+@endsection

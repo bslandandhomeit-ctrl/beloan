@@ -1,0 +1,174 @@
+@extends('layouts.app')
+
+@section('css')
+<link rel="stylesheet" type="text/css" href="{{ asset('theme/js/select2/site-demos.css',false) }}" />
+@endsection
+<?php $currency_symbol = config('static_data.currency_symbol'); ?>
+@section('content')
+<section class="panel panel-box-800">
+    @if(Session::has('message'))
+        <div class="alert alert-danger fade in">
+            <button class="close close-sm" data-dismiss="alert">x</button>
+            {{ Session::get('message') }}
+        </div>
+    @endif
+    @if(Session::has('error'))
+                <div class="alert alert-danger fade in">
+                    <button class="close close-sm" data-dismiss="alert">x</button>
+                    {{ Session::get('error') }}
+                </div>
+                @endif
+                @if(Session::has('msg'))
+                <div class="alert alert-success fade in">
+                    <button class="close close-sm" data-dismiss="alert">x</button>
+                    {{ Session::get('msg') }}
+                </div>
+                @endif
+    <header class="panel-heading">
+        {{ trans('sidebar.sb_currency') }}
+    </header>
+    <div class="panel-body">
+        <section id="flip-scroll">
+            @foreach($tellers as $teller)
+                <div class="row">
+                    <div class="col-lg-2">Till Account : <b>{{ $teller->account_name}}</b></div>
+                    <div class="col-lg-2">Branch : <b>{{ $teller->branch_name }}</b></div>
+                    <div class="col-lg-2">Balance : <b>{{ $currency_symbol[$teller->currency_id].number_format($teller->balance, 2)}} </b></div>
+                    <div class="col-lg-2">Status : <b>{{ ($teller->status==1)? 'Closed':'Opened'}} </b></div>
+                </div>
+            @endforeach
+        </section>
+        <hr/>
+        <form action="{{ route('currency_exchange') }}" method="post" class="cmxform form-horizontal" id="myform">
+            <input type="hidden" name="_token" value="{{ csrf_token() }}">
+            <div class="row">
+                <div class="panel panel-default box-border-500">
+                    <div class="panel-heading">
+                        <a class="btn btn-info btn-xs" data-toggle="modal">
+                            {{ trans('sidebar.sb_currency_exchange') }}
+                        </a>
+                    </div>
+                    <div class="panel-body">
+                        <div class="row">
+                            <div class="col-sm-12">
+                                <div class="form-group">
+                                    <label class="control-label col-sm-3">{{ trans('currency.c_from_currency') }}</label>
+                                    <div class="col-md-6">
+                                        <select class="form-control" id="cur_from" name="cur_from">
+                                            <option value="">-</option>
+                                            @foreach($currency as $r)
+                                                <option value="{{ $r->id }}" title="{{ $r->symbol}}">{{ $r->name}}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="control-label col-sm-3">{{ trans('currency.c_to_currency') }}</label>
+                                    <div class="col-md-6">
+                                        <select class="form-control" id="cur_to" name="cur_to">
+                                            <option value="">-</option>
+                                            @foreach($currency as $r)
+                                                <option value="{{ $r->id }}" title="{{ $r->symbol}}">{{ $r->name}}</option>
+                                            @endforeach
+                                        </select>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="col-xs-3 control-label" for="field">{{ trans('report.rpt_amount') }}</label>
+                                    <div class="col-md-6">
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" id="amount" name="amount" />
+                                            <div class="input-group-addon cur_from"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="control-label col-sm-3">{{ trans('currency.c_exchange_amount') }}</label>
+                                    <div class="col-md-6">
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" id="exchange_amount" name="exchange_amount" value="" readonly/>
+                                            <div class="input-group-addon cur_to"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-group">
+                                    <label class="control-label col-sm-3">{{ trans('currency.c_gain_lose') }}</label>
+                                    <div class="col-md-6">
+                                        <div class="input-group">
+                                            <input type="text" class="form-control" id="gain_lose" name="gain_lose" value="" readonly="readonly" />
+                                            <div class="input-group-addon">$</div>
+                                        </div>
+                                    </div>
+                                </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="journal_detail"></div>
+
+                <div class="text-center">
+                    <div class="clear-fix"></div>
+                    <button type="submit" class="btn btn-info"><i class="fa fa-save"></i>&nbsp;{{ trans('multiple.m_save') }}</button>
+                    <button type="button" class="btn btn-danger" onclick="javascript:history.back();"><i class="fa fa-times-circle"></i>&nbsp;{{ trans('multiple.m_cancel') }}</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</section>
+@endsection
+
+@section('js')
+<script type="text/javascript" src="{{ asset('theme/js/jquery-1.11.1.min.js',false) }}"></script>
+<script type="text/javascript" src="{{ asset('theme/js/jquery.validate.min.js',false) }}"></script>
+<script type="text/javascript" src="{{ asset('theme/js/additional-methods.min',false) }}"></script>
+<script>
+$(document).ready(function () {
+    $("body").on("keyup","#amount",function(){
+        $.ajax({
+            url: "{{ route('getExchangeRate') }}",
+            data: "amount="+$('#amount').val()+"&cur_from=" +$('#cur_from').val()+"&cur_to="+$('#cur_to').val(),
+            method: 'get',
+            success: function (res) {
+                res = JSON.parse(res);
+                $("#exchange_amount").val(res.exchange_amount);
+                $("#gain_lose").val(res.dolla);
+
+                //for journal detail
+                $.ajax({
+		            url: "{{ route('getExchangeRateJD') }}",
+		            data: "amount="+$('#amount').val()+"&cur_from=" +$('#cur_from').val()+"&cur_to="+$('#cur_to').val(),
+		            method: 'get',
+		            success: function (res_jd) {
+		                $('#journal_detail').html(res_jd);
+		            }
+
+		        })
+            }
+
+        })
+    });
+
+
+    $("body").on("change","#cur_from",function(){
+        $("#amount").trigger('keyup');
+        title = $(this).find('option:selected').attr('title');
+        $('.cur_from').text(title);
+    });
+
+    $("body").on("change","#cur_to",function(){
+    	$("#amount").trigger('keyup');
+    	title = $(this).find('option:selected').attr('title');
+    	$('.cur_to').text(title);
+    });
+
+});
+    $( "#myform" ).validate({
+      rules: {
+        amount: {
+          required: true,
+          number: true
+        }
+      }
+    });
+</script>
+@endsection
