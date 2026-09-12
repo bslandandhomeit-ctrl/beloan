@@ -970,23 +970,6 @@ class UserController extends Controller {
 //        return $this->view('users.notify',['last_login'=>$last_login])->render();
 //    }
 
-    public function getChangePwd(){
-        if(Request::ajax()){
-            $u_id = Request::input('u_id');
-            $password = Request::input('password');
-            if($u_id>0){
-                $user = User::where('id',$u_id)->first();
-                if(!empty($user)){
-                    $user->password = Hash::make($password);
-                    if($user->save()){
-                        return ['status'=>true];
-                    }
-                }
-            }
-        }
-        return ['status'=>false];
-    }
-
     function reset_session(){
     	Session::flush();
     	return 1;

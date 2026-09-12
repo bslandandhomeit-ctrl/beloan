@@ -269,10 +269,6 @@ Route::group(['middleware' => 'auth', 'prefix' => 'user'], function() {
         'uses' => 'UserController@postEdit'
     ])->where('id', '[0-9]+');
 
-    Route::get('change', [
-        'as' => 'change_pwd',
-        'uses' => 'UserController@getChangePwd'
-    ]);
     Route::post('check', [
         'as' => 'check_user',
         'uses' => 'UserController@check_user'
