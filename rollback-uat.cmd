@@ -18,72 +18,66 @@ if "%~1"=="" (
     echo Recent commits on the UAT server:
     ssh -i "%KEY%" %SRV% "cd %APP% && git log --oneline -12"
     echo.
-    echo Backups available on server:
-    ssh -i "%KEY%" %SRV% "ls -lh /tmp/backup-* 2>/dev/null ^|^| echo '  none'"
-    echo.
     pause
     exit /b 1
 )
 
 echo.
-echo ================= ROLLBACK =================
-echo Target commit: %~1
+echo Rolling back to %~1
 echo.
-echo Server currently running:
+echo Currently running:
 ssh -i "%KEY%" %SRV% "cd %APP% && git log --oneline -1"
 echo.
-echo Target commit details:
+echo Target:
 ssh -i "%KEY%" %SRV% "cd %APP% && git log --oneline -1 %~1" || goto badhash
 echo.
-echo ============================================
-echo Ctrl+C to abort, any key to roll back
+echo Ctrl+C to abort, any key to continue
 pause
 
 echo.
-echo == 1/4 Stash any server-side changes ==
-ssh -i "%KEY%" %SRV% "cd %APP% && git stash list && (git add -A && git commit -m 'state before rollback' >/dev/null 2>&1 || true)"
+echo == Marking log position ==
+ssh -i "%KEY%" %SRV% "sudo -n docker logs %CONTAINER% 2>^&1 ^| wc -l" > "%TEMP%\logmark.txt"
+set /p LOGMARK=<"%TEMP%\logmark.txt"
+echo    log was %LOGMARK% lines
 
 echo.
-echo == 2/4 Checkout target ==
-ssh -i "%KEY%" %SRV% "cd %APP% && git checkout %~1 2>&1 | tail -3" || goto fail
+echo == Checkout ==
+ssh -i "%KEY%" %SRV% "cd %APP% && (git add -A && git commit -m 'state before rollback' >/dev/null 2>&1 || true) && git checkout %~1 2>&1 | tail -2 && sudo -n chmod -R 777 storage" || goto fail
 
 echo.
-echo == 3/4 Fix permissions and clear caches ==
-ssh -i "%KEY%" %SRV% "cd %APP% && sudo -n chmod -R 777 storage && sudo -n rm -rf storage/framework/views/* && sudo -n docker exec %CONTAINER% php artisan config:clear && sudo -n docker restart %CONTAINER%" || goto fail
-echo    Waiting for Apache...
-timeout /t 8 /nobreak >nul
-
-echo.
-echo == 4/4 Verify ==
+echo == Verify page ==
 ssh -i "%KEY%" %SRV% "cd %APP% && git log --oneline -1"
-echo.
-ssh -i "%KEY%" %SRV% "curl -s -m 25 -o /dev/null -w '   HTTP %%{http_code}   bytes %%{size_download}\n' http://localhost:8081/user/login"
-echo.
-ssh -i "%KEY%" %SRV% "sudo -n docker logs %CONTAINER% --tail 100 2>^&1 ^| grep -i 'local.ERROR' ^| tail -3 ; echo '   --- end of errors ---'"
+ssh -i "%KEY%" %SRV% "curl -s -m 25 -o /dev/null -w '   HTTP %%{http_code}   bytes %%{size_download}   %%{time_total}s\n' http://localhost:8081/user/login"
 
 echo.
-echo ==================== ROLLED BACK ====================
-echo Expect HTTP 200 with bytes over 5000.
+echo == New errors since rollback ==
+ssh -i "%KEY%" %SRV% "sudo -n docker logs %CONTAINER% 2>^&1 ^| tail -n +%LOGMARK% ^| grep -i 'local.ERROR\^|Fatal\^|Segmentation' ^| tail -5 ; echo '   --- end ---'"
+
 echo.
-echo NOTE: server is now in detached HEAD. Before the next
-echo deploy, either deploy normally (works fine) or run:
-echo   ssh -i "%KEY%" %SRV%
-echo   cd %APP% ^&^& git checkout uat
+echo == Laravel log ==
+ssh -i "%KEY%" %SRV% "ls -la %APP%/storage/logs/ ^| grep laravel ^|^| echo '   no laravel log today (good)'"
+ssh -i "%KEY%" %SRV% "tail -5 %APP%/storage/logs/laravel-$(date +%%Y-%%m-%%d).log 2>/dev/null ^|^| echo '   (nothing logged today)'"
+
+echo.
+echo == Dirty files on server ==
+ssh -i "%KEY%" %SRV% "cd %APP% && git status --porcelain ^| wc -l"
+
+echo.
+echo ============== ROLLED BACK ==============
+echo Expect: HTTP 200, bytes over 5000, no errors above.
+echo App: http://10.3.0.99:8081
 goto end
 
 :badhash
 echo.
-echo *** Commit %~1 not found on the server ***
-echo Run rollback-uat.cmd with no arguments to list commits.
+echo *** Commit %~1 not found ***
 goto end
 
 :fail
 echo.
-echo *** ROLLBACK FAILED - manual intervention needed ***
+echo *** ROLLBACK FAILED ***
 echo   ssh -i "%KEY%" %SRV%
-echo   cd %APP%
-echo   git log --oneline -10
-echo   git checkout ^<hash^>
+echo   cd %APP% ^&^& git log --oneline -10 ^&^& git checkout ^<hash^>
 
 :end
 echo.
