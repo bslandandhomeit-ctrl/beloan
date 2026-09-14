@@ -99,7 +99,7 @@ return array (
   'sb_list_currencies' => 'Currency Summary',
   'sb_currency_exchange_list' => 'List Currency Exchange',
   'sb_list_currency_rate' => 'List Currency Rate',
-  'sb_till_tra_sum' => 'Till Transaction Summary',
+  'sb_till_tra_sum' => 'Till Transaction Summarys',
   'sb_teller_management' => 'Teller Management',
   'sb_till_acc_sum' => 'Till Account Summary',
   'sb_till_operation' => 'Till Operation',
