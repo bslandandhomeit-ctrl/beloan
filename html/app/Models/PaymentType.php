@@ -3,7 +3,7 @@
 use Illuminate\Database\Eloquent\Model;
 
 class PaymentType extends Model {
-  protected $table = 'tb_payment_types';
+  protected $table = 'payment_types';
   protected $hidden = ['created_at', 'updated_at'];
 
   public static function activeList()
