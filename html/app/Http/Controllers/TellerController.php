@@ -3041,8 +3041,9 @@ class TellerController extends Controller
             DB::commit();
           return $res;
         } catch (\Exception $e) {
-            // var_dump($e->getMessage());
             DB::rollback();
+            \Log::error('postBCashDeposit: '.$e->getMessage().' @ '.$e->getFile().':'.$e->getLine());
+            throw $e;
         }
     }
 

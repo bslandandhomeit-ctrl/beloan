@@ -838,12 +838,12 @@ public function printItemBECash($transaction_id,$description){
 
             $datas['success'] = 1;
             $datas['loan'] = $loan;
-            
+
             return response()->json($datas);
         } catch (Exception $e) {
             DB::rollback();
-            Session::flash('message', 'Save not successfully');
-            return redirect()->back();
+            \Log::error('addBcash: '.$e->getMessage().' @ '.$e->getFile().':'.$e->getLine());
+            return response()->json(['success' => false, 'message' => 'Save not successfully']);
         }
     }
 
