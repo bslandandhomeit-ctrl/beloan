@@ -1294,6 +1294,42 @@ Route::group(['prefix' => 'unit_type'], function() {
         'uses' => 'UnitTypeController@remove_image'
     ])->where('id', '[0-9]+');
 });
+Route::group(['prefix' => 'setting/payment_type'], function() {
+    Route::get('add', [
+        'as' => 'add_payment_type',
+        'uses' => 'PaymentTypeController@create'
+    ]);
+
+    Route::post('add', [
+        'as' => 'add_payment_type',
+        'uses' => 'PaymentTypeController@post_create'
+    ]);
+
+    Route::get('edit/{id}', [
+        'as' => 'edit_payment_type',
+        'uses' => 'PaymentTypeController@getEdit'
+    ])->where('id', '[0-9]+');
+
+    Route::post('edit/{id}', [
+        'as' => 'edit_payment_type',
+        'uses' => 'PaymentTypeController@postEdit'
+    ])->where('id', '[0-9]+');
+
+    Route::get('list', [
+        'as' => 'list_payment_type',
+        'uses' => 'PaymentTypeController@listPaymentType'
+    ]);
+
+    Route::get('disable/{id}', [
+        'as' => 'disable_payment_type',
+        'uses' => 'PaymentTypeController@Disable'
+    ])->where('id', '[0-9]+');
+
+    Route::get('enable/{id}', [
+        'as' => 'enable_payment_type',
+        'uses' => 'PaymentTypeController@Enable'
+    ])->where('id', '[0-9]+');
+});
 Route::group(['prefix' => 'setting/loan_unittype_config'], function() {
     Route::get('add', [
         'as' => 'add_unittype_config',

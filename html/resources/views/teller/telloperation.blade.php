@@ -81,15 +81,7 @@
         var cheifs = null;
         var chiefdata = null;
         var status_flag = '<?php echo $flag;?>';
-        let repay_type = <?php echo json_encode(config('static_data.payment_type'));?>;
-        repay_type = { ...repay_type, 129: '001367567 ABA Revenue-Exp (USD) - BS Property Management (BPM)',
-            130:"001367568 ABA Revenue-Exp (USD) - ESAT Property Management (EPM)",
-            131:"002779699 ABA Revenue-Exp (USD) - Internet Internal Provider (IIP)",
-            132:"000102158 SBILH Revenue (USD) Borey Chaktomuk City (BCC)",
-            133:"000159190 SBILH Revenue (USD) East Land and Home (EAST)",
-            134:"000815896 ABA Expenses (USD) - East Sihanouk Park (ESP)",
-            135:"100204285 BS&EAST LAND AND HOME (BEHQ) (USD)"
-        };
+        let repay_type = <?php echo json_encode(\App\Models\PaymentType::activeList());?>;
         
             if(status_flag == 1){ // all account opened
                 $(".issueTill").attr("disabled", "disabled");

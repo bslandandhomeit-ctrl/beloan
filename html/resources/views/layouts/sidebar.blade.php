@@ -341,6 +341,7 @@ $sidebar = [
                         ['route' => 'date_holiday', 'title' => 'sb_holiday_management', 'param' => []],
                 		['route' => 'setting', 'title' => 'sb_setting', 'param' => []],
                         ['route' => 'list_unittype_config', 'title' => 'sb_unittype_config', 'param' => []],
+                        ['route' => 'list_payment_type', 'title' => 'sb_payment_type', 'param' => []],
                 ]
         ],
         [

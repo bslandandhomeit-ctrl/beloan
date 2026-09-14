@@ -205,10 +205,10 @@
                }
             }
          });
-         var repay_type = <?php echo json_encode(config('static_data.payment_type'));?>;
+         var repay_type = <?php echo json_encode(\App\Models\PaymentType::activeList());?>;
          var types = '<option value="">Choose one</option>';
          for(var keys in repay_type) {
-            if(keys == 0) continue;
+            if(repay_type[keys] == 'Drawdown Account') continue;
             types += '<option value="' + repay_type[keys] + '"> ' + repay_type[keys] + ' </option>';
          }
          $("#types").html(types);

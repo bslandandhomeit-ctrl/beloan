@@ -184,6 +184,7 @@ return array (
   'sb_master_report' => 'Master Report',
   'schedule_eir' => 'Schedule by EIR',
   'sb_unittype_config' => 'Loan Unit Type Config',
+  'sb_payment_type' => 'Payment Type',
   'contract' => 'Contract',
   'sb_land' => 'Land',
   'sb_house' => 'House',

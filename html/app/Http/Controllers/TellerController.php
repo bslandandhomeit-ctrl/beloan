@@ -1431,7 +1431,11 @@ class TellerController extends Controller
                           if(Request::input('types') == 'Foreign Exchange Position Account'){
                             $teller_coa_id = CoaCategory::where('name', '=', Request::input('types'))->where('currency', Request::input('currency_id'))->first()->id;
                           }else{
-                            $teller_coa_id = CoaCategory::where('name', 'Like', '%'.Request::input('types').'%')->where('currency', Request::input('currency_id'))->first()->id;
+                            $teller_coa = CoaCategory::where('name', Request::input('types'))->where('currency', Request::input('currency_id'))->first();
+                            if (!$teller_coa) {
+                                $teller_coa = CoaCategory::where('name', 'Like', '%'.Request::input('types').'%')->where('currency', Request::input('currency_id'))->first();
+                            }
+                            $teller_coa_id = $teller_coa->id;
                           }
                           $branch_code = $drawDownAct->branch;
                           $journal_arr = [];
@@ -2858,7 +2862,11 @@ class TellerController extends Controller
                           if(Request::input('types') == 'Foreign Exchange Position Account'){
                             $teller_coa_id = CoaCategory::where('name', '=', Request::input('types'))->where('currency', Request::input('currency_id'))->first()->id;
                           }else{
-                            $teller_coa_id = CoaCategory::where('name', 'Like', '%'.Request::input('types').'%')->where('currency', Request::input('currency_id'))->first()->id;
+                            $teller_coa = CoaCategory::where('name', Request::input('types'))->where('currency', Request::input('currency_id'))->first();
+                            if (!$teller_coa) {
+                                $teller_coa = CoaCategory::where('name', 'Like', '%'.Request::input('types').'%')->where('currency', Request::input('currency_id'))->first();
+                            }
+                            $teller_coa_id = $teller_coa->id;
                           }
                           $branch_code = $drawDownAct->branch;
                           $journal_arr = [];

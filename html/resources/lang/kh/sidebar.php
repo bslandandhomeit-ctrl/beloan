@@ -169,6 +169,7 @@ return array (
   'sb_fa_detail' => 'FA detail',
   'sb_depreciation_summary' => 'សេចក្ដីសង្ខេបរំលោះ',
   'sb_unittype_config' => 'Loan Unit Type Config',
+  'sb_payment_type' => 'Payment Type',
   'contract' => 'Contract',
   'sb_land' => 'Land',
   'sb_house' => 'House',

@@ -1,0 +1,62 @@
+-- Creates the payment_types table and seeds it with the payment methods that
+-- were previously hardcoded in html/config/static_data.php ('payment_type')
+-- and duplicated inline in html/resources/views/bcash/home.blade.php.
+-- Run once per environment (local, UAT, production).
+
+CREATE TABLE IF NOT EXISTS `tb_payment_types` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `name` varchar(255) NOT NULL,
+  `is_active` tinyint(1) NOT NULL DEFAULT 1,
+  `created_at` timestamp NULL DEFAULT NULL,
+  `updated_at` timestamp NULL DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+INSERT INTO `tb_payment_types` (`name`, `is_active`, `created_at`, `updated_at`) VALUES
+('Drawdown Account', 1, NOW(), NOW()),
+('Cash In Vault', 1, NOW(), NOW()),
+('Cash on Hand-Teller', 1, NOW(), NOW()),
+('000816490 ABA Revenue (USD) - Borey Chaktumok City (BCC)', 1, NOW(), NOW()),
+('66675555 Chipmong Revenue Expenses (USD) - BS Land and Home (BS)', 1, NOW(), NOW()),
+('001036662 ABA Revenue Expenses (USD) - BS Holiday City (BHC)', 1, NOW(), NOW()),
+('002489507 BS Land and Home Co., Ltd (BHQ)', 1, NOW(), NOW()),
+('000826822 ABA Revenue Expenses (USD) - Chaktumuk CityView (CCC)', 1, NOW(), NOW()),
+('000816491 ABA Revenue Expenses (USD) - Sihanouk City View (SCC)', 1, NOW(), NOW()),
+('000868966 ABA Revenue Expenses (USD) - East Land Say Chrom (EDH)', 1, NOW(), NOW()),
+('002465254 East Land and Home Co., Ltd', 1, NOW(), NOW()),
+('001160513 ABA Revenue Expenses (USD) - East Kean Svay City (EKC)', 1, NOW(), NOW()),
+('000815888 ABA Revenue (USD) - Borey East Land and Home (ELH)', 1, NOW(), NOW()),
+('000815895 ABA Revenue Expenses (USD) - East Natural City', 1, NOW(), NOW()),
+('002262407 ABA Rev Exp - EAST Prime Land (EPL)', 1, NOW(), NOW()),
+('000815978 ABA Revenue (USD) - East Sihanouk City (ESC)', 1, NOW(), NOW()),
+('000815756 ABA Revenue (USD) - East Sihanouk Park (ESP)', 1, NOW(), NOW()),
+('000815761 ABA Rev. Exp. (USD) - East SenSok Condominium (ESS)', 1, NOW(), NOW()),
+('0700-03-530888-88 Acleda Bank for Revenue Expenses (USD) - East Natural City (ENC)', 1, NOW(), NOW()),
+('66678888 Chipmong Revenue Expenses (USD) - Borey East Land and Home (ELH)', 1, NOW(), NOW()),
+('PPCB Bank Acc. for Revenue Expenses (USD) - East Land Say Chrom (EDH)', 1, NOW(), NOW()),
+('PPCB Bank Acc. for Revenue Expenses (USD) - Borey East Land and Home (ELH)', 1, NOW(), NOW()),
+('PPCB Bank Acc. for Revenue Expenses (USD) - East Sihanouk City (ESC)', 1, NOW(), NOW()),
+('PPCB Bank Acc. for Revenue Expenses (USD) - ESP', 1, NOW(), NOW()),
+('PPCB Bank Acc. for Revenue Expenses (USD) - East SenSok Condominium (ESS)', 1, NOW(), NOW()),
+('10034861-Chipmong Gateway East Land & Home', 1, NOW(), NOW()),
+('Lyhour VeLuy', 1, NOW(), NOW()),
+('Wing', 1, NOW(), NOW()),
+('True Money', 1, NOW(), NOW()),
+('Borey Chaktumok City (BCC)  All  PPCB Bank  BS Land and Home Co., Ltd  112-01-094273-2', 1, NOW(), NOW()),
+('Lay Sreyleak', 1, NOW(), NOW()),
+('001367567 ABA Revenue-Exp (USD) - BS Property Management (BPM)', 1, NOW(), NOW()),
+('001367568 ABA Revenue-Exp (USD) - ESAT Property Management (EPM)', 1, NOW(), NOW()),
+('002779699 ABA Revenue-Exp (USD) - Internet Internal Provider (IIP)', 1, NOW(), NOW()),
+('000102158 SBILH Revenue (USD) Borey Chaktomuk City (BCC)', 1, NOW(), NOW()),
+('000159190 SBILH Revenue (USD) East Land and Home (EAST)', 1, NOW(), NOW()),
+('000815896 ABA Expenses (USD) - East Sihanouk Park (ESP)', 1, NOW(), NOW()),
+('100204285 BS&EAST LAND AND HOME (BEHQ) (USD)', 1, NOW(), NOW()),
+('ESP-103286601 WING BANK-East Sihanouk Park', 1, NOW(), NOW()),
+('EKC-103276014 WING BANK-East Kean Svay City', 1, NOW(), NOW()),
+('ENC-103275978 WING BANK-East Natural City', 1, NOW(), NOW()),
+('ELH-104126619 WING BANK-East Land and Home', 1, NOW(), NOW()),
+('EMC-100736314 WING BANK-East Mini Condo', 1, NOW(), NOW()),
+('ESC-103286557 WING BANK-East Sihnauok City', 1, NOW(), NOW()),
+('EPL-105137596 WING BANK-East Prime Land', 1, NOW(), NOW()),
+('ESS-105137804 WING BANK-East SenSok Condominium', 1, NOW(), NOW()),
+('EDH-105137842 WING BANK-East Svay Chrum', 1, NOW(), NOW());
