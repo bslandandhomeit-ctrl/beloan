@@ -235,13 +235,27 @@
                                         </div>
                                     </div><br/>
                                     <div class="row">
-                                        <div class="col-md-2">                                            
+                                        <div class="col-md-2">
                                             <label for="t_from">{{trans('teller.t_from')}}</label>
-                                            <input type="text" name="t_from" class="form-control" id="t_from" value="{{ $from_date }}"/>                                          
+                                            <input type="text" name="t_from" class="form-control" id="t_from" value="{{ $from_date }}"/>
                                         </div>
-                                        <div class="col-md-2">                                            
+                                        <div class="col-md-2">
                                             <label for="t_to">{{trans('teller.t_to')}}</label>
-                                            <input type="text" name="t_to" class="form-control" id="t_to" value="{{ $to_date }}"/>                                         
+                                            <input type="text" name="t_to" class="form-control" id="t_to" value="{{ $to_date }}"/>
+                                        </div>
+                                        <div class="col-md-2">
+                                            <label for="report_year">Year</label>
+                                            <select id="report_year" class="form-control">
+                                                @for ($y = (int)date('Y'); $y >= (int)date('Y') - 6; $y--)
+                                                    <option value="{{ $y }}">{{ $y }}</option>
+                                                @endfor
+                                            </select>
+                                        </div>
+                                        <div class="col-md-3" style="margin-top: 24px;">
+                                            <button type="button" class="btn btn-info" id="filter_year"><i class="fa fa-filter"></i> Filter by Year</button>
+                                            @if($canExport)
+                                            <button type="button" class="btn btn-primary" id="export_year"><i class="fa fa-download"></i> Export Yearly</button>
+                                            @endif
                                         </div>
                                         <div class="col-md-3">                                            
                                             <label for="Company">Company Type</label>
@@ -370,7 +384,8 @@
 
 
                                if($val->deposit_type=='Loan Installment' && $val->type == "Cash Deposit"){
-                                foreach ($repayment as $re) {   
+                                $repayment_matches = isset($repayment_by_loan[$val->loan_id]) ? $repayment_by_loan[$val->loan_id] : [];
+                                foreach ($repayment_matches as $re) {
                                                                
                                     if(!empty($val->principal)){
                                         if($val->loan_id==$re['loan_id'] && floatval($re['no']) == floatval($val->pmt_no)){
@@ -493,6 +508,22 @@
                     $('.tableexport-caption').remove();
             }
         });
+        $("#filter_year").click(function (event) {
+            event.preventDefault();
+            var year = $('#report_year').val();
+            $('#t_from').val(year + '-01-01');
+            $('#t_to').val(year + '-12-31');
+            $('.searchs').click();
+        });
+
+        $("#export_year").click(function (event) {
+            event.preventDefault();
+            var year = $('#report_year').val();
+            $('#t_from').val(year + '-01-01');
+            $('#t_to').val(year + '-12-31');
+            window.location.href = '{{ route("teller_receipt_detail_yearly_export") }}?' + $('form').serialize();
+        });
+
         $(document).ready(function () {
             $('#t_from, #t_to').datepicker({
                 format: 'yyyy-mm-dd',

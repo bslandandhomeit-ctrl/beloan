@@ -147,7 +147,8 @@
                 }
             }
                 if($val->deposit_type=='Loan Installment' && $val->type == "Cash Deposit"){
-                    foreach ($repayment as $re) {   
+                    $repayment_matches = isset($repayment_by_loan[$val->loan_id]) ? $repayment_by_loan[$val->loan_id] : [];
+                    foreach ($repayment_matches as $re) {
                                                    
                         if(!empty($val->principal)){
                             if($val->loan_id==$re['loan_id'] && floatval($re['no']) == floatval($val->pmt_no)){

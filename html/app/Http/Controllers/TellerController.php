@@ -2413,12 +2413,7 @@ class TellerController extends Controller
         ->leftJoin('units','units.id','=','drawdown_account.unit_id')
         ->leftJoin('unit_types','unit_types.id','=','drawdown_account.unit_type_id')
         ->where('till_transaction.approve_status',1)
-        ->with([
-        'feecharge' => function ($query) use ($data) {
-            $query->select('*');
-        }
-        ]  
-        )
+        ->with('feecharge')
         // ->where('till_account.assign_user_id',Auth::user()->id)
         ->select(
                 'clients.client_name',
@@ -2524,27 +2519,29 @@ class TellerController extends Controller
 
         $teller_transaction = $teller_transaction->get();
 
+        $loan_ids = [];
+        foreach ($teller_transaction as $item) {
+            if ($item->loan_id) {
+                $loan_ids[$item->loan_id] = true;
+            }
+        }
+
+        $last_payments_by_loan = [];
+        if (!empty($loan_ids)) {
+            $all_last_payments = LoanPayments::whereIn('loan_id', array_keys($loan_ids))
+                ->orderBy('payment_month','DESC')
+                ->orderBy('repayment_date','DESC')
+                ->get();
+            foreach ($all_last_payments as $payment) {
+                if (!isset($last_payments_by_loan[$payment->loan_id])) {
+                    $last_payments_by_loan[$payment->loan_id] = $payment;
+                }
+            }
+        }
+
         $repayment = array();
-        foreach ($teller_transaction as $item) { 
-            $date=date_create($item->tranx_time);
-
-            $last_payment = LoanPayments::where('loan_id',$item->loan_id)
-            ->orderBy('payment_month','DESC')
-            ->orderBy('repayment_date','DESC')->get()->first();
-
-            $last_payment_date=date_create($last_payment->repayment_date);
-
-            // $payment_month= $last_payment->payment_month+1;
-            // $repayment_data=RepaymentSchedule::where('loan_id', $item->loan_id)
-            //     ->where('no', $payment_month)
-            //     //->whereYear('schedule_date', '=', date_format($date,"Y"))
-            //     //->whereMonth('schedule_date', '=',date_format($date,"m"))
-            //   ->select(
-            //     'loan_id',
-            //     'schedule_date','interest','principal','no'
-            //     )->first();   
-                
-                
+        foreach ($teller_transaction as $item) {
+            $last_payment = isset($last_payments_by_loan[$item->loan_id]) ? $last_payments_by_loan[$item->loan_id] : null;
 
         if(!empty($item->principal)){
             array_push($repayment,array(
@@ -2558,18 +2555,24 @@ class TellerController extends Controller
         }else{
             array_push($repayment,array(
                 'loan_id' => $item->loan_id,
-                'schedule_date' => $last_payment->repayment_date ,
-                'interest'=> $last_payment->paid_interest,
-                'principal'=>$last_payment->paid_principal,
-                'no'=>$last_payment->payment_month,
+                'schedule_date' => $last_payment ? $last_payment->repayment_date : null,
+                'interest'=> $last_payment ? $last_payment->paid_interest : null,
+                'principal'=>$last_payment ? $last_payment->paid_principal : null,
+                'no'=>$last_payment ? $last_payment->payment_month : null,
                 'last_payment'=>$last_payment
             ));
 
         }
 
 
-  
+
          }
+
+        $repayment_by_loan = [];
+        foreach ($repayment as $re) {
+            $repayment_by_loan[$re['loan_id']][] = $re;
+        }
+
         $teller_user = Teller::select('users.name as name')
         ->join('users', 'users.id', '=', 'till_account.assign_user_id')
         ->where('assign_user_id', '=', auth()->user()->id)
@@ -2580,15 +2583,213 @@ class TellerController extends Controller
             if(Request::has('is_csv') == 1){
                 $xlsx = 'csv';
             }
-            return Excel::create('teller-transaction-detail-'.date('d-M-Y'), function($excel) use ($teller_transaction,$company_branch,$projects_row,$from_date,$to_date,$teller_user,$repayment) {
-                $excel->sheet('mySheet', function($sheet) use ($teller_transaction,$company_branch,$projects_row,$from_date,$to_date,$teller_user,$repayment)
-                {           
-                    $sheet->loadView('exports.teller_transaction_detail_excel',['teller_transaction' => $teller_transaction,'repayment'=>$repayment,'company_branch'=>$company_branch,'projects_row'=>$projects_row,
+            return Excel::create('teller-transaction-detail-'.date('d-M-Y'), function($excel) use ($teller_transaction,$company_branch,$projects_row,$from_date,$to_date,$teller_user,$repayment,$repayment_by_loan) {
+                $excel->sheet('mySheet', function($sheet) use ($teller_transaction,$company_branch,$projects_row,$from_date,$to_date,$teller_user,$repayment,$repayment_by_loan)
+                {
+                    $sheet->loadView('exports.teller_transaction_detail_excel',['teller_transaction' => $teller_transaction,'repayment'=>$repayment,'repayment_by_loan'=>$repayment_by_loan,'company_branch'=>$company_branch,'projects_row'=>$projects_row,
                     'from_date'=>$from_date,'to_date'=>$to_date,'teller'=>$teller_user]);
                 });
             })->download($xlsx);
         }
-        return $this->view('teller.teller_receipt_detail',['company_branch'=>$company_branch,'projects_row'=>$projects_row,'teller_user'=>$teller_user],compact('teller_transaction','repayment','projects','project_id','customer_id','client','from_date','to_date','teller','teller_id','canExport'));
+        return $this->view('teller.teller_receipt_detail',['company_branch'=>$company_branch,'projects_row'=>$projects_row,'teller_user'=>$teller_user],compact('teller_transaction','repayment','repayment_by_loan','projects','project_id','customer_id','client','from_date','to_date','teller','teller_id','canExport'));
+    }
+
+    // Fast path for the "Export Yearly" button on the receipt-detail report.
+    // Runs one raw SQL query (joins + last-payment lookup + admin fee done in
+    // MySQL) instead of the Eloquent query + PHP repayment-matching loop used
+    // by teller_receipt_detail(), since a full year of transactions is too
+    // slow to hydrate as Eloquent models with relations just to export them.
+    public function teller_receipt_detail_yearly_export(){
+        $from_date = Request::input('t_from') ?: date('Y-01-01');
+        $to_date   = Request::input('t_to') ?: date('Y-12-31');
+        $customer_id  = Request::input('customer_id');
+        $project_id   = Request::input('project_id');
+        $company      = Request::input('company');
+        $company_type = Request::input('company_type');
+        $teller_id    = Request::input('teller_id');
+        $methode      = Request::input('methode');
+        $deposit_type = Request::input('deposit_type');
+        $search       = Request::input('search');
+
+        $till_account_id = null;
+        if ($teller_id) {
+            $teller_acc = Teller::where('assign_user_id', $teller_id)->first();
+            $till_account_id = $teller_acc ? $teller_acc->id : null;
+        }
+
+        // Written as a sargable half-open range (not DATE(tt.tranx_time) BETWEEN ...)
+        // so MySQL can use an index on tranx_time — wrapping the column in DATE()
+        // forces a full table scan even when such an index exists.
+        $to_date_exclusive = date('Y-m-d', strtotime($to_date . ' +1 day'));
+        $where = [
+            'tt.approve_status = 1',
+            'tt.tranx_time >= ?',
+            'tt.tranx_time < ?',
+            'newer_lp.loan_id IS NULL',
+        ];
+        $bindings = [$from_date . ' 00:00:00', $to_date_exclusive . ' 00:00:00'];
+
+        if ($customer_id) {
+            $where[] = 'da.client_id = ?';
+            $bindings[] = $customer_id;
+        }
+        if ($project_id) {
+            $where[] = 'da.project_id = ?';
+            $bindings[] = $project_id;
+        }
+        if ($company) {
+            $where[] = 'pr.company_id = ?';
+            $bindings[] = $company;
+        }
+        if ($company_type) {
+            $where[] = 'tt.deposit_company = ?';
+            $bindings[] = $company_type;
+        }
+        if ($till_account_id) {
+            $where[] = 'tt.till_account_id = ?';
+            $bindings[] = $till_account_id;
+        }
+        if ($deposit_type) {
+            $where[] = 'tt.deposit_type LIKE ?';
+            $bindings[] = '%' . $deposit_type;
+        }
+        if ($methode === 'Bank Transfer') {
+            $where[] = "tt.methode NOT IN ('Cash on Hand-Teller', 'Lay Sreyleak', 'Cash In Vault')";
+        } elseif ($methode === 'Bank China') {
+            $where[] = "tt.methode LIKE '%Lay Sreyleak'";
+        } elseif ($methode) {
+            $where[] = 'tt.methode LIKE ?';
+            $bindings[] = '%' . $methode;
+        }
+        if ($search) {
+            // Grouped in one parenthesized OR block so it narrows the result
+            // (unlike the on-screen report's equivalent ->orWhere() chain,
+            // which isn't grouped and can leak rows from outside the date
+            // range whenever a search term is combined with other filters).
+            $where[] = '(
+                tt.description     LIKE ?
+                OR tt.deposit_company LIKE ?
+                OR pr.dealer_en       LIKE ?
+                OR pr.dealer          LIKE ?
+                OR cl.client_name     LIKE ?
+                OR lo.contract_id     LIKE ?
+                OR cl.cus_acc         LIKE ?
+                OR ut.name            LIKE ?
+                OR un.code            LIKE ?
+            )';
+            $searchLike = '%' . $search . '%';
+            for ($i = 0; $i < 9; $i++) {
+                $bindings[] = $searchLike;
+            }
+        }
+
+        $sql = "
+            SELECT
+                tt.tranx_time,
+                tt.receipt_no,
+                cl.cus_acc                                                      AS customer_id,
+                cl.client_name,
+                pr.short_code                                                   AS project_name,
+                un.code                                                         AS unit_code,
+                tt.methode,
+                tt.deposit_type,
+                tt.description,
+                tt.approve_status,
+                us.name                                                         AS username,
+                us.location,
+                CASE
+                    WHEN tt.deposit_type = 'Loan Installment' AND tt.type = 'Cash Deposit' THEN
+                        CASE WHEN tt.principal IS NOT NULL AND tt.principal <> 0 THEN tt.pmt_no ELSE last_lp.payment_month END
+                    ELSE NULL
+                END                                                              AS effective_pmt_no,
+                CASE
+                    WHEN tt.deposit_type = 'Loan Installment' AND tt.type = 'Cash Deposit' THEN
+                        CASE WHEN tt.principal IS NOT NULL AND tt.principal <> 0 THEN tt.pmt_date ELSE last_lp.repayment_date END
+                    ELSE NULL
+                END                                                              AS effective_pmt_date,
+                CASE
+                    WHEN tt.deposit_type = 'Loan Installment' AND tt.type = 'Cash Deposit' THEN
+                        ROUND(CASE WHEN tt.principal IS NOT NULL AND tt.principal <> 0 THEN tt.interest ELSE last_lp.paid_interest END, 2)
+                    ELSE 0
+                END                                                              AS effective_interest,
+                CASE
+                    WHEN tt.deposit_type = 'Loan Installment' AND tt.type = 'Cash Deposit' THEN
+                        ROUND(CASE WHEN tt.principal IS NOT NULL AND tt.principal <> 0 THEN tt.principal ELSE last_lp.paid_principal END, 2)
+                    ELSE 0
+                END                                                              AS effective_principal,
+                IFNULL(fc.admin_fee, 0)                                         AS admin_fee,
+                CASE
+                    WHEN tt.type = 'Withdraw' THEN -1 * IFNULL(tt.cash_out, 0)
+                    ELSE IFNULL(tt.cash_in, 0)
+                END                                                              AS paid_amount
+            FROM tb_till_transaction tt
+            LEFT JOIN tb_drawdown_account da ON da.id = tt.drawdown_acc_id
+            LEFT JOIN tb_loans           lo ON lo.drawdown_acc = da.account_no
+            LEFT JOIN tb_till_account    ta ON ta.id = tt.till_account_id
+            LEFT JOIN tb_users           us ON us.id = ta.assign_user_id
+            LEFT JOIN tb_clients         cl ON cl.id = da.client_id
+            LEFT JOIN tb_projects        pr ON pr.id = da.project_id
+            LEFT JOIN tb_units           un ON un.id = da.unit_id
+            LEFT JOIN tb_unit_types      ut ON ut.id = da.unit_type_id
+            LEFT JOIN tb_loan_payments last_lp
+                   ON last_lp.loan_id = lo.id
+            LEFT JOIN tb_loan_payments newer_lp
+                   ON newer_lp.loan_id = last_lp.loan_id
+                  AND (newer_lp.payment_month > last_lp.payment_month
+                       OR (newer_lp.payment_month = last_lp.payment_month
+                           AND newer_lp.repayment_date > last_lp.repayment_date)
+                       OR (newer_lp.payment_month = last_lp.payment_month
+                           AND newer_lp.repayment_date = last_lp.repayment_date
+                           AND newer_lp.id > last_lp.id))
+            LEFT JOIN (
+                SELECT loan_id, SUM(charge_amount) AS admin_fee
+                FROM tb_fee_charges
+                WHERE note REGEXP 'Admin Fee'
+                GROUP BY loan_id
+            ) fc ON fc.loan_id = tt.id
+            WHERE " . implode("\n              AND ", $where) . "
+            ORDER BY tt.tranx_time
+        ";
+
+        $rows = DB::select($sql, $bindings);
+
+        $company_branch = null;
+        $projects_row = null;
+        if ($project_id) {
+            $projects_row = Project::find($project_id);
+            $company_branch = $projects_row ? CompanyBranch::find($projects_row->company_id) : null;
+        } elseif ($company) {
+            $company_branch = CompanyBranch::find($company);
+        }
+
+        $grand_total = 0;
+        $project_names = [];
+        $location_names = [];
+        foreach ($rows as $row) {
+            $grand_total += round($row->paid_amount, 2);
+            if ($row->project_name) {
+                $project_names[$row->project_name] = true;
+            }
+            if ($row->location) {
+                $location_names[$row->location] = true;
+            }
+        }
+
+        return Excel::create('teller-transaction-detail-yearly-' . date('d-M-Y'), function ($excel) use ($rows, $company_branch, $projects_row, $from_date, $to_date, $grand_total, $project_names, $location_names) {
+            $excel->sheet('mySheet', function ($sheet) use ($rows, $company_branch, $projects_row, $from_date, $to_date, $grand_total, $project_names, $location_names) {
+                $sheet->loadView('exports.teller_transaction_detail_yearly_excel', [
+                    'rows' => $rows,
+                    'company_branch' => $company_branch,
+                    'projects_row' => $projects_row,
+                    'from_date' => $from_date,
+                    'to_date' => $to_date,
+                    'teller_name' => auth()->user()->name,
+                    'grand_total' => $grand_total,
+                    'project_names' => array_keys($project_names),
+                    'location_names' => array_keys($location_names),
+                ]);
+            });
+        })->download('xlsx');
     }
 
     public function teller_receipt_summary(){

@@ -2669,6 +2669,10 @@ Route::group(['prefix' => 'teller'], function() {
         'as'=>'teller_receipt_detail',
         'uses'=>'TellerController@teller_receipt_detail'
     ])->where(['slips_id'=>'[0-9]+']);
+    Route::get('receipt-detail-yearly-export',[
+        'as'=>'teller_receipt_detail_yearly_export',
+        'uses'=>'TellerController@teller_receipt_detail_yearly_export'
+    ]);
     Route::get('receipt-summary',[
         'as'=>'teller_receipt_summary',
         'uses'=>'TellerController@teller_receipt_summary'
