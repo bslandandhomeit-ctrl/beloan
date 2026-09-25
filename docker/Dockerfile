@@ -4,6 +4,15 @@ USER root
 
 WORKDIR /var/www/html
 
+# Debian stretch (base of php:5.6) is EOL: its repos moved to archive.debian.org
+# and stretch-updates no longer exists. The archive's Release files and signing
+# keys are expired, so the repos are marked trusted.
+RUN printf '%s\n' \
+        'deb [trusted=yes] http://archive.debian.org/debian stretch main' \
+        'deb [trusted=yes] http://archive.debian.org/debian-security stretch/updates main' \
+        > /etc/apt/sources.list \
+    && echo 'Acquire::Check-Valid-Until "false";' > /etc/apt/apt.conf.d/99no-check-valid-until
+
 RUN apt-get update && apt-get install -y \
         libfreetype6-dev \
         libjpeg62-turbo-dev \
@@ -22,7 +31,8 @@ RUN apt-get update && apt-get install -y \
 	cron \
 	mariadb-client \
 	libmagickwand-dev --no-install-recommends \
-    && pecl install imagick \
+    && curl -fsSL 'https://pecl.php.net/get/imagick-3.4.4.tgz' -o /tmp/imagick.tgz \
+    && pecl install /tmp/imagick.tgz \
     && docker-php-ext-configure gd --with-freetype --with-jpeg-dir=/usr/include/ \
     && docker-php-ext-install -j$(nproc) gd \
     && docker-php-ext-install pdo_mysql \
