@@ -27,7 +27,8 @@ remove_stray_containers() {
     local ours name id
     ours="$(docker compose ps -aq 2>/dev/null || true)"
     for name in landhome-uat-mysql landhome-uat-apache landhome-uat-pma; do
-        id="$(docker container inspect -f '{{.Id}}' "$name" 2>/dev/null)" || continue
+        id="$(docker container inspect -f '{{.Id}}' "$name" 2>/dev/null || true)"
+        [ -n "$id" ] || continue
         case "$ours" in *"${id:0:12}"*) continue ;; esac
         echo "    Removing stray container $name (not created by this compose project)"
         docker rm -f "$name" >/dev/null
