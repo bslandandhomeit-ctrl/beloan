@@ -12,7 +12,9 @@
 #
 # Run ./setup-mac.sh once before the first start.
 # ---------------------------------------------------------------------------
-set -euo pipefail
+set -Eeuo pipefail
+# Never exit silently: report the command and line that failed.
+trap 'echo "ERROR: command failed (exit $?) at line $LINENO: $BASH_COMMAND" >&2' ERR
 
 cd "$(dirname "$0")"
 
@@ -22,15 +24,13 @@ die() { printf '\n\033[1;31mERROR: %s\033[0m\n' "$*" >&2; exit 1; }
 # created by this compose project (e.g. a leftover `docker run` or another
 # checkout), otherwise `docker compose up` fails with "already in use".
 remove_stray_containers() {
-    local project name owner
-    project="$(docker compose config 2>/dev/null | awk '/^name:/{print $2; exit}')"
+    local ours name id
+    ours="$(docker compose ps -aq 2>/dev/null || true)"
     for name in landhome-uat-mysql landhome-uat-apache landhome-uat-pma; do
-        docker container inspect "$name" >/dev/null 2>&1 || continue
-        owner="$(docker container inspect -f '{{ index .Config.Labels "com.docker.compose.project" }}' "$name" 2>/dev/null || true)"
-        if [ "$owner" != "$project" ]; then
-            echo "    Removing stray container $name (not part of compose project '$project')"
-            docker rm -f "$name" >/dev/null
-        fi
+        id="$(docker container inspect -f '{{.Id}}' "$name" 2>/dev/null)" || continue
+        case "$ours" in *"${id:0:12}"*) continue ;; esac
+        echo "    Removing stray container $name (not created by this compose project)"
+        docker rm -f "$name" >/dev/null
     done
 }
 
