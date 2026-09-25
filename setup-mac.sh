@@ -32,6 +32,22 @@ step() { printf '\n\033[1;34m==> %s\033[0m\n' "$*"; }
 ok()   { printf '    \033[32m%s\033[0m\n' "$*"; }
 die()  { printf '\n\033[1;31mERROR: %s\033[0m\n' "$*" >&2; exit 1; }
 
+# Remove containers that use our fixed container_name values but were not
+# created by this compose project (e.g. a leftover `docker run` or another
+# checkout), otherwise `docker compose up` fails with "already in use".
+remove_stray_containers() {
+    local project name owner
+    project="$(docker compose config 2>/dev/null | awk '/^name:/{print $2; exit}')"
+    for name in "$DB_CONTAINER" "$APP_CONTAINER" landhome-uat-pma; do
+        docker container inspect "$name" >/dev/null 2>&1 || continue
+        owner="$(docker container inspect -f '{{ index .Config.Labels "com.docker.compose.project" }}' "$name" 2>/dev/null || true)"
+        if [ "$owner" != "$project" ]; then
+            ok "removing stray container $name (not part of compose project '$project')"
+            docker rm -f "$name" >/dev/null
+        fi
+    done
+}
+
 [ "$(uname -s)" = "Darwin" ] || die "This script is for macOS only."
 
 # mysql:5.7 has no arm64 image and the app image links an x86_64 LibXL build,
@@ -104,6 +120,7 @@ fi
 # --- 6. Start stack ---------------------------------------------------------
 step "Start containers"
 mkdir -p mysql
+remove_stray_containers
 docker compose up -d
 
 echo "    Waiting for MySQL to accept connections..."

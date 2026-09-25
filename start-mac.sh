@@ -18,6 +18,22 @@ cd "$(dirname "$0")"
 
 die() { printf '\n\033[1;31mERROR: %s\033[0m\n' "$*" >&2; exit 1; }
 
+# Remove containers that use our fixed container_name values but were not
+# created by this compose project (e.g. a leftover `docker run` or another
+# checkout), otherwise `docker compose up` fails with "already in use".
+remove_stray_containers() {
+    local project name owner
+    project="$(docker compose config 2>/dev/null | awk '/^name:/{print $2; exit}')"
+    for name in landhome-uat-mysql landhome-uat-apache landhome-uat-pma; do
+        docker container inspect "$name" >/dev/null 2>&1 || continue
+        owner="$(docker container inspect -f '{{ index .Config.Labels "com.docker.compose.project" }}' "$name" 2>/dev/null || true)"
+        if [ "$owner" != "$project" ]; then
+            echo "    Removing stray container $name (not part of compose project '$project')"
+            docker rm -f "$name" >/dev/null
+        fi
+    done
+}
+
 # mysql:5.7 and the app image are amd64-only.
 [ "$(uname -m)" = "arm64" ] && export DOCKER_DEFAULT_PLATFORM=linux/amd64
 
@@ -42,6 +58,7 @@ docker image inspect landhome-uat-docker-app >/dev/null 2>&1 \
     || die "app image not built yet. Run ./setup-mac.sh first."
 
 echo "Starting containers (mysql, apache, phpmyadmin)..."
+remove_stray_containers
 docker compose up -d
 
 cat <<EOF
